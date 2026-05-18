@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  GARAGE
+  CLIENT
+  ADMIN
+}
+
+enum GarageStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum Plan {
+  STARTER
+  PRO
+  PREMIUM
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum DocumentType {
+  BCE
+  INSURANCE
+  ID
+  PHOTO
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  NEW_APPOINTMENT
+  APPOINTMENT_CONFIRMED
+  APPOINTMENT_CANCELLED
+  NEW_REVIEW
+  REMINDER_24H
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  password      String?
+  role          Role           @default(CLIENT)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  garage        Garage?
+  client        Client?
+  notifications Notification[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Garage {
+  id           String          @id @default(cuid())
+  userId       String          @unique
+  user         User            @relation(fields: [userId], references: [id])
+  name         String
+  slug         String          @unique
+  description  String?
+  address      String
+  city         String
+  zipCode      String
+  phone        String
+  status       GarageStatus    @default(PENDING)
+  plan         Plan            @default(STARTER)
+  rating       Float           @default(0)
+  reviewCount  Int             @default(0)
+  lat          Float?
+  lng          Float?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  services     GarageService[]
+  schedules    GarageSchedule[]
+  documents    GarageDocument[]
+  appointments Appointment[]
+  reviews      Review[]
+}
+
+model GarageService {
+  id           String        @id @default(cuid())
+  garageId     String
+  garage       Garage        @relation(fields: [garageId], references: [id])
+  name         String
+  duration     Int           @default(60)
+  price        Float?
+  appointments Appointment[]
+}
+
+model GarageSchedule {
+  id        String  @id @default(cuid())
+  garageId  String
+  garage    Garage  @relation(fields: [garageId], references: [id])
+  dayOfWeek Int
+  openTime  String
+  closeTime String
+  isClosed  Boolean @default(false)
+}
+
+model GarageDocument {
+  id       String         @id @default(cuid())
+  garageId String
+  garage   Garage         @relation(fields: [garageId], references: [id])
+  type     DocumentType
+  fileUrl  String
+  status   DocumentStatus @default(PENDING)
+}
+
+model Client {
+  id           String        @id @default(cuid())
+  userId       String        @unique
+  user         User          @relation(fields: [userId], references: [id])
+  firstName    String
+  lastName     String
+  phone        String?
+  appointments Appointment[]
+  reviews      Review[]
+}
+
+model Appointment {
+  id           String            @id @default(cuid())
+  garageId     String
+  garage       Garage            @relation(fields: [garageId], references: [id])
+  clientId     String
+  client       Client            @relation(fields: [clientId], references: [id])
+  serviceId    String
+  service      GarageService     @relation(fields: [serviceId], references: [id])
+  date         DateTime
+  startTime    String
+  endTime      String
+  status       AppointmentStatus @default(PENDING)
+  vehiclePlate String?
+  vehicleModel String?
+  notes        String?
+  createdAt    DateTime          @default(now())
+  review       Review?
+}
+
+model Review {
+  id            String      @id @default(cuid())
+  garageId      String
+  garage        Garage      @relation(fields: [garageId], references: [id])
+  clientId      String
+  client        Client      @relation(fields: [clientId], references: [id])
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  rating        Int
+  comment       String?
+  createdAt     DateTime    @default(now())
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+}
