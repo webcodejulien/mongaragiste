@@ -2,229 +2,133 @@
 
 import { useState } from 'react'
 import { TopBar } from '@/components/layout/TopBar'
-import { Badge, statusToBadge } from '@/components/ui/Badge'
-import { Input } from '@/components/ui/Input'
+import { IconSearch, IconPhone, IconMail, IconCar, IconCalendar, IconChevronRight } from '@tabler/icons-react'
 
-const clients = [
-  {
-    id: '1',
-    firstName: 'Martin',
-    lastName: 'Dupont',
-    email: 'martin.dupont@gmail.com',
-    phone: '+32 470 12 34 56',
-    totalAppointments: 8,
-    lastVisit: '2024-01-15',
-    vehicles: ['Renault Clio 2019 — AB-123-CD'],
-    appointments: [
-      { date: '2024-01-15', service: 'Vidange', status: 'CONFIRMED', vehicle: 'Renault Clio' },
-      { date: '2023-10-22', service: 'Freins', status: 'DONE', vehicle: 'Renault Clio' },
-      { date: '2023-07-10', service: 'Révision', status: 'DONE', vehicle: 'Renault Clio' },
-    ],
-  },
-  {
-    id: '2',
-    firstName: 'Sophie',
-    lastName: 'Lambert',
-    email: 'sophie.lambert@outlook.com',
-    phone: '+32 475 98 76 54',
-    totalAppointments: 3,
-    lastVisit: '2024-01-15',
-    vehicles: ['Peugeot 308 2021 — EF-456-GH'],
-    appointments: [
-      { date: '2024-01-15', service: 'Freins avant', status: 'IN_PROGRESS', vehicle: 'Peugeot 308' },
-      { date: '2023-11-03', service: 'Vidange', status: 'DONE', vehicle: 'Peugeot 308' },
-      { date: '2023-05-20', service: 'Pneus', status: 'DONE', vehicle: 'Peugeot 308' },
-    ],
-  },
-  {
-    id: '3',
-    firstName: 'Jean',
-    lastName: 'Moreau',
-    email: 'jean.moreau@yahoo.fr',
-    phone: '+32 478 11 22 33',
-    totalAppointments: 12,
-    lastVisit: '2024-01-15',
-    vehicles: ['Citroën C3 2020 — IJ-789-KL', 'Renault Kangoo 2018 — MN-012-OP'],
-    appointments: [
-      { date: '2024-01-15', service: 'Révision 30 000 km', status: 'CONFIRMED', vehicle: 'Citroën C3' },
-      { date: '2023-12-01', service: 'Diagnostic', status: 'DONE', vehicle: 'Renault Kangoo' },
-      { date: '2023-09-14', service: 'Embrayage', status: 'DONE', vehicle: 'Citroën C3' },
-    ],
-  },
-  {
-    id: '4',
-    firstName: 'Marie',
-    lastName: 'Fontaine',
-    email: 'marie.fontaine@gmail.com',
-    phone: '+32 472 44 55 66',
-    totalAppointments: 5,
-    lastVisit: '2024-01-12',
-    vehicles: ['VW Golf 2022 — QR-345-ST'],
-    appointments: [
-      { date: '2024-01-15', service: 'Pneus (x4)', status: 'PENDING', vehicle: 'VW Golf' },
-      { date: '2023-08-30', service: 'Vidange', status: 'DONE', vehicle: 'VW Golf' },
-    ],
-  },
-  {
-    id: '5',
-    firstName: 'Pierre',
-    lastName: 'Bernard',
-    email: 'pierre.bernard@hotmail.com',
-    phone: '+32 479 77 88 99',
-    totalAppointments: 2,
-    lastVisit: '2023-11-20',
-    vehicles: ['BMW 320d 2018 — UV-678-WX'],
-    appointments: [
-      { date: '2024-01-16', service: 'Diagnostic', status: 'CONFIRMED', vehicle: 'BMW 320d' },
-      { date: '2023-11-20', service: 'Freins', status: 'DONE', vehicle: 'BMW 320d' },
-    ],
-  },
-  {
-    id: '6',
-    firstName: 'Émilie',
-    lastName: 'Renard',
-    email: 'emilie.renard@gmail.com',
-    phone: '+32 471 23 45 67',
-    totalAppointments: 1,
-    lastVisit: '2024-01-16',
-    vehicles: ['Toyota Yaris 2020 — YZ-901-AB'],
-    appointments: [
-      { date: '2024-01-16', service: 'Vidange', status: 'PENDING', vehicle: 'Toyota Yaris' },
-    ],
-  },
+const CLIENTS = [
+  { id:'1', firstName:'Marc',      lastName:'Dupont',   initials:'MD', email:'marc.dupont@gmail.com',    phone:'+32 470 12 34 56', totalRdv:8,  lastVisit:'15 mai 2024', vehicles:['Renault Clio 2021 · 1-MXD-872'], history:[{date:'15 mai 2024',service:'Vidange',status:'CONFIRMED'},{date:'22 oct. 2023',service:'Freins',status:'DONE'},{date:'10 jul. 2023',service:'Révision',status:'DONE'}] },
+  { id:'2', firstName:'Alice',     lastName:'Bernard',  initials:'AB', email:'alice.bernard@outlook.com', phone:'+32 475 98 76 54', totalRdv:3,  lastVisit:'19 mai 2024', vehicles:['Peugeot 308 2019 · 1-AXB-456'],  history:[{date:'19 mai 2024',service:'Freins avant',status:'PENDING'},{date:'03 nov. 2023',service:'Vidange',status:'DONE'}] },
+  { id:'3', firstName:'Karl',      lastName:'Schmitt',  initials:'KS', email:'karl.schmitt@gmail.com',    phone:'+32 472 44 55 66', totalRdv:5,  lastVisit:'19 mai 2024', vehicles:['Volkswagen Golf 2018 · 3-KXS-789','Audi A3 2020 · 2-KAS-112'], history:[{date:'19 mai 2024',service:'Climatisation',status:'IN_PROGRESS'},{date:'14 jan. 2024',service:'Diagnostic',status:'DONE'}] },
+  { id:'4', firstName:'Jean',      lastName:'Moreau',   initials:'JM', email:'jean.moreau@yahoo.fr',      phone:'+32 479 77 88 99', totalRdv:12, lastVisit:'19 mai 2024', vehicles:['Citroën C3 2022 · 1-JXM-334','Renault Kangoo 2019 · 2-JXM-885'], history:[{date:'19 mai 2024',service:'Vidange',status:'DONE'},{date:'01 déc. 2023',service:'Diagnostic',status:'DONE'},{date:'14 sep. 2023',service:'Embrayage',status:'DONE'}] },
+  { id:'5', firstName:'Sophie',    lastName:'Petit',    initials:'SP', email:'sophie.petit@gmail.com',    phone:'+32 478 11 22 33', totalRdv:6,  lastVisit:'19 mai 2024', vehicles:['BMW Série 3 2020 · 2-SXP-101'], history:[{date:'19 mai 2024',service:'Révision complète',status:'CONFIRMED'},{date:'22 mar. 2024',service:'Pneus',status:'DONE'}] },
+  { id:'6', firstName:'Luc',       lastName:'Fontaine', initials:'LF', email:'luc.fontaine@hotmail.com',  phone:'+32 471 23 45 67', totalRdv:2,  lastVisit:'20 mai 2024', vehicles:['Toyota Yaris 2021 · 2-LXF-009'], history:[{date:'20 mai 2024',service:'Freins',status:'CONFIRMED'}] },
+  { id:'7', firstName:'Sara',      lastName:'Ngom',     initials:'SN', email:'sara.ngom@gmail.com',       phone:'+32 476 89 01 23', totalRdv:1,  lastVisit:'22 mai 2024', vehicles:['Renault Mégane 2020 · 1-SXN-445'], history:[{date:'22 mai 2024',service:'Révision complète',status:'CONFIRMED'}] },
 ]
 
-function formatDate(d: string) {
-  const date = new Date(d)
-  const months = ['jan', 'fév', 'mar', 'avr', 'mai', 'jun', 'jul', 'aoû', 'sep', 'oct', 'nov', 'déc']
-  return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`
+const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+  PENDING:     { bg:'#FAEEDA', color:'#633806', label:'En attente' },
+  CONFIRMED:   { bg:'#E1F5EE', color:'#085041', label:'Confirmé' },
+  IN_PROGRESS: { bg:'#E6F1FB', color:'#185FA5', label:'En cours' },
+  DONE:        { bg:'var(--color-background-secondary)', color:'var(--color-text-secondary)', label:'Terminé' },
+  CANCELLED:   { bg:'#FCEBEB', color:'#A32D2D', label:'Annulé' },
 }
 
 export default function ClientsPage() {
-  const [search, setSearch] = useState('')
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [search, setSearch]   = useState('')
+  const [selected, setSelected] = useState<string | null>(null)
 
-  const filtered = clients.filter((c) => {
+  const filtered = CLIENTS.filter(c => {
     if (!search) return true
     const q = search.toLowerCase()
     return `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || c.phone.includes(q)
   })
 
-  const selected = clients.find((c) => c.id === selectedId)
+  const sel = CLIENTS.find(c => c.id === selected)
 
   return (
     <div className="flex flex-col flex-1">
-      <TopBar title="Clients" />
-      <main className="flex-1 p-6">
-        <div className="flex gap-6">
-          {/* Client list */}
-          <div className="flex-1">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="w-64">
-                <Input
-                  placeholder="Rechercher un client..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  icon={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  }
-                />
+      <TopBar title="Clients" subtitle={`${CLIENTS.length} clients`} />
+      <main className="flex-1 p-5">
+        <div className="flex gap-4">
+
+          {/* Liste */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-3">
+              <div className="relative w-64">
+                <IconSearch size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-tertiary)' }} />
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un client…"
+                  className="w-full pl-8 pr-3 py-2 text-[13px] rounded-lg focus:outline-none"
+                  style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-secondary)', color: 'var(--color-text-primary)' }} />
               </div>
-              <p className="text-xs text-gray-500">{filtered.length} client(s)</p>
+              <p className="text-[12px]" style={{ color: 'var(--color-text-tertiary)' }}>{filtered.length} résultat(s)</p>
             </div>
 
-            <div className="bg-white border border-gray-100 rounded-lg overflow-hidden">
-              <div className="grid grid-cols-[1fr_160px_80px_100px] text-xs font-medium text-gray-500 uppercase tracking-wide px-4 py-2.5 border-b border-gray-100 bg-gray-50">
-                <span>Client</span>
-                <span>Dernier RDV</span>
-                <span className="text-center">RDV total</span>
-                <span className="text-right">Fiche</span>
+            <div className="rounded-[10px] overflow-hidden" style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
+              <div className="grid text-[11px] font-medium uppercase tracking-wide px-4 py-2.5"
+                style={{ gridTemplateColumns: '1fr 130px 60px 40px', color: 'var(--color-text-secondary)', background: 'var(--color-background-secondary)', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
+                <span>Client</span><span>Dernier RDV</span><span className="text-center">RDV</span><span />
               </div>
-              <div className="divide-y divide-gray-50">
-                {filtered.map((c) => (
-                  <div
-                    key={c.id}
-                    onClick={() => setSelectedId(selectedId === c.id ? null : c.id)}
-                    className={`grid grid-cols-[1fr_160px_80px_100px] px-4 py-3 cursor-pointer transition-colors ${
-                      selectedId === c.id ? 'bg-primary-50' : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 text-sm font-semibold flex-shrink-0">
-                        {c.firstName.charAt(0)}{c.lastName.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{c.firstName} {c.lastName}</p>
-                        <p className="text-xs text-gray-500">{c.phone}</p>
-                      </div>
+              {filtered.map((c, i) => (
+                <div key={c.id}
+                  onClick={() => setSelected(selected === c.id ? null : c.id)}
+                  className="grid items-center px-4 py-2.5 cursor-pointer transition-colors"
+                  style={{
+                    gridTemplateColumns: '1fr 130px 60px 40px',
+                    borderBottom: i < filtered.length - 1 ? '0.5px solid var(--color-border-tertiary)' : 'none',
+                    background: selected === c.id ? 'var(--color-primary-light)' : 'transparent',
+                  }}>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-medium flex-shrink-0"
+                      style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
+                      {c.initials}
                     </div>
-                    <div className="flex items-center">
-                      <p className="text-sm text-gray-600">{formatDate(c.lastVisit)}</p>
-                    </div>
-                    <div className="flex items-center justify-center">
-                      <span className="text-sm font-semibold text-gray-900">{c.totalAppointments}</span>
-                    </div>
-                    <div className="flex items-center justify-end">
-                      <button className="text-xs text-primary-400 hover:text-primary-600 font-medium">
-                        {selectedId === c.id ? 'Fermer' : 'Voir →'}
-                      </button>
+                    <div>
+                      <p className="text-[13px] font-medium" style={{ color: 'var(--color-text-primary)' }}>{c.firstName} {c.lastName}</p>
+                      <p className="text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>{c.phone}</p>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <p className="text-[12px]" style={{ color: 'var(--color-text-secondary)' }}>{c.lastVisit}</p>
+                  <p className="text-[13px] font-semibold text-center" style={{ color: 'var(--color-text-primary)' }}>{c.totalRdv}</p>
+                  <IconChevronRight size={14} style={{ color: 'var(--color-text-tertiary)' }} />
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Client detail panel */}
-          {selected && (
-            <div className="w-80 flex-shrink-0">
-              <div className="bg-white border border-gray-100 rounded-lg p-5 sticky top-20">
+          {/* Détail */}
+          {sel && (
+            <div className="w-72 flex-shrink-0">
+              <div className="rounded-[10px] p-5 sticky top-20" style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 text-lg font-bold">
-                    {selected.firstName.charAt(0)}{selected.lastName.charAt(0)}
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-base font-semibold"
+                    style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
+                    {sel.initials}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{selected.firstName} {selected.lastName}</h3>
-                    <p className="text-xs text-gray-500">{selected.totalAppointments} rendez-vous</p>
+                    <p className="text-[14px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>{sel.firstName} {sel.lastName}</p>
+                    <p className="text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>{sel.totalRdv} rendez-vous</p>
                   </div>
                 </div>
 
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    {selected.email}
+                  <div className="flex items-center gap-2 text-[12px]" style={{ color: 'var(--color-text-secondary)' }}>
+                    <IconMail size={13} style={{ color: 'var(--color-text-tertiary)' }} /> {sel.email}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    {selected.phone}
+                  <div className="flex items-center gap-2 text-[12px]" style={{ color: 'var(--color-text-secondary)' }}>
+                    <IconPhone size={13} style={{ color: 'var(--color-text-tertiary)' }} /> {sel.phone}
                   </div>
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Véhicules</p>
-                  {selected.vehicles.map((v) => (
-                    <p key={v} className="text-sm text-gray-600 font-mono text-xs bg-gray-50 rounded px-2 py-1 mb-1">{v}</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wide mb-2" style={{ color: 'var(--color-text-tertiary)' }}>Véhicule(s)</p>
+                  {sel.vehicles.map(v => (
+                    <div key={v} className="flex items-center gap-2 text-[12px] py-1 rounded px-2" style={{ background: 'var(--color-background-secondary)', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>
+                      <IconCar size={12} /> {v}
+                    </div>
                   ))}
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Historique</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wide mb-2" style={{ color: 'var(--color-text-tertiary)' }}>Historique</p>
                   <div className="space-y-2">
-                    {selected.appointments.map((a, i) => {
-                      const badge = statusToBadge(a.status)
+                    {sel.history.map((h, i) => {
+                      const s = STATUS_STYLE[h.status]
                       return (
-                        <div key={i} className="flex items-start justify-between gap-2">
+                        <div key={i} className="flex items-center justify-between">
                           <div>
-                            <p className="text-xs font-medium text-gray-800">{a.service}</p>
-                            <p className="text-xs text-gray-500">{formatDate(a.date)} — {a.vehicle}</p>
+                            <p className="text-[12px] font-medium" style={{ color: 'var(--color-text-primary)' }}>{h.service}</p>
+                            <p className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>{h.date}</p>
                           </div>
-                          <Badge variant={badge.variant} className="flex-shrink-0">{badge.label}</Badge>
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ background: s.bg, color: s.color }}>{s.label}</span>
                         </div>
                       )
                     })}
