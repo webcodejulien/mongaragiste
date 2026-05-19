@@ -1,65 +1,102 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { IconBell, IconSearch, IconChevronDown } from '@tabler/icons-react'
 
-const mockNotifications = [
-  { id: '1', title: 'Nouveau RDV', message: 'Martin Dupont — Vidange — Demain 09:00', time: 'Il y a 5 min', read: false },
-  { id: '2', title: 'Avis client', message: 'Sophie Lambert vous a laissé 5 étoiles', time: 'Il y a 1h', read: false },
-  { id: '3', title: 'RDV confirmé', message: 'Jean Moreau — Freins — Lundi 14:00', time: 'Il y a 2h', read: true },
+const mockNotifs = [
+  { id: '1', title: 'Nouveau RDV', message: 'Luc Fontaine, demain 10h, Freins', time: 'Il y a 5 min', read: false, color: 'green' },
+  { id: '2', title: 'En attente', message: 'Alice Bernard n\'a pas encore confirmé', time: 'Il y a 22 min', read: false, color: 'amber' },
+  { id: '3', title: 'Nouveau RDV', message: 'Sara Ngom, jeudi 14h, Révision', time: 'Il y a 1h', read: false, color: 'green' },
+  { id: '4', title: 'Annulation', message: 'Pierre Collin a annulé son RDV de jeudi', time: 'Il y a 2h', read: false, color: 'red' },
+  { id: '5', title: 'Nouvel avis ★★★★★', message: '"Excellent travail, très pro !"', time: 'Il y a 3h', read: false, color: 'blue' },
+  { id: '6', title: 'RDV confirmé', message: 'Marc Dupont, aujourd\'hui 08h', time: 'Hier, 17h42', read: true, color: 'neutral' },
 ]
+
+const iconColors: Record<string, string> = {
+  green:   'background:#E1F5EE;color:#1D9E75',
+  amber:   'background:#FAEEDA;color:#854F0B',
+  red:     'background:#FCEBEB;color:#A32D2D',
+  blue:    'background:#E6F1FB;color:#185FA5',
+  neutral: 'background:#F5F5F2;color:#6B6E72',
+}
 
 interface TopBarProps {
   title: string
+  subtitle?: string
   garageName?: string
 }
 
-export function TopBar({ title, garageName = 'Garage Dubois' }: TopBarProps) {
+export function TopBar({ title, subtitle, garageName = 'Garage Dubois' }: TopBarProps) {
   const [notifOpen, setNotifOpen] = useState(false)
-  const unread = mockNotifications.filter((n) => !n.read).length
+  const unread = mockNotifs.filter((n) => !n.read).length
 
   return (
-    <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-10">
-      <h1 className="text-base font-semibold text-gray-900">{title}</h1>
+    <header className="h-[52px] flex items-center justify-between px-5 sticky top-0 z-10"
+      style={{ background: 'var(--color-background-primary)', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
 
-      <div className="flex items-center gap-3">
+      <div>
+        <p className="text-[15px] font-medium" style={{ color: 'var(--color-text-primary)' }}>{title}</p>
+        {subtitle && <p className="text-[12px] mt-px" style={{ color: 'var(--color-text-secondary)' }}>{subtitle}</p>}
+      </div>
+
+      <div className="flex items-center gap-2.5">
+        {/* Search */}
+        <button className="w-[34px] h-[34px] flex items-center justify-center rounded transition-colors"
+          style={{ border: '0.5px solid var(--color-border-tertiary)', color: 'var(--color-text-secondary)' }}>
+          <IconSearch size={17} />
+        </button>
+
+        {/* Notifications */}
         <div className="relative">
           <button
             onClick={() => setNotifOpen(!notifOpen)}
-            className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            className="w-[34px] h-[34px] flex items-center justify-center rounded transition-colors relative"
+            style={{ border: '0.5px solid var(--color-border-tertiary)', color: 'var(--color-text-secondary)' }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
+            <IconBell size={17} />
             {unread > 0 && (
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              <span className="absolute top-[6px] right-[6px] w-[7px] h-[7px] rounded-full bg-red-500" />
             )}
           </button>
 
           {notifOpen && (
-            <div className="absolute right-0 top-10 w-80 bg-white border border-gray-100 rounded-lg shadow-lg z-50">
-              <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-900">Notifications</span>
+            <div className="absolute right-0 top-11 w-80 rounded-lg shadow-lg z-50 overflow-hidden"
+              style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-secondary)' }}>
+              <div className="flex items-center justify-between px-4 py-2.5"
+                style={{ borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
+                <span className="text-[13px] font-medium" style={{ color: 'var(--color-text-primary)' }}>Notifications</span>
                 {unread > 0 && (
-                  <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">{unread} nouvelles</span>
+                  <span className="text-[11px] font-medium px-2 py-px rounded-full"
+                    style={{ background: '#FCEBEB', color: '#A32D2D' }}>
+                    {unread} nouvelles
+                  </span>
                 )}
               </div>
-              <div className="divide-y divide-gray-50 max-h-72 overflow-y-auto">
-                {mockNotifications.map((n) => (
-                  <div key={n.id} className={`px-4 py-3 hover:bg-gray-50 transition-colors ${!n.read ? 'bg-primary-50/30' : ''}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{n.title}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>
-                      </div>
-                      {!n.read && <span className="w-2 h-2 bg-primary-400 rounded-full mt-1 flex-shrink-0" />}
+              <div className="max-h-72 overflow-y-auto">
+                {mockNotifs.map((n) => (
+                  <div key={n.id}
+                    className="flex items-start gap-2.5 px-3.5 py-2.5 transition-colors cursor-pointer"
+                    style={{
+                      borderBottom: '0.5px solid var(--color-border-tertiary)',
+                      background: !n.read ? 'var(--color-primary-light)' : 'transparent',
+                    }}>
+                    <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ ...(iconColors[n.color].split(';').reduce((acc, s) => { const [k,v]=s.split(':'); if(k&&v) acc[k.trim()]=v.trim(); return acc }, {} as Record<string,string>)) }}>
+                      <span className="text-[12px]">
+                        {n.color==='green'?'📅':n.color==='amber'?'⏰':n.color==='red'?'❌':n.color==='blue'?'⭐':'✓'}
+                      </span>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">{n.time}</p>
+                    <div className="flex-1">
+                      <p className="text-[12px] leading-snug" style={{ color: 'var(--color-text-primary)' }}>
+                        <strong>{n.title}</strong> — {n.message}
+                      </p>
+                      <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>{n.time}</p>
+                    </div>
                   </div>
                 ))}
               </div>
-              <div className="px-4 py-2 border-t border-gray-100">
-                <button className="text-xs text-primary-400 hover:text-primary-600 font-medium">
+              <div className="px-4 py-2" style={{ borderTop: '0.5px solid var(--color-border-tertiary)' }}>
+                <button className="text-[12px] font-medium" style={{ color: 'var(--color-primary)' }}>
                   Tout marquer comme lu
                 </button>
               </div>
@@ -67,13 +104,14 @@ export function TopBar({ title, garageName = 'Garage Dubois' }: TopBarProps) {
           )}
         </div>
 
-        <div className="flex items-center gap-2.5 pl-3 border-l border-gray-100">
-          <div className="w-7 h-7 bg-primary-400 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+        {/* Avatar */}
+        <div className="flex items-center gap-2 pl-2.5" style={{ borderLeft: '0.5px solid var(--color-border-tertiary)' }}>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium"
+            style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
             {garageName.charAt(0)}
           </div>
-          <div className="text-right">
-            <p className="text-sm font-medium text-gray-900 leading-tight">{garageName}</p>
-          </div>
+          <span className="text-[13px] font-medium" style={{ color: 'var(--color-text-primary)' }}>{garageName}</span>
+          <IconChevronDown size={14} style={{ color: 'var(--color-text-secondary)' }} />
         </div>
       </div>
     </header>

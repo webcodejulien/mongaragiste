@@ -4,38 +4,40 @@
 @tailwind utilities;
 
 :root {
-  --color-primary:     #1D9E75;
-  --color-primary-dark:#085041;
-  --color-primary-light:#E1F5EE;
+  --color-primary:          #1D9E75;
+  --color-primary-dark:     #085041;
+  --color-primary-light:    #E1F5EE;
+
+  --color-background-primary:   #FFFFFF;
+  --color-background-secondary: #F5F5F2;
+  --color-background-tertiary:  #EBEBEB;
+
+  --color-text-primary:    #111210;
+  --color-text-secondary:  #6B6E72;
+  --color-text-tertiary:   #9EA3A9;
+
+  --color-border-primary:   #D1D5DB;
+  --color-border-secondary: #E5E7EB;
+  --color-border-tertiary:  #F0F0EE;
+
+  --border-radius-sm:  6px;
+  --border-radius-md:  8px;
+  --border-radius-lg:  10px;
+  --border-radius-xl:  14px;
+
+  --font-sans: 'Inter', -apple-system, sans-serif;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
-  font-family: 'Inter', sans-serif;
-  background: #F5F5F0;
-  color: #1A1A2E;
+  font-family: var(--font-sans);
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
 }
 
-@layer components {
-  .btn-primary {
-    @apply bg-primary-400 text-white font-medium px-4 py-2 rounded hover:bg-primary-600 transition-colors;
-  }
-  .btn-outline {
-    @apply border border-primary-400 text-primary-400 font-medium px-4 py-2 rounded hover:bg-primary-50 transition-colors;
-  }
-  .card {
-    @apply bg-white border border-gray-100 rounded-lg p-4;
-  }
-  .badge-success {
-    @apply bg-primary-50 text-primary-800 text-xs font-medium px-2 py-1 rounded-full;
-  }
-  .badge-warning {
-    @apply bg-amber-50 text-amber-800 text-xs font-medium px-2 py-1 rounded-full;
-  }
-  .badge-danger {
-    @apply bg-red-50 text-red-800 text-xs font-medium px-2 py-1 rounded-full;
-  }
-}
+/* Scrollbar fine */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border-primary); border-radius: 2px; }
