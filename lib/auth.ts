@@ -5,22 +5,33 @@ import { PrismaAdapter } from '@auth/prisma-adapter'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 
+const googleConfigured =
+  process.env.GOOGLE_CLIENT_ID &&
+  process.env.GOOGLE_CLIENT_ID !== 'PLACEHOLDER' &&
+  process.env.GOOGLE_CLIENT_ID !== 'PLACEHOLDER_A_REMPLACER' &&
+  process.env.GOOGLE_CLIENT_SECRET &&
+  process.env.GOOGLE_CLIENT_SECRET !== 'PLACEHOLDER' &&
+  process.env.GOOGLE_CLIENT_SECRET !== 'PLACEHOLDER_A_REMPLACER'
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',
+    error:  '/login',
   },
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    ...(googleConfigured
+      ? [GoogleProvider({
+          clientId:     process.env.GOOGLE_CLIENT_ID!,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        })]
+      : []),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
-        email:    { label: 'Email',         type: 'email' },
-        password: { label: 'Mot de passe',  type: 'password' },
+        email:    { label: 'Email',        type: 'email'    },
+        password: { label: 'Mot de passe', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
@@ -55,3 +66,5 @@ export const authOptions: NextAuthOptions = {
     },
   },
 }
+
+export { googleConfigured }
