@@ -7,11 +7,7 @@ export const metadata: Metadata = {
   keywords: ['garage', 'garagiste', 'réservation', 'rendez-vous', 'voiture', 'entretien'],
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
       <body>{children}</body>
