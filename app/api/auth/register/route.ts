@@ -20,7 +20,6 @@ export async function POST(req: NextRequest) {
     if (!email || !password) {
       return NextResponse.json({ error: 'Email et mot de passe requis.' }, { status: 400 })
     }
-
     if (password.length < 8) {
       return NextResponse.json({ error: 'Le mot de passe doit faire au moins 8 caractères.' }, { status: 400 })
     }
@@ -32,6 +31,7 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 12)
 
+    // ── Inscription garagiste ─────────────────────────────
     if (role === 'GARAGE' && garageData) {
       const slug = slugify(garageData.name) + '-' + Math.random().toString(36).slice(2, 6)
 
@@ -42,29 +42,31 @@ export async function POST(req: NextRequest) {
           role: 'GARAGE',
           garage: {
             create: {
-              name: garageData.name,
+              name:          garageData.name,
               slug,
-              phone: garageData.phone,
-              address: garageData.address,
-              city: garageData.city,
-              zipCode: garageData.zipCode,
-              description: garageData.description || null,
+              phone:         garageData.phone,
+              address:       garageData.address,
+              city:          garageData.city,
+              zipCode:       garageData.zipCode,
+              description:   garageData.description || null,
+              mechanicCount: garageData.mechanicCount ?? 1,
+              slotDuration:  garageData.slotDuration  ?? 30,
               status: 'PENDING',
               services: garageData.services?.length
                 ? {
                     create: garageData.services.map((name: string) => ({
                       name,
-                      duration: 60,
+                      duration: garageData.slotDuration ?? 30,
                     })),
                   }
                 : undefined,
               schedules: garageData.schedules?.length
                 ? {
-                    create: garageData.schedules.map((s: any) => ({
+                    create: garageData.schedules.map((s: { dayOfWeek: number; openTime: string; closeTime: string; isClosed: boolean }) => ({
                       dayOfWeek: s.dayOfWeek,
-                      openTime: s.openTime,
+                      openTime:  s.openTime,
                       closeTime: s.closeTime,
-                      isClosed: s.isClosed,
+                      isClosed:  s.isClosed,
                     })),
                   }
                 : undefined,
@@ -76,7 +78,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ id: user.id }, { status: 201 })
     }
 
-    // CLIENT
+    // ── Inscription client ────────────────────────────────
     const user = await prisma.user.create({
       data: {
         email,
@@ -85,8 +87,8 @@ export async function POST(req: NextRequest) {
         client: {
           create: {
             firstName: firstName || '',
-            lastName: lastName || '',
-            phone: phone || null,
+            lastName:  lastName  || '',
+            phone:     phone     || null,
           },
         },
       },

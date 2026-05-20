@@ -25,7 +25,7 @@ const INIT_SERVICES = [
   { id:'5', name:'Diagnostic électronique',duration:30,price:50  },
 ]
 
-type Tab = 'info'|'schedule'|'services'|'notifications'
+type Tab = 'info'|'equipe'|'schedule'|'services'|'notifications'
 
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (
@@ -59,6 +59,8 @@ export default function SettingsPage() {
   const [tab, setTab]           = useState<Tab>('info')
   const [saving, setSaving]     = useState(false)
   const [saved, setSaved]       = useState(false)
+  const [mechanicCount, setMechanicCount] = useState(2)
+  const [slotDuration,  setSlotDuration]  = useState(30)
   const [schedules, setSchedules] = useState(INIT_SCHEDULES)
   const [services, setServices] = useState(INIT_SERVICES)
   const [addSvc, setAddSvc]     = useState(false)
@@ -79,6 +81,7 @@ export default function SettingsPage() {
 
   const TABS: { id: Tab; label: string }[] = [
     { id:'info',          label:'Informations'     },
+    { id:'equipe',        label:'Équipe'           },
     { id:'schedule',      label:'Horaires'         },
     { id:'services',      label:'Services & tarifs'},
     { id:'notifications', label:'Notifications'    },
@@ -116,6 +119,80 @@ export default function SettingsPage() {
                   className="w-full px-3 py-2 text-[13px] rounded-lg resize-none focus:outline-none"
                   style={{ background: 'var(--color-background-secondary)', border: '0.5px solid var(--color-border-secondary)', color: 'var(--color-text-primary)' }} />
               </Field>
+            </div>
+          )}
+
+          {tab === 'equipe' && (
+            <div className="space-y-6">
+              <h3 className="text-[14px] font-medium" style={{ color: 'var(--color-text-primary)' }}>Équipe & capacité</h3>
+
+              {/* Nombre de mécaniciens */}
+              <div>
+                <p className="text-[13px] font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>Nombre de mécaniciens</p>
+                <p className="text-[12px] mb-3" style={{ color: 'var(--color-text-secondary)' }}>
+                  Définit combien de RDV peuvent se dérouler en simultané dans votre garage.
+                </p>
+                <div className="flex items-center gap-4">
+                  <button onClick={() => setMechanicCount(p => Math.max(1, p - 1))}
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-xl font-medium transition-colors"
+                    style={{ border: '0.5px solid var(--color-border-secondary)', color: 'var(--color-text-primary)' }}>−</button>
+                  <div className="flex-1 text-center">
+                    <span className="text-4xl font-semibold" style={{ color: '#1D9E75' }}>{mechanicCount}</span>
+                    <p className="text-[12px] mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
+                      {mechanicCount === 1 ? 'mécanicien' : 'mécaniciens'}
+                    </p>
+                  </div>
+                  <button onClick={() => setMechanicCount(p => Math.min(10, p + 1))}
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-xl font-medium transition-colors"
+                    style={{ border: '0.5px solid var(--color-border-secondary)', color: 'var(--color-text-primary)' }}>+</button>
+                </div>
+
+                {/* Visualisation postes */}
+                <div className="mt-4 p-3 rounded-lg" style={{ background: 'var(--color-background-secondary)' }}>
+                  <p className="text-[11px] font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                    Postes disponibles en même temps :
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                    {Array.from({ length: mechanicCount }).map((_, i) => (
+                      <div key={i} className="px-3 py-1.5 rounded-lg text-[12px] font-medium"
+                        style={{ background: '#E1F5EE', color: '#085041' }}>
+                        Poste {i + 1}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Durée de créneau */}
+              <div>
+                <p className="text-[13px] font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>Durée minimale d'un créneau</p>
+                <p className="text-[12px] mb-3" style={{ color: 'var(--color-text-secondary)' }}>
+                  Granularité de l'agenda. Les services peuvent avoir une durée plus longue.
+                </p>
+                <div className="grid grid-cols-4 gap-2">
+                  {[15, 30, 45, 60].map(d => (
+                    <button key={d} onClick={() => setSlotDuration(d)}
+                      className="py-2.5 rounded-lg text-[13px] font-medium border transition-colors"
+                      style={{
+                        background: slotDuration === d ? '#1D9E75' : 'var(--color-background-primary)',
+                        borderColor: slotDuration === d ? '#1D9E75' : 'var(--color-border-secondary)',
+                        color: slotDuration === d ? '#fff' : 'var(--color-text-secondary)',
+                      }}>
+                      {d} min
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Résumé */}
+              <div className="rounded-lg p-4" style={{ background: 'var(--color-primary-light)', border: '0.5px solid #9FE1CB' }}>
+                <p className="text-[13px] font-medium" style={{ color: 'var(--color-primary-dark)' }}>
+                  Capacité estimée : <strong>{mechanicCount * Math.floor(600 / slotDuration)} RDV / jour</strong>
+                </p>
+                <p className="text-[12px] mt-1" style={{ color: '#085041' }}>
+                  {mechanicCount} mécanicien{mechanicCount > 1 ? 's' : ''} × {Math.floor(600 / slotDuration)} créneaux de {slotDuration} min sur 10h d'ouverture
+                </p>
+              </div>
             </div>
           )}
 

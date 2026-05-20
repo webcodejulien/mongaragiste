@@ -105,12 +105,14 @@ model Garage {
   city         String
   zipCode      String
   phone        String
-  status       GarageStatus    @default(PENDING)
-  plan         Plan            @default(STARTER)
-  rating       Float           @default(0)
-  reviewCount  Int             @default(0)
-  lat          Float?
-  lng          Float?
+  status        GarageStatus    @default(PENDING)
+  plan          Plan            @default(STARTER)
+  rating        Float           @default(0)
+  reviewCount   Int             @default(0)
+  lat           Float?
+  lng           Float?
+  mechanicCount Int             @default(1)
+  slotDuration  Int             @default(30)
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   services     GarageService[]

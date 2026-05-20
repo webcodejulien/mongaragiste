@@ -3,159 +3,129 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
+import { signIn } from 'next-auth/react'
+import { IconEye, IconEyeOff } from '@tabler/icons-react'
 
 export default function RegisterClientPage() {
   const router = useRouter()
-  const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-  })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [form, setForm] = useState({ firstName:'', lastName:'', email:'', phone:'', password:'', confirm:'' })
+  const [showPw, setShowPw]     = useState(false)
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
 
   function update(field: string, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }))
+    setForm(p => ({ ...p, [field]: value }))
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError('')
+    if (form.password.length < 8) { setError('Mot de passe : 8 caractères minimum.'); return }
+    if (form.password !== form.confirm) { setError('Les mots de passe ne correspondent pas.'); return }
+    setLoading(true); setError('')
 
-    if (form.password !== form.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.')
-      return
-    }
-
-    setLoading(true)
-
+    // 1. Créer le compte
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, role: 'CLIENT' }),
+      body: JSON.stringify({ role: 'CLIENT', email: form.email, password: form.password, firstName: form.firstName, lastName: form.lastName, phone: form.phone }),
     })
 
+    if (!res.ok) {
+      const d = await res.json()
+      setError(d.error || 'Une erreur est survenue.')
+      setLoading(false)
+      return
+    }
+
+    // 2. Connexion automatique
+    const signInResult = await signIn('credentials', { email: form.email, password: form.password, redirect: false })
     setLoading(false)
 
-    if (!res.ok) {
-      const data = await res.json()
-      setError(data.error || 'Une erreur est survenue.')
-    } else {
-      router.push('/login?registered=true')
-    }
+    if (signInResult?.ok) router.push('/')
+    else router.push('/login?registered=true')
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-primary-400 rounded flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13 8 13.67 8 14.5 7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
-              </svg>
-            </div>
-            <span className="font-semibold text-gray-900">MonGaragiste</span>
-          </Link>
-        </div>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-background-secondary)' }}>
+      <header className="h-14 flex items-center px-6" style={{ background: 'var(--color-background-primary)', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
+        <Link href="/" className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full" style={{ background: '#1D9E75' }}/>
+          <span className="text-[14px] font-medium" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
+        </Link>
       </header>
 
       <div className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Créer un compte client</h1>
-            <p className="text-sm text-gray-500 mt-1">Réservez vos rendez-vous en ligne facilement</p>
+        <div className="w-full max-w-[360px]">
+          <div className="text-center mb-7">
+            <h1 className="text-[22px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>Créer un compte</h1>
+            <p className="text-[13px] mt-1" style={{ color: 'var(--color-text-secondary)' }}>Réservez vos RDV en quelques secondes</p>
           </div>
 
-          <div className="bg-white border border-gray-100 rounded-lg p-6">
+          <div className="rounded-xl p-6" style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
             {error && (
-              <div className="bg-red-50 border border-red-100 rounded p-3 text-sm text-red-600 mb-4">
-                {error}
-              </div>
+              <div className="text-[12px] px-3 py-2 rounded-lg mb-4" style={{ background: '#FCEBEB', color: '#A32D2D' }}>{error}</div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <Input
-                  label="Prénom"
-                  placeholder="Jean"
-                  value={form.firstName}
-                  onChange={(e) => update('firstName', e.target.value)}
-                  required
-                />
-                <Input
-                  label="Nom"
-                  placeholder="Dupont"
-                  value={form.lastName}
-                  onChange={(e) => update('lastName', e.target.value)}
-                  required
-                />
+                <Inp label="Prénom" value={form.firstName} onChange={v => update('firstName', v)} placeholder="Jean" required />
+                <Inp label="Nom"    value={form.lastName}  onChange={v => update('lastName', v)}  placeholder="Dupont" required />
               </div>
-              <Input
-                label="Adresse email"
-                type="email"
-                placeholder="vous@exemple.com"
-                value={form.email}
-                onChange={(e) => update('email', e.target.value)}
-                required
-              />
-              <Input
-                label="Téléphone (optionnel)"
-                type="tel"
-                placeholder="+32 470 12 34 56"
-                value={form.phone}
-                onChange={(e) => update('phone', e.target.value)}
-              />
-              <Input
-                label="Mot de passe"
-                type="password"
-                placeholder="Minimum 8 caractères"
-                value={form.password}
-                onChange={(e) => update('password', e.target.value)}
-                required
-                minLength={8}
-              />
-              <Input
-                label="Confirmer le mot de passe"
-                type="password"
-                placeholder="••••••••"
-                value={form.confirmPassword}
-                onChange={(e) => update('confirmPassword', e.target.value)}
-                required
-              />
+              <Inp label="Email" type="email" value={form.email} onChange={v => update('email', v)} placeholder="vous@exemple.com" required />
+              <Inp label="Téléphone (optionnel)" type="tel" value={form.phone} onChange={v => update('phone', v)} placeholder="+32 470 12 34 56" />
 
-              <p className="text-xs text-gray-500">
+              <div>
+                <label className="block text-[12px] font-medium mb-1" style={{ color: 'var(--color-text-secondary)' }}>Mot de passe</label>
+                <div className="relative">
+                  <input type={showPw ? 'text' : 'password'} value={form.password}
+                    onChange={e => update('password', e.target.value)}
+                    placeholder="8 caractères minimum" required
+                    className="w-full pl-3 pr-9 py-2 text-[13px] rounded-lg focus:outline-none"
+                    style={{ border: '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-secondary)' }}/>
+                  <button type="button" onClick={() => setShowPw(p => !p)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-tertiary)' }}>
+                    {showPw ? <IconEyeOff size={15}/> : <IconEye size={15}/>}
+                  </button>
+                </div>
+              </div>
+              <Inp label="Confirmer le mot de passe" type="password" value={form.confirm} onChange={v => update('confirm', v)} placeholder="••••••••" required />
+
+              <p className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
                 En créant un compte, vous acceptez nos{' '}
-                <Link href="/terms" className="text-primary-400 hover:underline">conditions d'utilisation</Link>
-                {' '}et notre{' '}
-                <Link href="/privacy" className="text-primary-400 hover:underline">politique de confidentialité</Link>.
+                <Link href="/terms" style={{ color: '#1D9E75' }}>CGU</Link>{' '}et notre{' '}
+                <Link href="/privacy" style={{ color: '#1D9E75' }}>politique de confidentialité</Link>.
               </p>
 
-              <Button type="submit" loading={loading} className="w-full" size="lg">
-                Créer mon compte
-              </Button>
+              <button type="submit" disabled={loading}
+                className="w-full py-2.5 rounded-lg text-[13px] font-medium text-white transition-opacity disabled:opacity-60 mt-1"
+                style={{ background: '#1D9E75' }}>
+                {loading ? 'Création du compte…' : 'Créer mon compte'}
+              </button>
             </form>
           </div>
 
-          <p className="text-center text-sm text-gray-500 mt-5">
+          <p className="text-center text-[12px] mt-4" style={{ color: 'var(--color-text-secondary)' }}>
             Déjà un compte ?{' '}
-            <Link href="/login" className="text-primary-400 hover:text-primary-600 font-medium">
-              Se connecter
-            </Link>
-          </p>
-          <p className="text-center text-sm text-gray-500 mt-2">
-            Vous êtes garagiste ?{' '}
-            <Link href="/register/garage" className="text-primary-400 hover:text-primary-600 font-medium">
-              Inscrire mon garage
-            </Link>
+            <Link href="/login" style={{ color: '#1D9E75', fontWeight: '500' }}>Se connecter</Link>
+            {' '}·{' '}
+            <Link href="/register/garage" style={{ color: '#1D9E75', fontWeight: '500' }}>Inscrire mon garage</Link>
           </p>
         </div>
       </div>
+    </div>
+  )
+}
+
+function Inp({ label, value, onChange, type = 'text', placeholder, required }: {
+  label: string; value: string; onChange: (v: string) => void
+  type?: string; placeholder?: string; required?: boolean
+}) {
+  return (
+    <div>
+      <label className="block text-[12px] font-medium mb-1" style={{ color: 'var(--color-text-secondary)' }}>{label}</label>
+      <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} required={required}
+        className="w-full px-3 py-2 text-[13px] rounded-lg focus:outline-none"
+        style={{ border: '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-secondary)', color: 'var(--color-text-primary)' }}/>
     </div>
   )
 }

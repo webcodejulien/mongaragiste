@@ -6,25 +6,51 @@ export default withAuth(
     const token    = req.nextauth.token
     const pathname = req.nextUrl.pathname
 
-    // Garage routes → rôle GARAGE requis
-    if (pathname.startsWith('/garage') && token?.role !== 'GARAGE') {
-      return NextResponse.redirect(new URL('/login', req.url))
+    // Routes dashboard garagiste → rôle GARAGE obligatoire
+    if (pathname.startsWith('/garage')) {
+      if (!token) {
+        const loginUrl = new URL('/login', req.url)
+        loginUrl.searchParams.set('callbackUrl', pathname)
+        return NextResponse.redirect(loginUrl)
+      }
+      if (token.role !== 'GARAGE') {
+        // Un client qui essaie d'accéder au dashboard garage
+        return NextResponse.redirect(new URL('/login?error=AccessDenied', req.url))
+      }
     }
 
-    // Client routes → rôle CLIENT requis
-    if (pathname.startsWith('/client') && token?.role !== 'CLIENT') {
-      return NextResponse.redirect(new URL('/login', req.url))
+    // Routes espace client → rôle CLIENT obligatoire
+    if (pathname.startsWith('/client')) {
+      if (!token) {
+        const loginUrl = new URL('/login', req.url)
+        loginUrl.searchParams.set('callbackUrl', pathname)
+        return NextResponse.redirect(loginUrl)
+      }
+      if (token.role !== 'CLIENT') {
+        return NextResponse.redirect(new URL('/login?error=AccessDenied', req.url))
+      }
     }
 
     return NextResponse.next()
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      // N'autorise l'accès qu'aux routes publiques sans token
+      // La logique de rôle est gérée dans middleware()
+      authorized: ({ token, req }) => {
+        const pathname = req.nextUrl.pathname
+        if (pathname.startsWith('/garage') || pathname.startsWith('/client')) {
+          return !!token
+        }
+        return true
+      },
     },
   }
 )
 
 export const config = {
-  matcher: ['/garage/:path*', '/client/:path*'],
+  matcher: [
+    '/garage/:path*',
+    '/client/:path*',
+  ],
 }
