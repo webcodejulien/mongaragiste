@@ -1,270 +1,301 @@
 import Link from 'next/link'
-import { GarageCard } from '@/components/GarageCard'
+import { IconSearch, IconMapPin, IconStar, IconShieldCheck, IconClock, IconArrowRight, IconPhone } from '@tabler/icons-react'
 
-const featuredGarages = [
-  {
-    name: 'Garage Dubois & Fils',
-    slug: 'garage-dubois-fils',
-    city: 'Bruxelles',
-    address: 'Rue de la Loi 42',
-    rating: 4.8,
-    reviewCount: 124,
-    services: ['Vidange', 'Freins', 'Révision', 'Pneus', 'Climatisation'],
-    phone: '+32 2 123 45 67',
-    nextSlot: 'Aujourd\'hui 14:30',
-  },
-  {
-    name: 'Auto Expert Molenbeek',
-    slug: 'auto-expert-molenbeek',
-    city: 'Molenbeek',
-    address: 'Chaussée de Ninove 88',
-    rating: 4.6,
-    reviewCount: 87,
-    services: ['Freins', 'Révision', 'Diagnostic', 'Embrayage'],
-    phone: '+32 2 456 78 90',
-    nextSlot: 'Demain 09:00',
-  },
-  {
-    name: 'Garage Léonard',
-    slug: 'garage-leonard',
-    city: 'Ixelles',
-    address: 'Avenue Louise 210',
-    rating: 4.9,
-    reviewCount: 211,
-    services: ['Vidange', 'Pneus', 'Révision', 'Carrosserie'],
-    phone: '+32 2 789 01 23',
-    nextSlot: 'Aujourd\'hui 16:00',
-  },
-  {
-    name: 'Mécanique Centrale Anderlecht',
-    slug: 'mecanique-centrale-anderlecht',
-    city: 'Anderlecht',
-    address: 'Rue Wayez 135',
-    rating: 4.4,
-    reviewCount: 63,
-    services: ['Freins', 'Vidange', 'Climatisation', 'Diagnostic'],
-    phone: '+32 2 321 98 76',
-  },
-  {
-    name: 'Garage Van den Berg',
-    slug: 'garage-van-den-berg',
-    city: 'Schaerbeek',
-    address: 'Boulevard Lambermont 74',
-    rating: 4.7,
-    reviewCount: 152,
-    services: ['Révision', 'Pneus', 'Freins', 'Embrayage', 'Vidange'],
-    phone: '+32 2 654 32 10',
-    nextSlot: 'Aujourd\'hui 11:30',
-  },
-  {
-    name: 'Quick Garage Uccle',
-    slug: 'quick-garage-uccle',
-    city: 'Uccle',
-    address: 'Chaussée de Waterloo 892',
-    rating: 4.5,
-    reviewCount: 98,
-    services: ['Vidange', 'Pneus', 'Freins'],
-    phone: '+32 2 987 65 43',
-    nextSlot: 'Demain 10:00',
-  },
+const GARAGES = [
+  { name:'Garage Dubois & Fils',    slug:'garage-dubois-fils',           city:'Bruxelles',  address:'Rue de la Loi 42',         rating:4.8, reviews:124, services:['Vidange','Freins','Révision','Pneus'], nextSlot:'Aujourd\'hui 14:30', available:true },
+  { name:'Garage Léonard',          slug:'garage-leonard',               city:'Ixelles',    address:'Avenue Louise 210',         rating:4.9, reviews:211, services:['Vidange','Pneus','Révision','Carrosserie'], nextSlot:'Aujourd\'hui 16:00', available:true },
+  { name:'Auto Expert Molenbeek',   slug:'auto-expert-molenbeek',        city:'Molenbeek',  address:'Chaussée de Ninove 88',     rating:4.6, reviews:87,  services:['Freins','Révision','Diagnostic','Embrayage'], nextSlot:'Demain 09:00', available:true },
+  { name:'Garage Van den Berg',     slug:'garage-van-den-berg',          city:'Schaerbeek', address:'Boulevard Lambermont 74',   rating:4.7, reviews:152, services:['Révision','Pneus','Freins','Embrayage'], nextSlot:'Aujourd\'hui 11:30', available:true },
+  { name:'Quick Garage Uccle',      slug:'quick-garage-uccle',           city:'Uccle',      address:'Chaussée de Waterloo 892',  rating:4.5, reviews:98,  services:['Vidange','Pneus','Freins'], nextSlot:'Demain 10:00', available:false },
+  { name:'AutoTech Laeken',         slug:'autotech-laeken',              city:'Laeken',     address:'Avenue du Laerbeek 88',     rating:4.6, reviews:78,  services:['Diagnostic','Révision','Vidange','Freins'], nextSlot:'Demain 14:00', available:false },
 ]
 
-const services = [
-  { label: 'Vidange', icon: '🛢️' },
-  { label: 'Freins', icon: '🔧' },
-  { label: 'Pneus', icon: '🔄' },
-  { label: 'Révision', icon: '🔍' },
-  { label: 'Climatisation', icon: '❄️' },
-  { label: 'Diagnostic', icon: '💡' },
-  { label: 'Embrayage', icon: '⚙️' },
-  { label: 'Carrosserie', icon: '🚗' },
+const SERVICES = [
+  { label:'Vidange',       icon:'🛢️', desc:'Huile + filtres' },
+  { label:'Freins',        icon:'🔧', desc:'Disques & plaquettes' },
+  { label:'Pneus',         icon:'🔄', desc:'Montage & équilibrage' },
+  { label:'Révision',      icon:'🔍', desc:'Contrôle complet' },
+  { label:'Diagnostic',    icon:'💡', desc:'Lecture OBD' },
+  { label:'Climatisation', icon:'❄️', desc:'Recharge & contrôle' },
+  { label:'Embrayage',     icon:'⚙️', desc:'Remplacement' },
+  { label:'Carrosserie',   icon:'🚗', desc:'Débosselage & peinture' },
 ]
 
-const steps = [
-  {
-    step: '1',
-    title: 'Recherchez',
-    desc: 'Entrez votre ville ou code postal et sélectionnez le service dont vous avez besoin.',
-  },
-  {
-    step: '2',
-    title: 'Choisissez',
-    desc: 'Comparez les garages, leurs avis clients et leurs disponibilités en temps réel.',
-  },
-  {
-    step: '3',
-    title: 'Réservez',
-    desc: 'Sélectionnez votre créneau et confirmez votre rendez-vous en quelques secondes.',
-  },
+const STEPS = [
+  { n:'1', title:'Recherchez', desc:'Entrez votre ville et sélectionnez le service dont vous avez besoin.', icon:'🔍' },
+  { n:'2', title:'Comparez',   desc:'Consultez les avis, les prix et les disponibilités en temps réel.',    icon:'⚖️' },
+  { n:'3', title:'Réservez',   desc:'Choisissez votre créneau et confirmez en quelques secondes.',          icon:'✅' },
 ]
+
+const STATS = [
+  { value:'200+', label:'Garages vérifiés' },
+  { value:'4.8★', label:'Note moyenne' },
+  { value:'15k+', label:'RDV pris' },
+  { value:'100%', label:'Gratuit pour les clients' },
+]
+
+function StarRow({ n }: { n: number }) {
+  return (
+    <span className="flex gap-0.5">
+      {[1,2,3,4,5].map(i => (
+        <svg key={i} className="w-3 h-3" fill={i<=n?'#EF9F27':'#E5E7EB'} viewBox="0 0 20 20">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+        </svg>
+      ))}
+    </span>
+  )
+}
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+    <div className="min-h-screen" style={{ fontFamily:'var(--font-sans)', background:'var(--color-background-secondary)' }}>
+
+      {/* ── HEADER ───────────────────────────────────────────── */}
+      <header className="sticky top-0 z-30 h-14" style={{ background:'var(--color-background-primary)', borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
+        <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-primary-400 rounded flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13 8 13.67 8 14.5 7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
-              </svg>
-            </div>
-            <span className="font-semibold text-gray-900">MonGaragiste</span>
+            <span className="w-2 h-2 rounded-full" style={{ background:'#1D9E75' }}/>
+            <span className="text-[15px] font-semibold" style={{ color:'var(--color-text-primary)' }}>MonGaragiste</span>
           </Link>
-          <nav className="flex items-center gap-4">
-            <Link href="/search" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Trouver un garage</Link>
-            <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Connexion</Link>
-            <Link
-              href="/register/garage"
-              className="text-sm bg-primary-400 text-white px-4 py-2 rounded hover:bg-primary-600 transition-colors font-medium"
-            >
+          <nav className="hidden md:flex items-center gap-6">
+            <Link href="/search" className="text-[13px] transition-colors" style={{ color:'var(--color-text-secondary)' }}>Trouver un garage</Link>
+            <Link href="/login" className="text-[13px] transition-colors" style={{ color:'var(--color-text-secondary)' }}>Connexion</Link>
+            <Link href="/register/garage"
+              className="px-4 py-2 rounded-lg text-[13px] font-medium text-white"
+              style={{ background:'#1D9E75' }}>
               Inscrire mon garage
             </Link>
           </nav>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="bg-primary-800 text-white">
-        <div className="max-w-6xl mx-auto px-4 py-20 text-center">
-          <h1 className="text-4xl font-bold mb-3">Votre garagiste, à portée de clic.</h1>
-          <p className="text-primary-100 text-lg mb-10 max-w-xl mx-auto">
-            Trouvez et réservez un garagiste de confiance près de chez vous. Vidange, freins, révision — choisissez votre créneau directement en ligne.
+      {/* ── HERO ─────────────────────────────────────────────── */}
+      <section style={{ background:'#085041' }}>
+        <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-medium mb-6"
+            style={{ background:'rgba(29,158,117,0.3)', color:'#9FE1CB' }}>
+            ✓ 200+ garages vérifiés en Belgique
+          </div>
+          <h1 className="text-[40px] font-bold leading-tight mb-4 text-white">
+            Votre garagiste,<br/>à portée de clic.
+          </h1>
+          <p className="text-[16px] mb-10" style={{ color:'#9FE1CB' }}>
+            Trouvez, comparez et réservez votre garagiste en ligne.<br/>
+            Vidange, freins, révision — choisissez votre créneau directement.
           </p>
 
-          <div className="bg-white rounded-xl p-2 flex gap-2 max-w-2xl mx-auto shadow-sm">
-            <div className="flex-1 flex items-center gap-2 px-3">
-              <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Ville ou code postal"
-                className="flex-1 text-sm text-gray-900 focus:outline-none placeholder:text-gray-400"
-              />
+          {/* Barre de recherche */}
+          <div className="bg-white rounded-xl p-2 flex gap-2 max-w-2xl mx-auto shadow-lg">
+            <div className="flex-1 flex items-center gap-2 px-3 min-w-0">
+              <IconMapPin size={16} style={{ color:'var(--color-text-tertiary)', flexShrink:0 }}/>
+              <input type="text" placeholder="Ville ou commune (ex: Bruxelles)"
+                className="flex-1 text-[13px] bg-transparent focus:outline-none min-w-0"
+                style={{ color:'var(--color-text-primary)' }}/>
             </div>
-            <div className="w-px bg-gray-200" />
-            <div className="flex-1 flex items-center gap-2 px-3">
-              <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <select className="flex-1 text-sm text-gray-700 focus:outline-none bg-transparent">
+            <div className="w-px" style={{ background:'var(--color-border-tertiary)' }}/>
+            <div className="flex-1 flex items-center gap-2 px-3 min-w-0">
+              <IconSearch size={16} style={{ color:'var(--color-text-tertiary)', flexShrink:0 }}/>
+              <select className="flex-1 text-[13px] bg-transparent focus:outline-none appearance-none cursor-pointer min-w-0"
+                style={{ color:'var(--color-text-secondary)' }}>
                 <option value="">Tous les services</option>
-                {services.map((s) => <option key={s.label} value={s.label}>{s.label}</option>)}
+                {SERVICES.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
               </select>
             </div>
-            <Link
-              href="/search"
-              className="bg-primary-400 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors flex-shrink-0"
-            >
+            <Link href="/search"
+              className="px-5 py-2.5 rounded-lg text-[13px] font-medium text-white flex-shrink-0"
+              style={{ background:'#1D9E75' }}>
               Rechercher
             </Link>
           </div>
 
-          <div className="mt-6 flex items-center justify-center gap-6 text-sm text-primary-200">
-            <span>✓ 200+ garages vérifiés</span>
-            <span>✓ Réservation instantanée</span>
-            <span>✓ 100% gratuit pour les clients</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Services pills */}
-      <section className="bg-white border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <span className="text-xs text-gray-500 font-medium flex-shrink-0">Services :</span>
-            {services.map((s) => (
-              <Link
-                key={s.label}
-                href={`/search?service=${s.label}`}
-                className="flex-shrink-0 flex items-center gap-1.5 text-sm text-gray-700 bg-gray-50 hover:bg-primary-50 hover:text-primary-700 border border-gray-200 hover:border-primary-200 px-3 py-1.5 rounded-full transition-colors"
-              >
-                <span>{s.icon}</span>
-                {s.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured garages */}
-      <section className="max-w-6xl mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Garages disponibles</h2>
-            <p className="text-sm text-gray-500 mt-0.5">Les meilleures garages près de chez vous</p>
-          </div>
-          <Link href="/search" className="text-sm text-primary-400 hover:text-primary-600 font-medium">
-            Voir tout →
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {featuredGarages.map((g) => (
-            <GarageCard key={g.slug} {...g} />
-          ))}
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="bg-white border-y border-gray-100 py-16">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-xl font-bold text-gray-900">Comment ça marche ?</h2>
-            <p className="text-sm text-gray-500 mt-1">Réservez votre rendez-vous en 3 étapes simples</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {steps.map((s) => (
-              <div key={s.step} className="text-center">
-                <div className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-primary-600 font-bold text-sm">{s.step}</span>
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">{s.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
+          {/* Stats inline */}
+          <div className="flex items-center justify-center gap-8 mt-10 flex-wrap">
+            {STATS.map(s => (
+              <div key={s.label} className="text-center">
+                <p className="text-[20px] font-bold text-white">{s.value}</p>
+                <p className="text-[11px]" style={{ color:'#9FE1CB' }}>{s.label}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA for garages */}
-      <section className="max-w-6xl mx-auto px-4 py-16">
-        <div className="bg-primary-800 rounded-xl p-10 text-center text-white">
-          <h2 className="text-2xl font-bold mb-2">Vous êtes garagiste ?</h2>
-          <p className="text-primary-100 mb-6 max-w-md mx-auto text-sm">
-            Rejoignez MonGaragiste et gérez vos rendez-vous en ligne. Agenda intelligent, rappels automatiques, gestion clients — tout en un.
+      {/* ── SERVICES ─────────────────────────────────────────── */}
+      <section style={{ background:'var(--color-background-primary)', borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
+        <div className="max-w-6xl mx-auto px-4 py-5">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <span className="text-[11px] font-medium flex-shrink-0" style={{ color:'var(--color-text-tertiary)' }}>Recherche rapide :</span>
+            {SERVICES.map(s => (
+              <Link key={s.label} href={`/search?service=${s.label}`}
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors"
+                style={{ border:'0.5px solid var(--color-border-secondary)', color:'var(--color-text-secondary)', background:'var(--color-background-primary)', whiteSpace:'nowrap' }}>
+                <span>{s.icon}</span> {s.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── GARAGES FEATURED ─────────────────────────────────── */}
+      <section className="max-w-6xl mx-auto px-4 py-12">
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <h2 className="text-[20px] font-bold" style={{ color:'var(--color-text-primary)' }}>Garages disponibles près de vous</h2>
+            <p className="text-[13px] mt-1" style={{ color:'var(--color-text-secondary)' }}>Bruxelles et communes — triés par note</p>
+          </div>
+          <Link href="/search" className="flex items-center gap-1 text-[13px] font-medium" style={{ color:'#1D9E75' }}>
+            Voir tout <IconArrowRight size={14}/>
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {GARAGES.map(g => (
+            <Link key={g.slug} href={`/garage/${g.slug}`}
+              className="rounded-xl p-5 transition-all hover:shadow-sm group"
+              style={{ background:'var(--color-background-primary)', border:'0.5px solid var(--color-border-tertiary)' }}>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-lg"
+                    style={{ background:'var(--color-primary-light)' }}>
+                    🔧
+                  </div>
+                  <div>
+                    <p className="text-[14px] font-semibold leading-tight group-hover:text-green-700 transition-colors"
+                      style={{ color:'var(--color-text-primary)' }}>{g.name}</p>
+                    <p className="text-[11px] mt-0.5" style={{ color:'var(--color-text-tertiary)' }}>{g.address}, {g.city}</p>
+                  </div>
+                </div>
+                {g.available && (
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0"
+                    style={{ background:'#E1F5EE', color:'#085041' }}>
+                    Dispo
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 mb-3">
+                <StarRow n={Math.round(g.rating)}/>
+                <span className="text-[12px] font-medium" style={{ color:'var(--color-text-primary)' }}>{g.rating}</span>
+                <span className="text-[11px]" style={{ color:'var(--color-text-tertiary)' }}>({g.reviews} avis)</span>
+              </div>
+
+              <div className="flex flex-wrap gap-1 mb-4">
+                {g.services.slice(0,3).map(s => (
+                  <span key={s} className="text-[10px] px-2 py-0.5 rounded-full"
+                    style={{ background:'var(--color-background-secondary)', color:'var(--color-text-secondary)' }}>{s}</span>
+                ))}
+                {g.services.length > 3 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full"
+                    style={{ background:'var(--color-background-secondary)', color:'var(--color-text-secondary)' }}>
+                    +{g.services.length - 3}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between pt-3"
+                style={{ borderTop:'0.5px solid var(--color-border-tertiary)' }}>
+                {g.nextSlot ? (
+                  <div className="flex items-center gap-1.5 text-[11px]" style={{ color:'var(--color-text-secondary)' }}>
+                    <IconClock size={12}/> {g.nextSlot}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-[11px]" style={{ color:'var(--color-text-tertiary)' }}>
+                    <IconPhone size={12}/> Appeler pour RDV
+                  </div>
+                )}
+                <span className="text-[12px] font-medium" style={{ color:'#1D9E75' }}>Réserver →</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── COMMENT ÇA MARCHE ────────────────────────────────── */}
+      <section style={{ background:'var(--color-background-primary)', borderTop:'0.5px solid var(--color-border-tertiary)', borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
+        <div className="max-w-5xl mx-auto px-4 py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-[22px] font-bold" style={{ color:'var(--color-text-primary)' }}>Comment ça marche ?</h2>
+            <p className="text-[14px] mt-2" style={{ color:'var(--color-text-secondary)' }}>Réservez votre rendez-vous en 3 étapes simples</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {STEPS.map((s, i) => (
+              <div key={s.n} className="text-center">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl"
+                  style={{ background:'var(--color-primary-light)' }}>
+                  {s.icon}
+                </div>
+                <div className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold mb-2 text-white"
+                  style={{ background:'#1D9E75' }}>{s.n}</div>
+                <h3 className="text-[16px] font-semibold mb-2" style={{ color:'var(--color-text-primary)' }}>{s.title}</h3>
+                <p className="text-[13px] leading-relaxed" style={{ color:'var(--color-text-secondary)' }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── POURQUOI ─────────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-4 py-16">
+        <h2 className="text-[22px] font-bold text-center mb-10" style={{ color:'var(--color-text-primary)' }}>
+          Pourquoi MonGaragiste ?
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { icon:<IconShieldCheck size={22} style={{color:'#1D9E75'}}/>, title:'Garages vérifiés', desc:'Chaque garage est contrôlé : assurance, agrément et avis clients authentiques.' },
+            { icon:<IconClock size={22} style={{color:'#1D9E75'}}/>,       title:'Dispo en temps réel', desc:'Consultez les créneaux disponibles et réservez instantanément, 24h/24.' },
+            { icon:<IconStar size={22} style={{color:'#1D9E75'}}/>,        title:'Avis certifiés', desc:'Les avis sont uniquement laissés par des clients ayant eu un RDV effectif.' },
+          ].map(c => (
+            <div key={c.title} className="rounded-xl p-5"
+              style={{ background:'var(--color-background-primary)', border:'0.5px solid var(--color-border-tertiary)' }}>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
+                style={{ background:'var(--color-primary-light)' }}>
+                {c.icon}
+              </div>
+              <h3 className="text-[14px] font-semibold mb-1.5" style={{ color:'var(--color-text-primary)' }}>{c.title}</h3>
+              <p className="text-[12px] leading-relaxed" style={{ color:'var(--color-text-secondary)' }}>{c.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CTA GARAGISTE ────────────────────────────────────── */}
+      <section className="max-w-6xl mx-auto px-4 pb-16">
+        <div className="rounded-2xl px-10 py-12 text-center"
+          style={{ background:'#085041' }}>
+          <h2 className="text-[26px] font-bold text-white mb-3">Vous êtes garagiste ?</h2>
+          <p className="text-[14px] mb-8 max-w-md mx-auto" style={{ color:'#9FE1CB' }}>
+            Rejoignez MonGaragiste et gérez vos rendez-vous en ligne. Agenda intelligent,
+            rappels automatiques, statistiques — tout en un.
           </p>
-          <div className="flex items-center justify-center gap-3">
-            <Link
-              href="/register/garage"
-              className="bg-white text-primary-800 font-semibold px-6 py-3 rounded-lg text-sm hover:bg-primary-50 transition-colors"
-            >
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <Link href="/register/garage"
+              className="px-6 py-3 rounded-xl text-[14px] font-semibold"
+              style={{ background:'#fff', color:'#085041' }}>
               Inscrire mon garage gratuitement
             </Link>
-            <Link
-              href="/login"
-              className="border border-primary-400 text-white px-6 py-3 rounded-lg text-sm hover:bg-primary-700 transition-colors"
-            >
+            <Link href="/login"
+              className="px-6 py-3 rounded-xl text-[14px] font-medium text-white"
+              style={{ border:'0.5px solid rgba(255,255,255,0.3)' }}>
               Déjà inscrit ? Connexion
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-100 py-8">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between text-sm text-gray-500">
+      {/* ── FOOTER ───────────────────────────────────────────── */}
+      <footer style={{ background:'var(--color-background-primary)', borderTop:'0.5px solid var(--color-border-tertiary)' }}>
+        <div className="max-w-6xl mx-auto px-4 py-8 flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 bg-primary-400 rounded flex items-center justify-center">
-              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13 8 13.67 8 14.5 7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
-              </svg>
-            </div>
-            <span className="font-semibold text-gray-700">MonGaragiste</span>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background:'#1D9E75' }}/>
+            <span className="text-[13px] font-semibold" style={{ color:'var(--color-text-primary)' }}>MonGaragiste</span>
+            <span className="text-[12px]" style={{ color:'var(--color-text-tertiary)' }}>— Votre garagiste, à portée de clic.</span>
           </div>
-          <p>© 2024 MonGaragiste — Votre garagiste, à portée de clic.</p>
+          <div className="flex items-center gap-5">
+            {['CGU','Confidentialité','Contact'].map(l => (
+              <Link key={l} href="#" className="text-[12px]" style={{ color:'var(--color-text-tertiary)' }}>{l}</Link>
+            ))}
+          </div>
+          <p className="text-[11px]" style={{ color:'var(--color-text-tertiary)' }}>© 2024 MonGaragiste</p>
         </div>
       </footer>
     </div>

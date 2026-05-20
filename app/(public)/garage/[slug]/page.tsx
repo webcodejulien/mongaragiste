@@ -2,237 +2,425 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { BookingModal } from '@/components/BookingModal'
-import { Badge } from '@/components/ui/Badge'
+import {
+  IconMapPin, IconPhone, IconClock, IconStar, IconStarFilled,
+  IconCheck, IconX, IconChevronLeft, IconChevronRight, IconCar,
+  IconUser, IconArrowLeft,
+} from '@tabler/icons-react'
 
-const GARAGE_DATA: Record<string, {
-  name: string
-  slug: string
-  city: string
-  address: string
-  zipCode: string
-  phone: string
-  description: string
-  rating: number
-  reviewCount: number
-  services: { id: string; name: string; duration: number; price?: number }[]
-  schedules: { day: string; open: string; close: string; closed: boolean }[]
-  reviews: { author: string; rating: number; comment: string; date: string; service: string }[]
-}> = {
+/* ─── Données mock par slug ──────────────────────────────── */
+const GARAGES: Record<string, any> = {
   'garage-dubois-fils': {
     name: 'Garage Dubois & Fils',
     slug: 'garage-dubois-fils',
-    city: 'Bruxelles',
-    address: 'Rue de la Loi 42',
-    zipCode: '1000',
+    city: 'Bruxelles', address: 'Rue de la Loi 42', zipCode: '1000',
     phone: '+32 2 123 45 67',
     description: 'Votre garagiste de confiance depuis 1985. Spécialiste toutes marques, nous vous accueillons dans notre atelier moderne pour tous vos besoins d\'entretien et de réparation automobile. Équipe qualifiée, diagnostic électronique, pièces d\'origine.',
-    rating: 4.8,
-    reviewCount: 124,
+    rating: 4.8, reviewCount: 124, mechanicCount: 3,
     services: [
-      { id: '1', name: 'Vidange', duration: 30, price: 30 },
-      { id: '2', name: 'Freins avant', duration: 60, price: 80 },
-      { id: '3', name: 'Révision complète', duration: 90, price: 150 },
-      { id: '4', name: 'Pneus (x4)', duration: 60, price: 80 },
-      { id: '5', name: 'Diagnostic électronique', duration: 30, price: 50 },
-      { id: '6', name: 'Climatisation', duration: 45, price: 65 },
+      { id:'1', name:'Vidange',                 duration:30,  price:30  },
+      { id:'2', name:'Freins avant',            duration:60,  price:80  },
+      { id:'3', name:'Révision complète',       duration:90,  price:150 },
+      { id:'4', name:'Pneus (x4)',              duration:60,  price:80  },
+      { id:'5', name:'Diagnostic électronique', duration:30,  price:50  },
+      { id:'6', name:'Climatisation',           duration:45,  price:65  },
     ],
     schedules: [
-      { day: 'Lundi', open: '08:00', close: '18:00', closed: false },
-      { day: 'Mardi', open: '08:00', close: '18:00', closed: false },
-      { day: 'Mercredi', open: '08:00', close: '18:00', closed: false },
-      { day: 'Jeudi', open: '08:00', close: '18:00', closed: false },
-      { day: 'Vendredi', open: '08:00', close: '18:00', closed: false },
-      { day: 'Samedi', open: '09:00', close: '13:00', closed: false },
-      { day: 'Dimanche', open: '', close: '', closed: true },
+      { day:'Lundi',    open:'08:00', close:'18:00', closed:false },
+      { day:'Mardi',    open:'08:00', close:'18:00', closed:false },
+      { day:'Mercredi', open:'08:00', close:'18:00', closed:false },
+      { day:'Jeudi',    open:'08:00', close:'18:00', closed:false },
+      { day:'Vendredi', open:'08:00', close:'18:00', closed:false },
+      { day:'Samedi',   open:'09:00', close:'13:00', closed:false },
+      { day:'Dimanche', open:'',      close:'',      closed:true  },
     ],
     reviews: [
-      { author: 'Martin D.', rating: 5, comment: 'Excellent service, travail soigné et prix honnêtes. Je recommande vivement !', date: '12 jan 2024', service: 'Révision' },
-      { author: 'Sophie L.', rating: 5, comment: 'Très professionnel, délai respecté et explication claire du travail effectué.', date: '08 jan 2024', service: 'Freins' },
-      { author: 'Jean M.', rating: 4, comment: 'Bon garage, personnel accueillant. Petit délai d\'attente mais qualité au rendez-vous.', date: '03 jan 2024', service: 'Vidange' },
-      { author: 'Marie F.', rating: 5, comment: 'Prise en charge rapide, devis transparent. Mon garage de confiance désormais.', date: '28 déc 2023', service: 'Pneus' },
+      { author:'Martin D.',  initials:'MD', rating:5, service:'Révision',    date:'12 jan 2024', comment:'Excellent service, travail soigné et prix honnêtes. Je recommande vivement !' },
+      { author:'Sophie L.',  initials:'SL', rating:5, service:'Freins',      date:'08 jan 2024', comment:'Très professionnel, délai respecté et explication claire du travail effectué.' },
+      { author:'Jean M.',    initials:'JM', rating:4, service:'Vidange',     date:'03 jan 2024', comment:'Bon garage, personnel accueillant. Petit délai d\'attente mais qualité au rendez-vous.' },
+      { author:'Marie F.',   initials:'MF', rating:5, service:'Pneus',       date:'28 déc 2023', comment:'Prise en charge rapide, devis transparent. Mon garage de confiance désormais.' },
     ],
   },
 }
+const DEFAULT_SLUG = 'garage-dubois-fils'
 
-const DEFAULT_GARAGE = GARAGE_DATA['garage-dubois-fils']
+/* ─── Créneaux dispo ─────────────────────────────────────── */
+const TIME_SLOTS = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30']
+// Slots déjà pris (mock)
+const TAKEN: Record<string, string[]> = {
+  [new Date().toISOString().split('T')[0]]: ['08:00','09:00','14:00'],
+}
 
-function StarDisplay({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'lg' }) {
+function getWeekDates(): { iso: string; day: string; date: number; month: string }[] {
+  const days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam']
+  const months = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc']
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() + i)
+    return { iso: d.toISOString().split('T')[0], day: days[d.getDay()], date: d.getDate(), month: months[d.getMonth()] }
+  })
+}
+
+function Stars({ n, size = 14 }: { n: number; size?: number }) {
   return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((s) => (
-        <svg
-          key={s}
-          className={`${size === 'lg' ? 'w-5 h-5' : 'w-3.5 h-3.5'} ${s <= Math.round(rating) ? 'text-amber-400' : 'text-gray-200'}`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
+    <span className="flex gap-0.5">
+      {[1,2,3,4,5].map(i => (
+        i <= n
+          ? <IconStarFilled key={i} size={size} style={{ color:'#EF9F27' }}/>
+          : <IconStar       key={i} size={size} style={{ color:'var(--color-border-primary)' }}/>
       ))}
-    </div>
+    </span>
   )
 }
 
+/* ─── Étapes booking ─────────────────────────────────────── */
+const BOOKING_STEPS = ['Service','Créneau','Véhicule','Confirmation']
+
 export default function GarageProfilePage({ params }: { params: { slug: string } }) {
-  const garage = GARAGE_DATA[params.slug] ?? DEFAULT_GARAGE
-  const [bookingOpen, setBookingOpen] = useState(false)
+  const garage = GARAGES[params.slug] ?? GARAGES[DEFAULT_SLUG]
+
+  /* booking state */
+  const [bStep,       setBStep]      = useState(1)
+  const [selService,  setSelService] = useState<any>(null)
+  const [selDateIdx,  setSelDateIdx] = useState(0)
+  const [selTime,     setSelTime]    = useState('')
+  const [plate,       setPlate]      = useState('')
+  const [vehicle,     setVehicle]    = useState('')
+  const [notes,       setNotes]      = useState('')
+  const [firstName,   setFirstName]  = useState('')
+  const [lastName,    setLastName]   = useState('')
+  const [email,       setEmail]      = useState('')
+  const [phone,       setPhone]      = useState('')
+  const [loading,     setLoading]    = useState(false)
+  const [done,        setDone]       = useState(false)
+
+  const weekDates = getWeekDates()
+  const selDate   = weekDates[selDateIdx]
+  const takenToday = TAKEN[selDate?.iso] ?? []
+
+  function canNext() {
+    if (bStep === 1) return !!selService
+    if (bStep === 2) return !!selDate && !!selTime
+    if (bStep === 3) return !!plate && !!vehicle && !!firstName && !!lastName && !!email
+    return false
+  }
+
+  async function confirm() {
+    setLoading(true)
+    await new Promise(r => setTimeout(r, 1200))
+    setLoading(false)
+    setDone(true)
+  }
+
+  function reset() {
+    setBStep(1); setSelService(null); setSelTime(''); setPlate(''); setVehicle('')
+    setNotes(''); setFirstName(''); setLastName(''); setEmail(''); setPhone(''); setDone(false)
+  }
+
+  const avgRating = garage.rating.toFixed(1)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+    <div className="min-h-screen" style={{ background:'var(--color-background-secondary)' }}>
+
+      {/* Header */}
+      <header className="sticky top-0 z-30 h-14" style={{ background:'var(--color-background-primary)', borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
+        <div className="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-primary-400 rounded flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13 8 13.67 8 14.5 7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
-              </svg>
-            </div>
-            <span className="font-semibold text-gray-900">MonGaragiste</span>
+            <span className="w-2 h-2 rounded-full" style={{ background:'#1D9E75' }}/>
+            <span className="text-[14px] font-semibold" style={{ color:'var(--color-text-primary)' }}>MonGaragiste</span>
           </Link>
-          <Link href="/search" className="text-sm text-gray-600 hover:text-gray-900">← Retour aux résultats</Link>
+          <Link href="/search" className="flex items-center gap-1 text-[12px]" style={{ color:'var(--color-text-secondary)' }}>
+            <IconArrowLeft size={13}/> Retour aux résultats
+          </Link>
         </div>
       </header>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main content */}
-          <div className="lg:col-span-2 space-y-5">
-            {/* Header card */}
-            <div className="bg-white border border-gray-100 rounded-lg p-6">
+        <div className="grid gap-6" style={{ gridTemplateColumns:'1fr 340px' }}>
+
+          {/* ── COLONNE GAUCHE ── */}
+          <div className="space-y-5">
+
+            {/* Carte info principale */}
+            <div className="rounded-xl p-6" style={{ background:'var(--color-background-primary)', border:'0.5px solid var(--color-border-tertiary)' }}>
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <svg className="w-7 h-7 text-primary-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z" />
-                  </svg>
-                </div>
+                <div className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl flex-shrink-0"
+                  style={{ background:'var(--color-primary-light)' }}>🔧</div>
                 <div className="flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h1 className="text-xl font-bold text-gray-900">{garage.name}</h1>
-                      <p className="text-sm text-gray-500 mt-0.5">{garage.address}, {garage.zipCode} {garage.city}</p>
-                    </div>
-                    <Badge variant="success">Actif</Badge>
+                  <div className="flex items-start justify-between gap-2">
+                    <h1 className="text-[20px] font-bold" style={{ color:'var(--color-text-primary)' }}>{garage.name}</h1>
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0"
+                      style={{ background:'#E1F5EE', color:'#085041' }}>Actif</span>
                   </div>
-                  <div className="flex items-center gap-3 mt-3">
-                    <StarDisplay rating={garage.rating} size="lg" />
-                    <span className="font-bold text-gray-900">{garage.rating.toFixed(1)}</span>
-                    <span className="text-sm text-gray-500">({garage.reviewCount} avis)</span>
+                  <div className="flex items-center gap-1.5 mt-1 text-[12px]" style={{ color:'var(--color-text-secondary)' }}>
+                    <IconMapPin size={12}/> {garage.address}, {garage.zipCode} {garage.city}
                   </div>
-                  <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
-                    <a href={`tel:${garage.phone}`} className="flex items-center gap-1.5 hover:text-primary-600">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      {garage.phone}
+                  <div className="flex items-center gap-3 mt-2">
+                    <Stars n={Math.round(garage.rating)} size={15}/>
+                    <span className="text-[14px] font-bold" style={{ color:'var(--color-text-primary)' }}>{avgRating}</span>
+                    <span className="text-[12px]" style={{ color:'var(--color-text-secondary)' }}>({garage.reviewCount} avis)</span>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background:'var(--color-background-secondary)', color:'var(--color-text-secondary)' }}>
+                      {garage.mechanicCount} poste{garage.mechanicCount>1?'s':''}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 mt-3">
+                    <a href={`tel:${garage.phone}`} className="flex items-center gap-1.5 text-[13px]" style={{ color:'var(--color-text-secondary)' }}>
+                      <IconPhone size={13}/> {garage.phone}
                     </a>
-                    <a
-                      href={`https://maps.google.com/?q=${encodeURIComponent(garage.address + ' ' + garage.city)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 hover:text-primary-600"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      </svg>
-                      Voir sur la carte
+                    <a href={`https://maps.google.com/?q=${encodeURIComponent(garage.address+' '+garage.city)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-[13px]" style={{ color:'var(--color-text-secondary)' }}>
+                      <IconMapPin size={13}/> Voir sur la carte
                     </a>
                   </div>
                 </div>
               </div>
-
               {garage.description && (
-                <p className="text-sm text-gray-600 mt-5 leading-relaxed border-t border-gray-100 pt-4">{garage.description}</p>
+                <p className="text-[13px] mt-4 leading-relaxed pt-4"
+                  style={{ borderTop:'0.5px solid var(--color-border-tertiary)', color:'var(--color-text-secondary)' }}>
+                  {garage.description}
+                </p>
               )}
             </div>
 
             {/* Services */}
-            <div className="bg-white border border-gray-100 rounded-lg p-6">
-              <h2 className="font-semibold text-gray-900 mb-4">Services & tarifs</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {garage.services.map((s) => (
-                  <div key={s.id} className="flex items-center justify-between border border-gray-100 rounded p-3 hover:border-primary-200 transition-colors">
+            <div className="rounded-xl overflow-hidden" style={{ background:'var(--color-background-primary)', border:'0.5px solid var(--color-border-tertiary)' }}>
+              <div className="px-5 py-3.5" style={{ borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
+                <h2 className="text-[14px] font-semibold" style={{ color:'var(--color-text-primary)' }}>Services & tarifs</h2>
+              </div>
+              <div className="grid grid-cols-2 gap-px" style={{ background:'var(--color-border-tertiary)' }}>
+                {garage.services.map((s: any) => (
+                  <div key={s.id} className="px-5 py-3.5 flex items-center justify-between"
+                    style={{ background:'var(--color-background-primary)' }}>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{s.name}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{s.duration} min</p>
+                      <p className="text-[13px] font-medium" style={{ color:'var(--color-text-primary)' }}>{s.name}</p>
+                      <p className="text-[11px] mt-0.5" style={{ color:'var(--color-text-tertiary)' }}>{s.duration} min</p>
                     </div>
-                    {s.price && (
-                      <span className="text-sm font-semibold text-gray-900">{s.price} €</span>
-                    )}
+                    <span className="text-[14px] font-semibold" style={{ color:'#1D9E75' }}>{s.price} €</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Reviews */}
-            <div className="bg-white border border-gray-100 rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-gray-900">Avis clients</h2>
+            {/* Avis */}
+            <div className="rounded-xl overflow-hidden" style={{ background:'var(--color-background-primary)', border:'0.5px solid var(--color-border-tertiary)' }}>
+              <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
+                <h2 className="text-[14px] font-semibold" style={{ color:'var(--color-text-primary)' }}>Avis clients</h2>
                 <div className="flex items-center gap-2">
-                  <StarDisplay rating={garage.rating} />
-                  <span className="text-sm font-bold text-gray-900">{garage.rating.toFixed(1)}</span>
-                  <span className="text-xs text-gray-500">/ 5</span>
+                  <Stars n={Math.round(garage.rating)} size={13}/>
+                  <span className="text-[13px] font-bold" style={{ color:'var(--color-text-primary)' }}>{avgRating}</span>
+                  <span className="text-[11px]" style={{ color:'var(--color-text-tertiary)' }}>/ 5</span>
                 </div>
               </div>
-              <div className="space-y-4">
-                {garage.reviews.map((r, i) => (
-                  <div key={i} className="border-b border-gray-50 pb-4 last:border-0 last:pb-0">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 text-xs font-bold">
-                          {r.author.charAt(0)}
+              <div className="divide-y" style={{ borderColor:'var(--color-border-tertiary)' }}>
+                {garage.reviews.map((r: any, i: number) => (
+                  <div key={i} className="px-5 py-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+                          style={{ background:'var(--color-primary-light)', color:'var(--color-primary-dark)' }}>
+                          {r.initials}
                         </div>
-                        <span className="text-sm font-medium text-gray-900">{r.author}</span>
+                        <div>
+                          <p className="text-[13px] font-medium" style={{ color:'var(--color-text-primary)' }}>{r.author}</p>
+                          <p className="text-[11px]" style={{ color:'var(--color-text-tertiary)' }}>{r.service} · {r.date}</p>
+                        </div>
                       </div>
-                      <span className="text-xs text-gray-500">{r.date}</span>
+                      <Stars n={r.rating} size={12}/>
                     </div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <StarDisplay rating={r.rating} />
-                      <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{r.service}</span>
-                    </div>
-                    <p className="text-sm text-gray-700 leading-relaxed">{r.comment}</p>
+                    <p className="text-[13px] leading-relaxed" style={{ color:'var(--color-text-secondary)' }}>{r.comment}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Booking sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white border border-gray-100 rounded-lg p-5 sticky top-20">
-              <h3 className="font-semibold text-gray-900 mb-1">Prendre rendez-vous</h3>
-              <p className="text-sm text-gray-500 mb-4">Prochain créneau disponible : <span className="text-primary-600 font-medium">Aujourd'hui 14:30</span></p>
+          {/* ── COLONNE DROITE : BOOKING ── */}
+          <div>
+            <div className="rounded-xl overflow-hidden sticky top-20" style={{ background:'var(--color-background-primary)', border:'0.5px solid var(--color-border-tertiary)' }}>
 
-              <button
-                onClick={() => setBookingOpen(true)}
-                className="w-full bg-primary-400 text-white font-medium py-3 rounded hover:bg-primary-600 transition-colors mb-4"
-              >
-                Réserver en ligne
-              </button>
+              {done ? (
+                <div className="p-6 text-center">
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+                    style={{ background:'#E1F5EE' }}>
+                    <IconCheck size={26} style={{ color:'#1D9E75' }}/>
+                  </div>
+                  <h3 className="text-[16px] font-semibold mb-2" style={{ color:'var(--color-text-primary)' }}>Demande envoyée !</h3>
+                  <p className="text-[12px] mb-1 leading-relaxed" style={{ color:'var(--color-text-secondary)' }}>
+                    <strong>{selService?.name}</strong> · {selDate?.day} {selDate?.date} {selDate?.month} à {selTime}
+                  </p>
+                  <p className="text-[12px] mb-5 leading-relaxed" style={{ color:'var(--color-text-secondary)' }}>
+                    Le garage vous confirmera par email sous peu.
+                  </p>
+                  <button onClick={reset} className="text-[13px] font-medium" style={{ color:'#1D9E75' }}>
+                    Prendre un autre RDV
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Step header */}
+                  <div className="px-5 py-4" style={{ borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
+                    <p className="text-[14px] font-semibold" style={{ color:'var(--color-text-primary)' }}>Prendre rendez-vous</p>
+                    <div className="flex items-center gap-1.5 mt-2">
+                      {BOOKING_STEPS.map((s, i) => (
+                        <div key={s} className="flex items-center gap-1.5">
+                          <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold transition-colors"
+                            style={{
+                              background: bStep > i+1 ? '#1D9E75' : bStep === i+1 ? '#085041' : 'var(--color-background-secondary)',
+                              color: bStep >= i+1 ? '#fff' : 'var(--color-text-tertiary)',
+                            }}>
+                            {bStep > i+1 ? '✓' : i+1}
+                          </div>
+                          {i < BOOKING_STEPS.length-1 && (
+                            <div className="w-6 h-px" style={{ background: bStep > i+1 ? '#1D9E75' : 'var(--color-border-tertiary)' }}/>
+                          )}
+                        </div>
+                      ))}
+                      <span className="text-[11px] ml-1" style={{ color:'var(--color-text-tertiary)' }}>
+                        {BOOKING_STEPS[bStep-1]}
+                      </span>
+                    </div>
+                  </div>
 
-              <div className="space-y-1.5">
-                <a
-                  href={`tel:${garage.phone}`}
-                  className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-700 py-2.5 rounded hover:bg-gray-50 transition-colors text-sm font-medium"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                  Appeler le garage
-                </a>
-              </div>
+                  <div className="p-5">
+                    {/* Étape 1 : Service */}
+                    {bStep === 1 && (
+                      <div className="space-y-2">
+                        {garage.services.map((s: any) => (
+                          <button key={s.id} onClick={() => setSelService(s)}
+                            className="w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors"
+                            style={{
+                              border: `0.5px solid ${selService?.id===s.id ? '#1D9E75' : 'var(--color-border-secondary)'}`,
+                              background: selService?.id===s.id ? '#E1F5EE' : 'var(--color-background-primary)',
+                            }}>
+                            <div>
+                              <p className="text-[13px] font-medium" style={{ color:'var(--color-text-primary)' }}>{s.name}</p>
+                              <p className="text-[11px] mt-0.5" style={{ color:'var(--color-text-tertiary)' }}>{s.duration} min</p>
+                            </div>
+                            <span className="text-[14px] font-semibold" style={{ color:'#1D9E75' }}>{s.price} €</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
-              <div className="mt-5 border-t border-gray-100 pt-4">
-                <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">Horaires</p>
-                <div className="space-y-1.5">
-                  {garage.schedules.map((s) => (
-                    <div key={s.day} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">{s.day}</span>
-                      {s.closed ? (
-                        <span className="text-red-400 font-medium">Fermé</span>
-                      ) : (
-                        <span className="text-gray-900 font-medium">{s.open} – {s.close}</span>
-                      )}
+                    {/* Étape 2 : Créneau */}
+                    {bStep === 2 && (
+                      <div>
+                        {/* Sélecteur de jours */}
+                        <p className="text-[11px] font-medium mb-2 uppercase tracking-wide" style={{ color:'var(--color-text-tertiary)' }}>Date</p>
+                        <div className="grid grid-cols-7 gap-1 mb-4">
+                          {weekDates.map((d, i) => (
+                            <button key={d.iso} onClick={() => { setSelDateIdx(i); setSelTime('') }}
+                              className="flex flex-col items-center py-2 rounded-lg transition-colors"
+                              style={{
+                                background: selDateIdx===i ? '#1D9E75' : 'var(--color-background-secondary)',
+                                color: selDateIdx===i ? '#fff' : 'var(--color-text-secondary)',
+                              }}>
+                              <span className="text-[9px] font-medium">{d.day}</span>
+                              <span className="text-[13px] font-bold leading-tight">{d.date}</span>
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Créneaux horaires */}
+                        <p className="text-[11px] font-medium mb-2 uppercase tracking-wide" style={{ color:'var(--color-text-tertiary)' }}>
+                          Heure — {garage.mechanicCount} poste{garage.mechanicCount>1?'s':''} disponible{garage.mechanicCount>1?'s':''}
+                        </p>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {TIME_SLOTS.map(t => {
+                            const taken = takenToday.includes(t)
+                            return (
+                              <button key={t} disabled={taken} onClick={() => setSelTime(t)}
+                                className="py-2 rounded text-[12px] font-medium transition-colors"
+                                style={{
+                                  background: taken ? 'var(--color-background-secondary)' : selTime===t ? '#1D9E75' : 'var(--color-background-primary)',
+                                  border: `0.5px solid ${taken ? 'var(--color-border-tertiary)' : selTime===t ? '#1D9E75' : 'var(--color-border-secondary)'}`,
+                                  color: taken ? 'var(--color-text-tertiary)' : selTime===t ? '#fff' : 'var(--color-text-primary)',
+                                  textDecoration: taken ? 'line-through' : 'none',
+                                  cursor: taken ? 'not-allowed' : 'pointer',
+                                }}>
+                                {t}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Étape 3 : Véhicule + contact */}
+                    {bStep === 3 && (
+                      <div className="space-y-3">
+                        <p className="text-[12px] font-medium pb-1" style={{ color:'var(--color-text-secondary)', borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
+                          Votre véhicule
+                        </p>
+                        <FI label="Immatriculation *" value={plate} onChange={setPlate} placeholder="1-ABC-123" upper />
+                        <FI label="Modèle *" value={vehicle} onChange={setVehicle} placeholder="ex: Renault Clio 2021" />
+                        <FI label="Notes (optionnel)" value={notes} onChange={setNotes} placeholder="Informations complémentaires…" />
+
+                        <p className="text-[12px] font-medium pt-1 pb-1" style={{ color:'var(--color-text-secondary)', borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
+                          Vos coordonnées
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <FI label="Prénom *" value={firstName} onChange={setFirstName} placeholder="Jean" />
+                          <FI label="Nom *"    value={lastName}  onChange={setLastName}  placeholder="Dupont" />
+                        </div>
+                        <FI label="Email *"     type="email" value={email} onChange={setEmail} placeholder="vous@exemple.com" />
+                        <FI label="Téléphone"  type="tel"   value={phone} onChange={setPhone} placeholder="+32 470 12 34 56" />
+                      </div>
+                    )}
+
+                    {/* Étape 4 : Récapitulatif */}
+                    {bStep === 4 && (
+                      <div className="space-y-3">
+                        <div className="rounded-lg p-4 space-y-2" style={{ background:'var(--color-background-secondary)' }}>
+                          <Row icon={<span>🔧</span>} label={selService?.name} sub={`${selService?.duration} min · ${selService?.price} €`} />
+                          <Row icon={<span>📅</span>} label={`${selDate?.day} ${selDate?.date} ${selDate?.month} à ${selTime}`} sub="" />
+                          <Row icon={<span>🚗</span>} label={vehicle} sub={plate} />
+                          <Row icon={<span>👤</span>} label={`${firstName} ${lastName}`} sub={email} />
+                        </div>
+                        {notes && (
+                          <p className="text-[12px] italic" style={{ color:'var(--color-text-secondary)' }}>« {notes} »</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Navigation */}
+                  <div className="flex gap-2 px-5 pb-5">
+                    {bStep > 1 && (
+                      <button onClick={() => setBStep(s => s-1)}
+                        className="flex-1 py-2.5 rounded-lg text-[13px] font-medium"
+                        style={{ background:'var(--color-background-secondary)', color:'var(--color-text-secondary)' }}>
+                        Retour
+                      </button>
+                    )}
+                    {bStep < 4 ? (
+                      <button onClick={() => setBStep(s => s+1)} disabled={!canNext()}
+                        className="flex-1 py-2.5 rounded-lg text-[13px] font-medium text-white disabled:opacity-40"
+                        style={{ background:'#1D9E75' }}>
+                        Continuer
+                      </button>
+                    ) : (
+                      <button onClick={confirm} disabled={loading}
+                        className="flex-1 py-2.5 rounded-lg text-[13px] font-medium text-white disabled:opacity-60"
+                        style={{ background:'#1D9E75' }}>
+                        {loading ? 'Envoi…' : 'Confirmer la demande'}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Horaires */}
+              <div className="px-5 py-4" style={{ borderTop:'0.5px solid var(--color-border-tertiary)' }}>
+                <p className="text-[11px] font-medium mb-2.5 uppercase tracking-wide" style={{ color:'var(--color-text-tertiary)' }}>Horaires</p>
+                <div className="space-y-1">
+                  {garage.schedules.map((s: any) => (
+                    <div key={s.day} className="flex items-center justify-between">
+                      <span className="text-[12px]" style={{ color:'var(--color-text-secondary)' }}>{s.day}</span>
+                      {s.closed
+                        ? <span className="text-[11px] font-medium" style={{ color:'#E24B4A' }}>Fermé</span>
+                        : <span className="text-[12px] font-medium" style={{ color:'var(--color-text-primary)' }}>{s.open} – {s.close}</span>
+                      }
                     </div>
                   ))}
                 </div>
@@ -241,15 +429,33 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
           </div>
         </div>
       </div>
+    </div>
+  )
+}
 
-      {bookingOpen && (
-        <BookingModal
-          garageName={garage.name}
-          garageSlug={garage.slug}
-          services={garage.services}
-          onClose={() => setBookingOpen(false)}
-        />
-      )}
+function FI({ label, value, onChange, placeholder, type='text', upper=false }: {
+  label:string; value:string; onChange:(v:string)=>void
+  placeholder?:string; type?:string; upper?:boolean
+}) {
+  return (
+    <div>
+      <label className="block text-[11px] font-medium mb-1" style={{ color:'var(--color-text-secondary)' }}>{label}</label>
+      <input type={type} value={value} placeholder={placeholder}
+        onChange={e => onChange(upper ? e.target.value.toUpperCase() : e.target.value)}
+        className="w-full px-3 py-2 text-[12px] rounded-lg focus:outline-none"
+        style={{ border:'0.5px solid var(--color-border-secondary)', background:'var(--color-background-secondary)', color:'var(--color-text-primary)' }}/>
+    </div>
+  )
+}
+
+function Row({ icon, label, sub }: { icon:React.ReactNode; label:string; sub:string }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className="text-base flex-shrink-0">{icon}</span>
+      <div>
+        <p className="text-[12px] font-medium" style={{ color:'var(--color-text-primary)' }}>{label}</p>
+        {sub && <p className="text-[11px]" style={{ color:'var(--color-text-secondary)' }}>{sub}</p>}
+      </div>
     </div>
   )
 }
