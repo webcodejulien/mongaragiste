@@ -167,7 +167,7 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
       </header>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="grid gap-6" style={{gridTemplateColumns:'1fr 340px'}}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
 
           {/* Gauche */}
           <div className="space-y-5">

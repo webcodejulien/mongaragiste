@@ -86,8 +86,9 @@ export default function AppointmentsPage() {
           </div>
         </div>
 
-        <div className="rounded-[10px] overflow-hidden"
+        <div className="rounded-[10px] overflow-hidden overflow-x-auto"
           style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
+          <div style={{ minWidth: '700px' }}>
           <div className="grid text-[11px] font-medium uppercase tracking-wide px-4 py-2.5"
             style={{ gridTemplateColumns:'90px 1fr 160px 150px 110px 110px', color:'var(--color-text-secondary)', background:'var(--color-background-secondary)', borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
             <span>Date/Heure</span><span>Client</span><span>Service</span><span>Véhicule</span><span>Statut</span><span className="text-right">Actions</span>
@@ -161,6 +162,7 @@ export default function AppointmentsPage() {
               })}
             </div>
           )}
+          </div>{/* end minWidth wrapper */}
         </div>
         {!loading && <p className="text-[11px] mt-2" style={{ color:'var(--color-text-tertiary)' }}>{filtered.length} résultat(s)</p>}
       </main>

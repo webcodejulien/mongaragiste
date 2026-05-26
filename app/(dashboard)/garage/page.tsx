@@ -92,7 +92,7 @@ export default function GarageDashboard() {
         </div>
 
         {/* Métriques */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
           ) : [
@@ -117,7 +117,7 @@ export default function GarageDashboard() {
           })}
         </div>
 
-        <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 300px' }}>
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4">
           {/* RDV aujourd'hui */}
           <div className="space-y-4">
             <div className="rounded-[10px] overflow-hidden"

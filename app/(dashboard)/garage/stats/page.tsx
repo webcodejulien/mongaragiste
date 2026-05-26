@@ -88,7 +88,7 @@ export default function StatsPage() {
               })}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Évolution mensuelle */}
               <div className="rounded-[10px] p-5" style={{ background:'var(--color-background-primary)', border:'0.5px solid var(--color-border-tertiary)' }}>
                 <p className="text-[13px] font-semibold mb-4" style={{ color:'var(--color-text-primary)' }}>CA mensuel</p>
