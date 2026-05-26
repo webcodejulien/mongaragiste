@@ -30,8 +30,18 @@ function LoginForm() {
     setError('')
     const res = await signIn('credentials', { email, password, redirect: false })
     setLoading(false)
-    if (res?.error) setError('Email ou mot de passe incorrect.')
-    else router.push('/garage')
+    if (res?.error) {
+      setError('Email ou mot de passe incorrect.')
+    } else {
+      // Récupérer le rôle depuis la session
+      const sessionRes = await fetch('/api/auth/session')
+      const session = await sessionRes.json()
+      const role = session?.user?.role
+      const cb = params.get('callbackUrl')
+      if (cb) router.push(cb)
+      else if (role === 'GARAGE') router.push('/garage')
+      else router.push('/mon-compte')
+    }
   }
 
   async function handleGoogle() {

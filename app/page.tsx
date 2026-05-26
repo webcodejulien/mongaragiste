@@ -59,6 +59,7 @@ export default function HomePage() {
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <Link href="/search" className="text-[13px] transition-colors" style={{ color:'var(--color-text-secondary)' }}>Trouver un garage</Link>
+            <Link href="/mon-compte" className="text-[13px] transition-colors" style={{ color:'var(--color-text-secondary)' }}>Mes RDV</Link>
             <Link href="/login" className="text-[13px] transition-colors" style={{ color:'var(--color-text-secondary)' }}>Connexion</Link>
             <Link href="/register/garage"
               className="px-4 py-2 rounded-lg text-[13px] font-medium text-white"

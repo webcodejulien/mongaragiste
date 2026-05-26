@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { TopBar } from '@/components/layout/TopBar'
 import {
   IconChevronLeft, IconChevronRight, IconPlus, IconX,
@@ -17,25 +17,26 @@ interface Appt {
   status: Status; notes: string; color: string
 }
 
-/* ─── Données mock ───────────────────────────────────────── */
+/* ─── Helpers ────────────────────────────────────────────── */
 function todayStr() { return new Date().toISOString().split('T')[0] }
-function offsetDay(base: string, d: number) {
-  const dt = new Date(base); dt.setDate(dt.getDate() + d)
-  return dt.toISOString().split('T')[0]
+
+// Convertit un RDV API → format interne Appt
+function apiToAppt(a: any): Appt {
+  return {
+    id:          a.id,
+    clientName:  `${a.client?.firstName ?? ''} ${a.client?.lastName ?? ''}`.trim() || 'Client',
+    clientPhone: a.client?.phone || '',
+    service:     a.service?.name || '',
+    vehicle:     a.vehicleModel || '',
+    plate:       a.vehiclePlate || '',
+    date:        a.date?.split('T')[0] ?? '',
+    startTime:   a.startTime,
+    endTime:     a.endTime,
+    status:      a.status as Status,
+    notes:       a.notes || '',
+    color:       STATUS_COLOR[a.status as Status] ?? 'teal',
+  }
 }
-const T = todayStr()
-const INIT_APPTS: Appt[] = [
-  { id:'1', clientName:'Marc Dupont',    clientPhone:'+32 470 12 34 56', service:'Vidange',           vehicle:'Renault Clio 2021',     plate:'1-MXD-872', date:T,              startTime:'08:00', endTime:'08:30', status:'CONFIRMED',   notes:'',                          color:'teal'  },
-  { id:'2', clientName:'Alice Bernard',  clientPhone:'+32 475 98 76 54', service:'Freins avant',      vehicle:'Peugeot 308 2019',      plate:'1-AXB-456', date:T,              startTime:'09:00', endTime:'10:00', status:'PENDING',     notes:'Bruit au freinage gauche',  color:'amber' },
-  { id:'3', clientName:'Sophie Petit',   clientPhone:'+32 478 11 22 33', service:'Révision complète', vehicle:'BMW Série 3 2020',      plate:'2-SXP-101', date:T,              startTime:'11:00', endTime:'12:30', status:'IN_PROGRESS', notes:'',                          color:'blue'  },
-  { id:'4', clientName:'Karl Schmitt',   clientPhone:'+32 472 44 55 66', service:'Climatisation',     vehicle:'Volkswagen Golf 2018',  plate:'3-KXS-789', date:T,              startTime:'14:00', endTime:'15:00', status:'CONFIRMED',   notes:'Urgence — véhicule chaud', color:'teal'  },
-  { id:'5', clientName:'Jean Moreau',    clientPhone:'+32 479 77 88 99', service:'Vidange',           vehicle:'Citroën C3 2022',       plate:'1-JXM-334', date:T,              startTime:'15:30', endTime:'16:00', status:'DONE',        notes:'',                          color:'done'  },
-  { id:'6', clientName:'Luc Fontaine',   clientPhone:'+32 471 23 45 67', service:'Freins',            vehicle:'Toyota Yaris 2021',     plate:'2-LXF-009', date:offsetDay(T,1), startTime:'09:00', endTime:'10:00', status:'CONFIRMED',   notes:'',                          color:'teal'  },
-  { id:'7', clientName:'Sara Ngom',      clientPhone:'+32 476 89 01 23', service:'Révision complète', vehicle:'Renault Mégane 2020',   plate:'1-SXN-445', date:offsetDay(T,1), startTime:'11:00', endTime:'12:30', status:'CONFIRMED',   notes:'',                          color:'teal'  },
-  { id:'8', clientName:'Thomas Leroy',   clientPhone:'+32 473 45 67 89', service:'Pneus (x4)',        vehicle:'Audi A3 2019',          plate:'3-TXL-882', date:offsetDay(T,2), startTime:'09:00', endTime:'10:00', status:'CONFIRMED',   notes:'',                          color:'teal'  },
-  { id:'9', clientName:'Emma Laurent',   clientPhone:'+32 474 01 23 45', service:'Diagnostic',        vehicle:'Ford Focus 2018',       plate:'2-ELX-330', date:offsetDay(T,3), startTime:'14:00', endTime:'14:30', status:'PENDING',     notes:'Voyant moteur allumé',      color:'amber' },
-  { id:'10',clientName:'Pierre Collin',  clientPhone:'+32 477 55 44 33', service:'Embrayage',         vehicle:'Citroën Berlingo 2017', plate:'1-PCX-771', date:offsetDay(T,4), startTime:'10:00', endTime:'12:00', status:'CONFIRMED',   notes:'Devis accepté',             color:'teal'  },
-]
 
 const HOURS = [8,9,10,11,12,13,14,15,16,17]
 const SLOT_H = 56 // px par heure
@@ -84,25 +85,7 @@ function sameWeek(a: Appt, monday: Date): boolean {
   return ad >= monday && ad <= end
 }
 
-/* ─── Clients & services mock ────────────────────────────── */
-const MOCK_CLIENTS = [
-  { name:'Marc Dupont',   phone:'+32 470 12 34 56' },
-  { name:'Alice Bernard', phone:'+32 475 98 76 54' },
-  { name:'Sophie Petit',  phone:'+32 478 11 22 33' },
-  { name:'Jean Moreau',   phone:'+32 479 77 88 99' },
-  { name:'Luc Fontaine',  phone:'+32 471 23 45 67' },
-  { name:'Nouveau client',phone:'' },
-]
-const MOCK_SERVICES = [
-  { name:'Vidange', duration:30, price:30 },
-  { name:'Freins avant', duration:60, price:80 },
-  { name:'Révision complète', duration:90, price:150 },
-  { name:'Pneus (x4)', duration:60, price:80 },
-  { name:'Diagnostic électronique', duration:30, price:50 },
-  { name:'Climatisation', duration:45, price:65 },
-  { name:'Embrayage', duration:120, price:280 },
-  { name:'Distribution', duration:180, price:350 },
-]
+/* ─── (clients & services chargés depuis la DB dans le composant) ── */
 
 /* ════════════════════════════════════════════════════════════
    COMPOSANT PRINCIPAL
@@ -110,8 +93,10 @@ const MOCK_SERVICES = [
 export default function AgendaPage() {
   const [view, setView]     = useState<'week'|'day'>('week')
   const [monday, setMonday] = useState(() => getMonday(new Date()))
-  const [dayIdx, setDayIdx] = useState(0) // 0 = lundi de la semaine
-  const [appts, setAppts]   = useState(INIT_APPTS)
+  const [dayIdx, setDayIdx] = useState(0)
+  const [appts, setAppts]   = useState<Appt[]>([])
+  const [loadingAppts, setLoadingAppts] = useState(true)
+  const [garageServices, setGarageServices] = useState<any[]>([])
   const [selected, setSelected] = useState<Appt|null>(null)
   const [adding, setAdding]     = useState(false)
   const [addDate, setAddDate]   = useState('')
@@ -126,6 +111,19 @@ export default function AgendaPage() {
   const [newDate,    setNewDate]    = useState('')
   const [newTime,    setNewTime]    = useState('09:00')
   const [newNotes,   setNewNotes]   = useState('')
+
+  // Charger les RDV depuis la DB
+  useEffect(() => {
+    setLoadingAppts(true)
+    fetch('/api/garage/appointments')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setAppts(d.map(apiToAppt)) })
+      .finally(() => setLoadingAppts(false))
+    // Charger les services pour le formulaire d'ajout
+    fetch('/api/garage/me')
+      .then(r => r.json())
+      .then(g => { if (g.services?.length) setGarageServices(g.services) })
+  }, [])
 
   const weekDays = useMemo(() =>
     Array.from({length:5}, (_,i) => addDays(monday, i))
@@ -148,32 +146,61 @@ export default function AgendaPage() {
     setAdding(true)
   }
 
-  function submitAdd() {
+  async function submitAdd() {
     if (!newClient || !newService) return
-    const svc = MOCK_SERVICES.find(s => s.name === newService)
-    const dur = svc ? svc.duration : 60
+    const svc = garageServices.find(s => s.name === newService) || { duration: 60 }
+    const dur = svc.duration
     const [h,m] = newTime.split(':').map(Number)
     const endMin = h*60 + m + dur
     const endTime = `${String(Math.floor(endMin/60)).padStart(2,'0')}:${String(endMin%60).padStart(2,'0')}`
-    const newAppt: Appt = {
+
+    // Optimistic update
+    const tempAppt: Appt = {
       id: Date.now().toString(),
       clientName: newClient, clientPhone: newPhone,
       service: newService, vehicle: newVehicle, plate: newPlate,
       date: newDate, startTime: newTime, endTime,
       status: 'CONFIRMED', notes: newNotes, color: 'teal',
     }
-    setAppts(p => [...p, newAppt])
+    setAppts(p => [...p, tempAppt])
     setAdding(false)
+
+    // Sauvegarder en DB (si on a un vrai serviceId)
+    const svcObj = garageServices.find(s => s.name === newService)
+    if (svcObj?.id) {
+      try {
+        const res = await fetch('/api/garage/appointments', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            clientId: null, // sera géré côté serveur si on a un vrai client
+            serviceId: svcObj.id,
+            date: newDate, startTime: newTime, endTime,
+            vehiclePlate: newPlate, vehicleModel: newVehicle, notes: newNotes,
+          }),
+        })
+        if (res.ok) {
+          const saved = await res.json()
+          setAppts(p => p.map(a => a.id === tempAppt.id ? apiToAppt(saved) : a))
+        }
+      } catch { /* on garde l'optimistic */ }
+    }
   }
 
-  function updateStatus(id: string, status: Status) {
+  async function updateStatus(id: string, status: Status) {
     setAppts(p => p.map(a => a.id === id ? { ...a, status, color: STATUS_COLOR[status] } : a))
     setSelected(p => p ? { ...p, status, color: STATUS_COLOR[status] } : null)
+    await fetch(`/api/garage/appointments/${id}`, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ status }),
+    }).catch(console.error)
   }
 
-  function deleteAppt(id: string) {
+  async function deleteAppt(id: string) {
     setAppts(p => p.filter(a => a.id !== id))
     setSelected(null)
+    await fetch(`/api/garage/appointments/${id}`, { method: 'DELETE' }).catch(console.error)
   }
 
   const todayStr2 = isoDate(new Date())
@@ -499,21 +526,11 @@ export default function AgendaPage() {
             {/* Client */}
             <div>
               <label className="block text-[12px] font-medium mb-1" style={{ color:'var(--color-text-secondary)' }}>Client</label>
-              <select value={newClient} onChange={e => {
-                const cl = MOCK_CLIENTS.find(c=>c.name===e.target.value)
-                setNewClient(e.target.value)
-                if (cl) setNewPhone(cl.phone)
-              }}
+              <input value={newClient} onChange={e => setNewClient(e.target.value)}
+                placeholder="Nom du client"
                 className="w-full px-3 py-2 text-[13px] rounded-lg focus:outline-none"
-                style={{ border:'0.5px solid var(--color-border-secondary)', background:'var(--color-background-secondary)', color:'var(--color-text-primary)' }}>
-                <option value="">Choisir un client…</option>
-                {MOCK_CLIENTS.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-              </select>
-              {newClient === 'Nouveau client' && (
-                <input placeholder="Nom complet" value={newClient !== 'Nouveau client' ? newClient : ''} onChange={e => setNewClient(e.target.value)}
-                  className="w-full px-3 py-2 mt-2 text-[13px] rounded-lg focus:outline-none"
-                  style={{ border:'0.5px solid var(--color-border-secondary)', background:'var(--color-background-secondary)' }} />
-              )}
+                style={{ border:'0.5px solid var(--color-border-secondary)', background:'var(--color-background-secondary)', color:'var(--color-text-primary)' }}
+              />
             </div>
             <FieldAdd label="Téléphone"><input value={newPhone} onChange={e=>setNewPhone(e.target.value)} placeholder="+32 470…" className="w-full px-3 py-2 text-[13px] rounded-lg focus:outline-none" style={{ border:'0.5px solid var(--color-border-secondary)', background:'var(--color-background-secondary)' }}/></FieldAdd>
             <div>
@@ -522,7 +539,7 @@ export default function AgendaPage() {
                 className="w-full px-3 py-2 text-[13px] rounded-lg focus:outline-none"
                 style={{ border:'0.5px solid var(--color-border-secondary)', background:'var(--color-background-secondary)', color:'var(--color-text-primary)' }}>
                 <option value="">Choisir un service…</option>
-                {MOCK_SERVICES.map(s=><option key={s.name} value={s.name}>{s.name} ({s.duration} min · {s.price}€)</option>)}
+                {garageServices.map(s=><option key={s.name} value={s.name}>{s.name} ({s.duration} min{s.price ? ` · ${s.price}€` : ''})</option>)}
               </select>
             </div>
             <div className="grid grid-cols-2 gap-2">
