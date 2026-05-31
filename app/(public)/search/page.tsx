@@ -73,8 +73,8 @@ function SearchContent() {
         setTotal(d.total ?? sorted.length)
 
         /* Extraire les villes et services uniques pour les filtres */
-        const allCities   = [...new Set(list.map(g => g.city).filter(Boolean))] as string[]
-        const allServices = [...new Set(list.flatMap(g => (g.services ?? []).map((s: any) => s.name)).filter(Boolean))] as string[]
+        const allCities   = Array.from(new Set(list.map(g => g.city).filter(Boolean))) as string[]
+        const allServices = Array.from(new Set(list.flatMap(g => (g.services ?? []).map((s: any) => s.name)).filter(Boolean))) as string[]
         setCities(allCities.sort())
         setServices(allServices.sort())
       })
