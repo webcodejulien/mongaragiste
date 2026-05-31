@@ -21,8 +21,9 @@ export default function ReviewsPage() {
   const [reviews,    setReviews]    = useState<any[]>([])
   const [loading,    setLoading]    = useState(true)
   const [filter,     setFilter]     = useState(0)
-  const [replyingTo, setReplyingTo] = useState<string | null>(null)
-  const [replyText,  setReplyText]  = useState('')
+  const [replyingTo,  setReplyingTo]  = useState<string | null>(null)
+  const [replyText,   setReplyText]   = useState('')
+  const [replyLoading, setReplyLoading] = useState(false)
 
   useEffect(() => {
     fetch('/api/garage/reviews')
@@ -148,7 +149,20 @@ export default function ReviewsPage() {
                     </p>
                   )}
 
-                  {!r.replied && (
+                  {/* Réponse existante */}
+                  {r.garageReply && (
+                    <div className="mt-3 pl-3 border-l-2" style={{ borderColor: '#1D9E75' }}>
+                      <p className="text-[11px] font-medium mb-1" style={{ color: '#085041' }}>
+                        Votre réponse · {fmtDate(r.repliedAt)}
+                      </p>
+                      <p className="text-[12px] leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+                        {r.garageReply}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Formulaire de réponse */}
+                  {!r.garageReply && (
                     replyingTo === r.id ? (
                       <div className="mt-3">
                         <textarea rows={2} value={replyText} onChange={e => setReplyText(e.target.value)}
@@ -156,10 +170,30 @@ export default function ReviewsPage() {
                           className="w-full text-[12px] px-3 py-2 rounded-lg resize-none focus:outline-none"
                           style={{ border: '0.5px solid var(--color-border-primary)', background: 'var(--color-background-secondary)' }} />
                         <div className="flex gap-2 mt-2">
-                          <button className="text-[12px] font-medium px-3 py-1.5 rounded-lg text-white"
+                          <button
+                            disabled={replyLoading || !replyText.trim()}
+                            className="text-[12px] font-medium px-3 py-1.5 rounded-lg text-white disabled:opacity-50"
                             style={{ background: '#1D9E75' }}
-                            onClick={() => { setReplyingTo(null); setReplyText('') }}>
-                            Publier
+                            onClick={async () => {
+                              if (!replyText.trim()) return
+                              setReplyLoading(true)
+                              try {
+                                const res = await fetch(`/api/garage/reviews/${r.id}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ reply: replyText }),
+                                })
+                                if (res.ok) {
+                                  const updated = await res.json()
+                                  setReviews(p => p.map(x => x.id === r.id ? { ...x, garageReply: updated.garageReply, repliedAt: updated.repliedAt } : x))
+                                  setReplyingTo(null)
+                                  setReplyText('')
+                                }
+                              } finally {
+                                setReplyLoading(false)
+                              }
+                            }}>
+                            {replyLoading ? 'Publication…' : 'Publier'}
                           </button>
                           <button className="text-[12px] px-3 py-1.5 rounded-lg"
                             style={{ background: 'var(--color-background-secondary)', color: 'var(--color-text-secondary)' }}
@@ -169,7 +203,7 @@ export default function ReviewsPage() {
                         </div>
                       </div>
                     ) : (
-                      <button onClick={() => setReplyingTo(r.id)}
+                      <button onClick={() => { setReplyingTo(r.id); setReplyText('') }}
                         className="flex items-center gap-1.5 mt-3 text-[12px] font-medium transition-colors"
                         style={{ color: '#1D9E75' }}>
                         <IconMessageCircle size={13} /> Répondre

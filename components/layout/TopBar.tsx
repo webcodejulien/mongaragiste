@@ -17,10 +17,11 @@ interface TopBarProps {
   garageName?: string
 }
 
-export function TopBar({ title, subtitle, garageName = 'Mon Garage' }: TopBarProps) {
-  const [notifOpen, setNotifOpen] = useState(false)
-  const [notifs,    setNotifs]    = useState<any[]>([])
-  const [loaded,    setLoaded]    = useState(false)
+export function TopBar({ title, subtitle, garageName: garageProp }: TopBarProps) {
+  const [notifOpen,  setNotifOpen]  = useState(false)
+  const [notifs,     setNotifs]     = useState<any[]>([])
+  const [loaded,     setLoaded]     = useState(false)
+  const [garageName, setGarageName] = useState(garageProp ?? '')
 
   useEffect(() => {
     fetch('/api/garage/notifications')
@@ -28,6 +29,14 @@ export function TopBar({ title, subtitle, garageName = 'Mon Garage' }: TopBarPro
       .then(d => { if (Array.isArray(d)) setNotifs(d) })
       .finally(() => setLoaded(true))
   }, [])
+
+  useEffect(() => {
+    if (garageProp) { setGarageName(garageProp); return }
+    fetch('/api/garage/me')
+      .then(r => r.json())
+      .then(d => { if (d?.name) setGarageName(d.name) })
+      .catch(() => {})
+  }, [garageProp])
 
   const unread = notifs.filter(n => !n.isRead).length
 
