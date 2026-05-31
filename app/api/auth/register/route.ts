@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
               description:   garageData.description || null,
               mechanicCount: garageData.mechanicCount ?? 1,
               slotDuration:  garageData.slotDuration  ?? 30,
-              status: 'PENDING',
+              status: 'ACTIVE',
               services: garageData.services?.length
                 ? {
                     create: garageData.services.map((name: string) => ({
