@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getGarageId } from '@/lib/getGarage'
 import { prisma } from '@/lib/prisma'
+import { sendEmail, tplBookingConfirmed, tplBookingCancelled } from '@/lib/email'
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const garageId = await getGarageId()
@@ -11,10 +12,62 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!valid.includes(status)) return NextResponse.json({ error: 'Statut invalide.' }, { status: 400 })
 
   const appt = await prisma.appointment.update({
-    where: { id: params.id, garageId },
-    data: { status },
-    include: { client: true, service: true },
+    where:   { id: params.id, garageId },
+    data:    { status },
+    include: {
+      client:  { include: { user: { select: { email: true } } } },
+      service: true,
+      garage:  { select: { name: true, phone: true } },
+    },
   })
+
+  const clientEmail = appt.client.user?.email
+  const clientName  = `${appt.client.firstName} ${appt.client.lastName}`
+  const dateStr     = new Date(appt.date).toLocaleDateString('fr-BE', { weekday:'long', day:'numeric', month:'long' })
+
+  // Email de confirmation au client
+  if (status === 'CONFIRMED' && clientEmail) {
+    const tpl = tplBookingConfirmed({
+      clientName,
+      garageName:  appt.garage.name,
+      serviceName: appt.service?.name ?? '',
+      date:        dateStr,
+      time:        appt.startTime,
+      garagePhone: appt.garage.phone ?? undefined,
+    })
+    sendEmail({ to: [{ email: clientEmail, name: clientName }], subject: tpl.subject, html: tpl.html }).catch(console.error)
+
+    // Notification en DB
+    await prisma.notification.create({
+      data: {
+        userId:  appt.client.userId,
+        type:    'APPOINTMENT_CONFIRMED',
+        title:   'RDV confirmé',
+        message: `${appt.garage.name} — ${appt.service?.name} — le ${dateStr} à ${appt.startTime}`,
+      },
+    }).catch(console.error)
+  }
+
+  // Email d'annulation au client
+  if (status === 'CANCELLED' && clientEmail) {
+    const tpl = tplBookingCancelled({
+      clientName,
+      garageName:  appt.garage.name,
+      serviceName: appt.service?.name ?? '',
+      date:        dateStr,
+      time:        appt.startTime,
+    })
+    sendEmail({ to: [{ email: clientEmail, name: clientName }], subject: tpl.subject, html: tpl.html }).catch(console.error)
+
+    await prisma.notification.create({
+      data: {
+        userId:  appt.client.userId,
+        type:    'APPOINTMENT_CANCELLED',
+        title:   'RDV annulé',
+        message: `${appt.garage.name} — ${appt.service?.name} — le ${dateStr} à ${appt.startTime}`,
+      },
+    }).catch(console.error)
+  }
 
   return NextResponse.json(appt)
 }
