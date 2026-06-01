@@ -319,14 +319,28 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                       <div>
                         <p className="text-[11px] font-medium mb-2 uppercase tracking-wide" style={{color:'var(--color-text-tertiary)'}}>Date</p>
                         <div className="grid grid-cols-7 gap-1 mb-4">
-                          {weekDates.map((d,i) => (
-                            <button key={d.iso} onClick={() => {setSelDateIdx(i);setSelTime('')}}
-                              className="flex flex-col items-center py-2 rounded-lg transition-colors"
-                              style={{background:selDateIdx===i?'#1D9E75':'var(--color-background-secondary)',color:selDateIdx===i?'#fff':'var(--color-text-secondary)'}}>
-                              <span className="text-[9px] font-medium">{d.day}</span>
-                              <span className="text-[13px] font-bold leading-tight">{d.date}</span>
-                            </button>
-                          ))}
+                          {weekDates.map((d,i) => {
+                            // Vérifier si le jour est fermé (convention app: 1=lun…7=dim)
+                            const jsDay = new Date(d.iso).getDay()
+                            const appDay = jsDay === 0 ? 7 : jsDay
+                            const schedule = garage?.schedules?.find((s: any) => s.dayOfWeek === appDay)
+                            const isClosed = schedule ? schedule.closed : false
+                            return (
+                              <button key={d.iso}
+                                onClick={() => { if (!isClosed) { setSelDateIdx(i); setSelTime('') } }}
+                                disabled={isClosed}
+                                className="flex flex-col items-center py-2 rounded-lg transition-colors"
+                                style={{
+                                  background: isClosed ? 'transparent' : selDateIdx===i ? '#1D9E75' : 'var(--color-background-secondary)',
+                                  color: isClosed ? 'var(--color-border-primary)' : selDateIdx===i ? '#fff' : 'var(--color-text-secondary)',
+                                  cursor: isClosed ? 'not-allowed' : 'pointer',
+                                  opacity: isClosed ? 0.4 : 1,
+                                }}>
+                                <span className="text-[9px] font-medium">{d.day}</span>
+                                <span className="text-[13px] font-bold leading-tight">{d.date}</span>
+                              </button>
+                            )
+                          })}
                         </div>
                         <p className="text-[11px] font-medium mb-2 uppercase tracking-wide" style={{color:'var(--color-text-tertiary)'}}>
                           Créneaux disponibles

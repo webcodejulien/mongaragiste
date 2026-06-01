@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { IconCalendar, IconCheck, IconX, IconClock, IconArrowRight, IconLogout } from '@tabler/icons-react'
+import { IconCalendar, IconCheck, IconX, IconClock, IconArrowRight, IconLogout, IconUser, IconPencil, IconDeviceFloppy } from '@tabler/icons-react'
 
 const STATUS: Record<string, {label:string;bg:string;color:string}> = {
   PENDING:     {label:'En attente', bg:'#FAEEDA', color:'#633806'},
@@ -29,15 +29,52 @@ export default function MonComptePage() {
   const [appts,   setAppts]   = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
+  // Profil
+  const [profile,      setProfile]      = useState<any>(null)
+  const [editingProfile, setEditingProfile] = useState(false)
+  const [pFirstName,   setPFirstName]   = useState('')
+  const [pLastName,    setPLastName]    = useState('')
+  const [pPhone,       setPPhone]       = useState('')
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [profileSaved,  setProfileSaved]  = useState(false)
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login')
     if (status === 'authenticated') {
-      fetch('/api/client/appointments')
-        .then(r => r.json())
-        .then(d => setAppts(Array.isArray(d) ? d : []))
-        .finally(() => setLoading(false))
+      Promise.all([
+        fetch('/api/client/appointments').then(r => r.json()),
+        fetch('/api/client/profile').then(r => r.json()),
+      ]).then(([a, p]) => {
+        setAppts(Array.isArray(a) ? a : [])
+        if (p && !p.error) {
+          setProfile(p)
+          setPFirstName(p.firstName || '')
+          setPLastName(p.lastName || '')
+          setPPhone(p.phone || '')
+        }
+      }).finally(() => setLoading(false))
     }
   }, [status])
+
+  async function saveProfile() {
+    setSavingProfile(true)
+    try {
+      const res = await fetch('/api/client/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName: pFirstName, lastName: pLastName, phone: pPhone }),
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        setProfile((p: any) => ({ ...p, ...updated }))
+        setEditingProfile(false)
+        setProfileSaved(true)
+        setTimeout(() => setProfileSaved(false), 2000)
+      }
+    } finally {
+      setSavingProfile(false)
+    }
+  }
 
   async function cancel(id: string) {
     await fetch(`/api/client/appointments/${id}`, {
@@ -71,10 +108,83 @@ export default function MonComptePage() {
       </header>
 
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-[22px] font-bold" style={{color:'var(--color-text-primary)'}}>Mon compte</h1>
-          <p className="text-[13px] mt-1" style={{color:'var(--color-text-secondary)'}}>Suivez vos rendez-vous</p>
+          <p className="text-[13px] mt-1" style={{color:'var(--color-text-secondary)'}}>Gérez votre profil et vos rendez-vous</p>
         </div>
+
+        {/* Profil */}
+        {profile && (
+          <div className="rounded-xl p-5 mb-6" style={{background:'var(--color-background-primary)',border:'0.5px solid var(--color-border-tertiary)'}}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold"
+                  style={{background:'var(--color-primary-light)',color:'var(--color-primary-dark)'}}>
+                  {(profile.firstName?.charAt(0) ?? '') + (profile.lastName?.charAt(0) ?? '')}
+                </div>
+                <div>
+                  <p className="text-[14px] font-semibold" style={{color:'var(--color-text-primary)'}}>
+                    {profile.firstName} {profile.lastName}
+                  </p>
+                  <p className="text-[12px]" style={{color:'var(--color-text-secondary)'}}>{profile.email}</p>
+                </div>
+              </div>
+              <button onClick={() => setEditingProfile(p => !p)}
+                className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg transition-colors"
+                style={{border:'0.5px solid var(--color-border-tertiary)',color:'var(--color-text-secondary)'}}>
+                <IconPencil size={13}/> {editingProfile ? 'Annuler' : 'Modifier'}
+              </button>
+            </div>
+
+            {editingProfile ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-medium block mb-1" style={{color:'var(--color-text-secondary)'}}>Prénom</label>
+                    <input value={pFirstName} onChange={e => setPFirstName(e.target.value)}
+                      className="w-full px-3 py-2 text-[13px] rounded-lg focus:outline-none"
+                      style={{border:'0.5px solid var(--color-border-secondary)',background:'var(--color-background-secondary)',color:'var(--color-text-primary)'}}/>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium block mb-1" style={{color:'var(--color-text-secondary)'}}>Nom</label>
+                    <input value={pLastName} onChange={e => setPLastName(e.target.value)}
+                      className="w-full px-3 py-2 text-[13px] rounded-lg focus:outline-none"
+                      style={{border:'0.5px solid var(--color-border-secondary)',background:'var(--color-background-secondary)',color:'var(--color-text-primary)'}}/>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[11px] font-medium block mb-1" style={{color:'var(--color-text-secondary)'}}>Téléphone</label>
+                  <input value={pPhone} onChange={e => setPPhone(e.target.value)} type="tel" placeholder="+32 470 12 34 56"
+                    className="w-full px-3 py-2 text-[13px] rounded-lg focus:outline-none"
+                    style={{border:'0.5px solid var(--color-border-secondary)',background:'var(--color-background-secondary)',color:'var(--color-text-primary)'}}/>
+                </div>
+                <button onClick={saveProfile} disabled={savingProfile}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-white disabled:opacity-50"
+                  style={{background:'#1D9E75'}}>
+                  <IconDeviceFloppy size={14}/>
+                  {savingProfile ? 'Enregistrement…' : 'Enregistrer'}
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  {label:'Téléphone', val: profile.phone || '—'},
+                  {label:'Email',     val: profile.email},
+                ].map(f => (
+                  <div key={f.label}>
+                    <p className="text-[11px]" style={{color:'var(--color-text-tertiary)'}}>{f.label}</p>
+                    <p className="text-[13px] font-medium mt-0.5" style={{color:'var(--color-text-primary)'}}>{f.val}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            {profileSaved && (
+              <p className="text-[12px] mt-3 flex items-center gap-1.5" style={{color:'#1D9E75'}}>
+                <IconCheck size={13}/> Profil mis à jour !
+              </p>
+            )}
+          </div>
+        )}
 
         {/* À venir */}
         <div className="mb-6">
