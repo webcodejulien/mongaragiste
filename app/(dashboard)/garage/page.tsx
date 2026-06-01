@@ -116,6 +116,31 @@ export default function GarageDashboard() {
           </div>
         </div>
 
+        {/* Bannière onboarding si garage incomplet */}
+        {!loading && garage && (!garage.services?.length || !garage.schedules?.length) && (
+          <div className="rounded-[10px] p-4 flex items-center gap-4"
+            style={{ background: '#FAEEDA', border: '0.5px solid #EF9F27' }}>
+            <span className="text-2xl flex-shrink-0">⚙️</span>
+            <div className="flex-1">
+              <p className="text-[13px] font-semibold" style={{ color: '#633806' }}>
+                Finalisez la configuration de votre garage
+              </p>
+              <p className="text-[12px] mt-0.5" style={{ color: '#854F0B' }}>
+                {!garage.services?.length && !garage.schedules?.length
+                  ? 'Ajoutez vos services et vos horaires pour recevoir des réservations.'
+                  : !garage.services?.length
+                    ? 'Ajoutez au moins un service pour que les clients puissent réserver.'
+                    : 'Configurez vos horaires d\'ouverture pour que les créneaux soient disponibles.'}
+              </p>
+            </div>
+            <Link href="/garage/settings"
+              className="px-3 py-2 rounded-lg text-[12px] font-medium text-white flex-shrink-0"
+              style={{ background: '#EF9F27' }}>
+              Configurer
+            </Link>
+          </div>
+        )}
+
         {/* Métriques */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
           {loading ? (

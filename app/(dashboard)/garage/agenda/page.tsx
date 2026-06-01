@@ -294,17 +294,23 @@ export default function AgendaPage() {
                 const iso   = isoDate(d)
                 const isToday = iso === todayStr2
                 const count = apptsForDay(iso).length
+                const jsDay  = d.getDay()
+                const appDay = jsDay === 0 ? 7 : jsDay
+                const sched  = garageSchedules.find((s: any) => s.dayOfWeek === appDay)
+                const isClosed = sched ? sched.isClosed : false
                 return (
                   <div key={i} className="py-2 px-3 flex items-center justify-between"
                     onClick={() => { setDayIdx(i); setView('day') }}
                     style={{
-                      background: isToday ? '#E1F5EE' : 'var(--color-background-secondary)',
+                      background: isClosed ? 'var(--color-background-secondary)' : isToday ? '#E1F5EE' : 'var(--color-background-secondary)',
                       borderRight: i<4 ? '0.5px solid var(--color-border-tertiary)' : 'none',
                       cursor:'pointer',
+                      opacity: isClosed ? 0.5 : 1,
                     }}>
                     <div>
                       <p className="text-[10px] font-medium" style={{ color: isToday?'#1D9E75':'var(--color-text-tertiary)' }}>{DAY_FR[d.getDay()]}</p>
                       <p className="text-[16px] font-semibold leading-tight" style={{ color: isToday?'#1D9E75':'var(--color-text-primary)' }}>{d.getDate()}</p>
+                      {isClosed && <p className="text-[9px]" style={{ color:'var(--color-text-tertiary)' }}>Fermé</p>}
                     </div>
                     {count > 0 && (
                       <span className="text-[10px] font-medium w-5 h-5 rounded-full flex items-center justify-center"
@@ -333,6 +339,10 @@ export default function AgendaPage() {
                     {weekDays.map((d, di) => {
                       const iso   = isoDate(d)
                       const isToday = iso === todayStr2
+                      const jsDay2  = d.getDay()
+                      const appDay2 = jsDay2 === 0 ? 7 : jsDay2
+                      const sched2  = garageSchedules.find((s: any) => s.dayOfWeek === appDay2)
+                      const isClosed2 = sched2 ? sched2.isClosed : false
                       const dayAppts = apptsForDay(iso).filter(a => {
                         const s = toMin(a.startTime); const e = toMin(a.endTime)
                         return s >= h*60 && s < (h+1)*60
@@ -343,7 +353,9 @@ export default function AgendaPage() {
                             height:`${SLOT_H}px`,
                             borderBottom:'0.5px solid var(--color-border-tertiary)',
                             borderRight: di<4 ? '0.5px solid var(--color-border-tertiary)' : 'none',
-                            background: isToday ? '#FAFFF9' : 'transparent',
+                            background: isClosed2
+                              ? 'repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(0,0,0,0.02) 4px,rgba(0,0,0,0.02) 8px)'
+                              : isToday ? '#FAFFF9' : 'transparent',
                           }}
                           onClick={() => openAdd(iso, h)}>
                           {/* Hover indicator */}
