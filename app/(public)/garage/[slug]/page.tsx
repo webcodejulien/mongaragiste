@@ -7,7 +7,6 @@ import {
   IconCheck, IconArrowLeft, IconCar, IconUser, IconLoader2,
 } from '@tabler/icons-react'
 
-const TIME_SLOTS = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30']
 const BOOKING_STEPS = ['Service','Créneau','Vos infos','Confirmation']
 
 // Données statiques pour les garages non en DB
@@ -67,32 +66,34 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
   const [plate,      setPlate]      = useState('')
   const [vehicle,    setVehicle]    = useState('')
   const [notes,      setNotes]      = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [done,       setDone]       = useState(false)
+  const [submitting,   setSubmitting]   = useState(false)
+  const [done,         setDone]         = useState(false)
   const [bookingError, setBookingError] = useState('')
+  const [slots,        setSlots]        = useState<string[]>([])
+  const [slotsLoading, setSlotsLoading] = useState(false)
 
   const weekDates = getWeekDates()
   const selDate   = weekDates[selDateIdx]
 
   useEffect(() => {
-    // Charger les services depuis la DB
     fetch(`/api/public/garage/${params.slug}`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        if (d) { setGarage(d); setServices(d.services || []) }
-        else {
-          // fallback services statiques
-          setServices([
-            {id:'1',name:'Vidange',duration:30,price:30},
-            {id:'2',name:'Freins avant',duration:60,price:80},
-            {id:'3',name:'Révision complète',duration:90,price:150},
-            {id:'4',name:'Pneus (x4)',duration:60,price:80},
-            {id:'5',name:'Diagnostic',duration:30,price:50},
-          ])
-        }
-      })
+      .then(d => { if (d) { setGarage(d); setServices(d.services || []) } })
       .finally(() => setLoading(false))
   }, [params.slug])
+
+  // Charger les créneaux dispo quand on change de date ou de service (à l'étape 2)
+  useEffect(() => {
+    if (bStep !== 2 || !selService || !selDate) return
+    setSlotsLoading(true)
+    setSelTime('')
+    setSlots([])
+    fetch(`/api/public/slots?slug=${params.slug}&date=${selDate.iso}&serviceId=${selService.id}`)
+      .then(r => r.json())
+      .then(d => setSlots(Array.isArray(d) ? d : []))
+      .catch(() => setSlots([]))
+      .finally(() => setSlotsLoading(false))
+  }, [bStep, selDateIdx, selService?.id])
 
   function canNext() {
     if (bStep===1) return !!selService
@@ -328,17 +329,27 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                           ))}
                         </div>
                         <p className="text-[11px] font-medium mb-2 uppercase tracking-wide" style={{color:'var(--color-text-tertiary)'}}>
-                          Créneau — {garage.mechanicCount||1} poste{(garage.mechanicCount||1)>1?'s':''}
+                          Créneaux disponibles
                         </p>
-                        <div className="grid grid-cols-3 gap-1.5">
-                          {TIME_SLOTS.map(t => (
-                            <button key={t} onClick={() => setSelTime(t)}
-                              className="py-2 rounded text-[12px] font-medium transition-colors"
-                              style={{background:selTime===t?'#1D9E75':'var(--color-background-primary)',border:`0.5px solid ${selTime===t?'#1D9E75':'var(--color-border-secondary)'}`,color:selTime===t?'#fff':'var(--color-text-primary)'}}>
-                              {t}
-                            </button>
-                          ))}
-                        </div>
+                        {slotsLoading ? (
+                          <div className="flex items-center gap-2 py-4 text-[12px]" style={{color:'var(--color-text-secondary)'}}>
+                            <IconLoader2 size={14} className="animate-spin"/> Chargement des créneaux…
+                          </div>
+                        ) : slots.length === 0 ? (
+                          <p className="text-[12px] py-3" style={{color:'var(--color-text-tertiary)'}}>
+                            Aucun créneau disponible ce jour. Choisissez une autre date.
+                          </p>
+                        ) : (
+                          <div className="grid grid-cols-3 gap-1.5">
+                            {slots.map(t => (
+                              <button key={t} onClick={() => setSelTime(t)}
+                                className="py-2 rounded text-[12px] font-medium transition-colors"
+                                style={{background:selTime===t?'#1D9E75':'var(--color-background-primary)',border:`0.5px solid ${selTime===t?'#1D9E75':'var(--color-border-secondary)'}`,color:selTime===t?'#fff':'var(--color-text-primary)'}}>
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
 
