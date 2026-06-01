@@ -30,9 +30,10 @@ export async function GET(req: NextRequest) {
     if (svc) serviceDuration = svc.duration
   }
 
-  // Jour de la semaine (0=dim … 6=sam)
-  const date    = new Date(dateStr + 'T00:00:00')
-  const dayOfWeek = date.getDay()
+  // Jour de la semaine — convention app: 1=lun … 6=sam, 7=dim
+  const date      = new Date(dateStr + 'T00:00:00')
+  const jsDay     = date.getDay() // 0=dim, 1=lun … 6=sam
+  const dayOfWeek = jsDay === 0 ? 7 : jsDay
 
   // Trouver l'horaire du jour
   const schedule = garage.schedules.find(s => s.dayOfWeek === dayOfWeek)

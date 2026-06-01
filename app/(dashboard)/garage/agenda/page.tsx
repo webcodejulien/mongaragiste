@@ -38,7 +38,7 @@ function apiToAppt(a: any): Appt {
   }
 }
 
-const HOURS = [8,9,10,11,12,13,14,15,16,17]
+const DEFAULT_HOURS = [8,9,10,11,12,13,14,15,16,17]
 const SLOT_H = 56 // px par heure
 
 /* ─── Config couleurs ────────────────────────────────────── */
@@ -97,6 +97,8 @@ export default function AgendaPage() {
   const [appts, setAppts]   = useState<Appt[]>([])
   const [loadingAppts, setLoadingAppts] = useState(true)
   const [garageServices, setGarageServices] = useState<any[]>([])
+  const [garageSchedules, setGarageSchedules] = useState<any[]>([])
+  const [garageSlotDuration, setGarageSlotDuration] = useState(30)
   const [selected, setSelected] = useState<Appt|null>(null)
   const [adding, setAdding]     = useState(false)
   const [addDate, setAddDate]   = useState('')
@@ -119,15 +121,30 @@ export default function AgendaPage() {
       .then(r => r.json())
       .then(d => { if (Array.isArray(d)) setAppts(d.map(apiToAppt)) })
       .finally(() => setLoadingAppts(false))
-    // Charger les services pour le formulaire d'ajout
+    // Charger les services + horaires pour le formulaire d'ajout
     fetch('/api/garage/me')
       .then(r => r.json())
-      .then(g => { if (g.services?.length) setGarageServices(g.services) })
+      .then(g => {
+        if (g.services?.length)   setGarageServices(g.services)
+        if (g.schedules?.length)  setGarageSchedules(g.schedules)
+        if (g.slotDuration)       setGarageSlotDuration(g.slotDuration)
+      })
   }, [])
 
   const weekDays = useMemo(() =>
     Array.from({length:5}, (_,i) => addDays(monday, i))
   , [monday])
+
+  // Heures affichées selon les horaires du garage (min openTime → max closeTime)
+  const HOURS = useMemo(() => {
+    if (!garageSchedules.length) return DEFAULT_HOURS
+    const opens  = garageSchedules.filter(s => !s.isClosed).map(s => parseInt(s.openTime))
+    const closes = garageSchedules.filter(s => !s.isClosed).map(s => parseInt(s.closeTime))
+    if (!opens.length) return DEFAULT_HOURS
+    const minH = Math.min(...opens)
+    const maxH = Math.max(...closes)
+    return Array.from({ length: maxH - minH }, (_, i) => minH + i)
+  }, [garageSchedules])
 
   const viewDate = addDays(monday, dayIdx)
 
