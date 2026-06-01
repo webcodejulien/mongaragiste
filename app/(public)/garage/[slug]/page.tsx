@@ -9,25 +9,6 @@ import {
 
 const BOOKING_STEPS = ['Service','Créneau','Vos infos','Confirmation']
 
-// Données statiques pour les garages non en DB
-const STATIC: Record<string, any> = {
-  'garage-dubois-fils': {
-    name:'Garage Dubois & Fils', city:'Bruxelles', address:'Rue de la Loi 42', zipCode:'1000',
-    phone:'+32 2 123 45 67', description:'Votre garagiste de confiance depuis 1985. Spécialiste toutes marques.',
-    rating:4.8, reviewCount:124, mechanicCount:3,
-    schedules:[
-      {day:'Lundi',open:'08:00',close:'18:00',closed:false},{day:'Mardi',open:'08:00',close:'18:00',closed:false},
-      {day:'Mercredi',open:'08:00',close:'18:00',closed:false},{day:'Jeudi',open:'08:00',close:'18:00',closed:false},
-      {day:'Vendredi',open:'08:00',close:'18:00',closed:false},{day:'Samedi',open:'09:00',close:'13:00',closed:false},
-      {day:'Dimanche',open:'',close:'',closed:true},
-    ],
-    reviews:[
-      {author:'Martin D.',initials:'MD',rating:5,service:'Révision',date:'12 jan 2024',comment:'Excellent service, travail soigné et prix honnêtes !'},
-      {author:'Sophie L.',initials:'SL',rating:5,service:'Freins',date:'08 jan 2024',comment:'Très professionnel, délai respecté et explication claire.'},
-      {author:'Jean M.',initials:'JM',rating:4,service:'Vidange',date:'03 jan 2024',comment:'Bon garage, personnel accueillant.'},
-    ],
-  },
-}
 
 function Stars({ n, size=14 }: { n:number; size?:number }) {
   return (
@@ -50,7 +31,7 @@ function getWeekDates() {
 }
 
 export default function GarageProfilePage({ params }: { params: { slug: string } }) {
-  const [garage,   setGarage]   = useState<any>(STATIC[params.slug] || null)
+  const [garage,   setGarage]   = useState<any>(null)
   const [services, setServices] = useState<any[]>([])
   const [loading,  setLoading]  = useState(true)
 
@@ -249,7 +230,15 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                       </div>
                       <Stars n={r.rating} size={12}/>
                     </div>
-                    <p className="text-[13px] leading-relaxed" style={{color:'var(--color-text-secondary)'}}>{r.comment}</p>
+                    {r.comment && (
+                      <p className="text-[13px] leading-relaxed" style={{color:'var(--color-text-secondary)'}}>{r.comment}</p>
+                    )}
+                    {r.garageReply && (
+                      <div className="mt-2 pl-3 border-l-2 border-[#1D9E75]">
+                        <p className="text-[11px] font-medium mb-0.5" style={{color:'#085041'}}>Réponse du garage</p>
+                        <p className="text-[12px] leading-relaxed" style={{color:'var(--color-text-secondary)'}}>{r.garageReply}</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

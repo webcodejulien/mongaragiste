@@ -6,7 +6,27 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { IconCalendar, IconCheck, IconX, IconClock, IconArrowRight, IconLogout, IconUser, IconPencil, IconDeviceFloppy } from '@tabler/icons-react'
+import { IconCalendar, IconCheck, IconX, IconClock, IconArrowRight, IconLogout, IconUser, IconPencil, IconDeviceFloppy, IconStarFilled, IconStar, IconMessageCircle } from '@tabler/icons-react'
+
+function StarPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+  const [hover, setHover] = useState(0)
+  return (
+    <div className="flex items-center gap-1">
+      {[1,2,3,4,5].map(n => {
+        const filled = n <= (hover || value)
+        return (
+          <button key={n} type="button"
+            onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)}
+            onClick={() => onChange(n)}>
+            {filled
+              ? <IconStarFilled size={22} style={{color:'#EF9F27'}}/>
+              : <IconStar       size={22} style={{color:'var(--color-border-primary)'}}/>}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 const STATUS: Record<string, {label:string;bg:string;color:string}> = {
   PENDING:     {label:'En attente', bg:'#FAEEDA', color:'#633806'},
@@ -38,6 +58,13 @@ export default function MonComptePage() {
   const [savingProfile, setSavingProfile] = useState(false)
   const [profileSaved,  setProfileSaved]  = useState(false)
 
+  // Avis
+  const [reviewingId,  setReviewingId]  = useState<string | null>(null) // appointmentId
+  const [reviewRating, setReviewRating] = useState(5)
+  const [reviewText,   setReviewText]   = useState('')
+  const [submittingReview, setSubmittingReview] = useState(false)
+  const [reviewedIds,  setReviewedIds]  = useState<Set<string>>(new Set())
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login')
     if (status === 'authenticated') {
@@ -55,6 +82,25 @@ export default function MonComptePage() {
       }).finally(() => setLoading(false))
     }
   }, [status])
+
+  async function submitReview(appointmentId: string) {
+    setSubmittingReview(true)
+    try {
+      const res = await fetch('/api/client/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appointmentId, rating: reviewRating, comment: reviewText }),
+      })
+      if (res.ok) {
+        setReviewedIds(p => new Set(Array.from(p).concat(appointmentId)))
+        setReviewingId(null)
+        setReviewRating(5)
+        setReviewText('')
+      }
+    } finally {
+      setSubmittingReview(false)
+    }
+  }
 
   async function saveProfile() {
     setSavingProfile(true)
@@ -240,16 +286,63 @@ export default function MonComptePage() {
               Historique ({past.length})
             </h2>
             <div className="rounded-xl overflow-hidden" style={{background:'var(--color-background-primary)',border:'0.5px solid var(--color-border-tertiary)'}}>
-              {past.map((a,i) => {
-                const s = STATUS[a.status] ?? STATUS.DONE
+              {past.map((a, i) => {
+                const s          = STATUS[a.status] ?? STATUS.DONE
+                const canReview  = a.status === 'DONE' && !a.review && !reviewedIds.has(a.id)
+                const alreadyDone = a.review || reviewedIds.has(a.id)
+                const isReviewing = reviewingId === a.id
                 return (
-                  <div key={a.id} className="flex items-center gap-3 px-4 py-3"
-                    style={{borderBottom:i<past.length-1?'0.5px solid var(--color-border-tertiary)':'none'}}>
-                    <div className="flex-1">
-                      <p className="text-[13px] font-medium" style={{color:'var(--color-text-primary)'}}>{a.garage?.name} — {a.service?.name}</p>
-                      <p className="text-[11px] mt-0.5" style={{color:'var(--color-text-tertiary)'}}>{fmtDate(a.date)} à {a.startTime}</p>
+                  <div key={a.id} style={{borderBottom:i<past.length-1?'0.5px solid var(--color-border-tertiary)':'none'}}>
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <div className="flex-1">
+                        <p className="text-[13px] font-medium" style={{color:'var(--color-text-primary)'}}>{a.garage?.name} — {a.service?.name}</p>
+                        <p className="text-[11px] mt-0.5" style={{color:'var(--color-text-tertiary)'}}>{fmtDate(a.date)} à {a.startTime}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {alreadyDone && (
+                          <span className="text-[11px] flex items-center gap-1" style={{color:'#1D9E75'}}>
+                            <IconStarFilled size={11}/> Avis publié
+                          </span>
+                        )}
+                        {canReview && (
+                          <button onClick={() => { setReviewingId(a.id); setReviewRating(5); setReviewText('') }}
+                            className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-lg"
+                            style={{border:'0.5px solid var(--color-border-tertiary)',color:'var(--color-text-secondary)'}}>
+                            <IconMessageCircle size={11}/> Laisser un avis
+                          </button>
+                        )}
+                        <span className="text-[11px] font-medium px-2.5 py-1 rounded-full" style={{background:s.bg,color:s.color}}>{s.label}</span>
+                      </div>
                     </div>
-                    <span className="text-[11px] font-medium px-2.5 py-1 rounded-full" style={{background:s.bg,color:s.color}}>{s.label}</span>
+
+                    {isReviewing && (
+                      <div className="px-4 pb-4 pt-1">
+                        <div className="rounded-xl p-4 space-y-3" style={{background:'var(--color-background-secondary)'}}>
+                          <div>
+                            <p className="text-[12px] font-medium mb-2" style={{color:'var(--color-text-primary)'}}>
+                              Votre note pour {a.garage?.name}
+                            </p>
+                            <StarPicker value={reviewRating} onChange={setReviewRating}/>
+                          </div>
+                          <textarea rows={3} value={reviewText} onChange={e => setReviewText(e.target.value)}
+                            placeholder="Décrivez votre expérience (optionnel)…"
+                            className="w-full text-[12px] px-3 py-2 rounded-lg resize-none focus:outline-none"
+                            style={{border:'0.5px solid var(--color-border-secondary)',background:'var(--color-background-primary)',color:'var(--color-text-primary)'}}/>
+                          <div className="flex gap-2">
+                            <button onClick={() => submitReview(a.id)} disabled={submittingReview}
+                              className="px-4 py-2 rounded-lg text-[12px] font-medium text-white disabled:opacity-50"
+                              style={{background:'#1D9E75'}}>
+                              {submittingReview ? 'Envoi…' : 'Publier mon avis'}
+                            </button>
+                            <button onClick={() => setReviewingId(null)}
+                              className="px-4 py-2 rounded-lg text-[12px]"
+                              style={{background:'var(--color-background-primary)',color:'var(--color-text-secondary)',border:'0.5px solid var(--color-border-tertiary)'}}>
+                              Annuler
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })}

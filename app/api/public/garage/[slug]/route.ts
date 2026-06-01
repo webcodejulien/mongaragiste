@@ -29,12 +29,13 @@ export async function GET(_: NextRequest, { params }: { params: { slug: string }
         closed: s.isClosed,
       })),
       reviews: garage.reviews.map(r => ({
-        author:   `${r.client.firstName} ${r.client.lastName.charAt(0)}.`,
-        initials: `${r.client.firstName.charAt(0)}${r.client.lastName.charAt(0)}`,
-        rating:   r.rating,
-        comment:  r.comment || '',
-        date:     new Date(r.createdAt).toLocaleDateString('fr-BE'),
-        service:  '',
+        author:      `${r.client.firstName} ${r.client.lastName.charAt(0)}.`,
+        initials:    `${r.client.firstName.charAt(0)}${r.client.lastName.charAt(0)}`,
+        rating:      r.rating,
+        comment:     r.comment || '',
+        garageReply: r.garageReply || null,
+        date:        new Date(r.createdAt).toLocaleDateString('fr-BE'),
+        service:     '',
       })),
     })
   } catch (err) {
