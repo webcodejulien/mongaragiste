@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { TopBar } from '@/components/layout/TopBar'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SkeletonRow } from '@/components/ui/Skeleton'
-import { IconSearch, IconMail, IconPhone, IconChevronRight } from '@tabler/icons-react'
+import { IconSearch, IconMail, IconPhone, IconChevronRight, IconDownload } from '@tabler/icons-react'
 import Link from 'next/link'
 
 const STATUS: Record<string, { label: string; bg: string; color: string }> = {
@@ -63,7 +63,14 @@ export default function ClientsPage() {
                   className="w-full pl-8 pr-3 py-2 text-[13px] rounded-lg focus:outline-none"
                   style={{ border:'0.5px solid var(--color-border-secondary)', background:'var(--color-background-primary)', color:'var(--color-text-primary)' }}/>
               </div>
-              <p className="text-[11px]" style={{ color:'var(--color-text-tertiary)' }}>{filtered.length} résultat(s)</p>
+              <div className="flex items-center gap-3">
+                <p className="text-[11px]" style={{ color:'var(--color-text-tertiary)' }}>{filtered.length} résultat(s)</p>
+                <a href="/api/garage/export?type=clients"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-medium"
+                  style={{ border:'0.5px solid var(--color-border-tertiary)', color:'var(--color-text-secondary)', background:'var(--color-background-primary)' }}>
+                  <IconDownload size={13}/> Export CSV
+                </a>
+              </div>
             </div>
 
             <div className="rounded-[10px] overflow-hidden"

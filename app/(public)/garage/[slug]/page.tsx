@@ -7,28 +7,10 @@ import {
   IconCheck, IconArrowLeft, IconCar, IconUser, IconLoader2,
 } from '@tabler/icons-react'
 
-const TIME_SLOTS = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30']
 const BOOKING_STEPS = ['Service','Créneau','Vos infos','Confirmation']
 
-// Données statiques pour les garages non en DB
-const STATIC: Record<string, any> = {
-  'garage-dubois-fils': {
-    name:'Garage Dubois & Fils', city:'Bruxelles', address:'Rue de la Loi 42', zipCode:'1000',
-    phone:'+32 2 123 45 67', description:'Votre garagiste de confiance depuis 1985. Spécialiste toutes marques.',
-    rating:4.8, reviewCount:124, mechanicCount:3,
-    schedules:[
-      {day:'Lundi',open:'08:00',close:'18:00',closed:false},{day:'Mardi',open:'08:00',close:'18:00',closed:false},
-      {day:'Mercredi',open:'08:00',close:'18:00',closed:false},{day:'Jeudi',open:'08:00',close:'18:00',closed:false},
-      {day:'Vendredi',open:'08:00',close:'18:00',closed:false},{day:'Samedi',open:'09:00',close:'13:00',closed:false},
-      {day:'Dimanche',open:'',close:'',closed:true},
-    ],
-    reviews:[
-      {author:'Martin D.',initials:'MD',rating:5,service:'Révision',date:'12 jan 2024',comment:'Excellent service, travail soigné et prix honnêtes !'},
-      {author:'Sophie L.',initials:'SL',rating:5,service:'Freins',date:'08 jan 2024',comment:'Très professionnel, délai respecté et explication claire.'},
-      {author:'Jean M.',initials:'JM',rating:4,service:'Vidange',date:'03 jan 2024',comment:'Bon garage, personnel accueillant.'},
-    ],
-  },
-}
+const DAY_NAMES = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
+
 
 function Stars({ n, size=14 }: { n:number; size?:number }) {
   return (
@@ -51,7 +33,7 @@ function getWeekDates() {
 }
 
 export default function GarageProfilePage({ params }: { params: { slug: string } }) {
-  const [garage,   setGarage]   = useState<any>(STATIC[params.slug] || null)
+  const [garage,   setGarage]   = useState<any>(null)
   const [services, setServices] = useState<any[]>([])
   const [loading,  setLoading]  = useState(true)
 
@@ -67,32 +49,34 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
   const [plate,      setPlate]      = useState('')
   const [vehicle,    setVehicle]    = useState('')
   const [notes,      setNotes]      = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [done,       setDone]       = useState(false)
+  const [submitting,   setSubmitting]   = useState(false)
+  const [done,         setDone]         = useState(false)
   const [bookingError, setBookingError] = useState('')
+  const [slots,        setSlots]        = useState<string[]>([])
+  const [slotsLoading, setSlotsLoading] = useState(false)
 
   const weekDates = getWeekDates()
   const selDate   = weekDates[selDateIdx]
 
   useEffect(() => {
-    // Charger les services depuis la DB
     fetch(`/api/public/garage/${params.slug}`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        if (d) { setGarage(d); setServices(d.services || []) }
-        else {
-          // fallback services statiques
-          setServices([
-            {id:'1',name:'Vidange',duration:30,price:30},
-            {id:'2',name:'Freins avant',duration:60,price:80},
-            {id:'3',name:'Révision complète',duration:90,price:150},
-            {id:'4',name:'Pneus (x4)',duration:60,price:80},
-            {id:'5',name:'Diagnostic',duration:30,price:50},
-          ])
-        }
-      })
+      .then(d => { if (d) { setGarage(d); setServices(d.services || []) } })
       .finally(() => setLoading(false))
   }, [params.slug])
+
+  // Charger les créneaux dispo quand on change de date ou de service (à l'étape 2)
+  useEffect(() => {
+    if (bStep !== 2 || !selService || !selDate) return
+    setSlotsLoading(true)
+    setSelTime('')
+    setSlots([])
+    fetch(`/api/public/slots?slug=${params.slug}&date=${selDate.iso}&serviceId=${selService.id}`)
+      .then(r => r.json())
+      .then(d => setSlots(Array.isArray(d) ? d : []))
+      .catch(() => setSlots([]))
+      .finally(() => setSlotsLoading(false))
+  }, [bStep, selDateIdx, selService?.id])
 
   function canNext() {
     if (bStep===1) return !!selService
@@ -152,6 +136,21 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
 
   const avg = garage.rating?.toFixed(1) || '—'
 
+  /* Logique ouvert/fermé */
+  const todayIdx      = new Date().getDay() // 0=dim
+  const todayName     = DAY_NAMES[todayIdx]
+  const todaySchedule = garage.schedules?.find((s: any) => s.day === todayName)
+  const _now          = new Date()
+  const currentTime   = `${String(_now.getHours()).padStart(2,'0')}:${String(_now.getMinutes()).padStart(2,'0')}`
+  const isOpenNow     = todaySchedule && !todaySchedule.closed
+    && currentTime >= todaySchedule.open
+    && currentTime <= todaySchedule.close
+
+  /* Badge "Nouveau" si créé il y a moins de 30 jours */
+  const isNew = garage.createdAt
+    ? (Date.now() - new Date(garage.createdAt).getTime()) < 30 * 24 * 60 * 60 * 1000
+    : false
+
   return (
     <div className="min-h-screen" style={{background:'var(--color-background-secondary)'}}>
       <header className="sticky top-0 z-30 h-14" style={{background:'var(--color-background-primary)',borderBottom:'0.5px solid var(--color-border-tertiary)'}}>
@@ -174,20 +173,41 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
             {/* Infos */}
             <div className="rounded-xl p-6" style={{background:'var(--color-background-primary)',border:'0.5px solid var(--color-border-tertiary)'}}>
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl flex-shrink-0" style={{background:'var(--color-primary-light)'}}>🔧</div>
+                <div className="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center text-3xl flex-shrink-0" style={{background:'var(--color-primary-light)'}}>
+                  {garage.logoUrl
+                    ? <img src={garage.logoUrl} alt={garage.name} className="w-full h-full object-cover"/>
+                    : '🔧'
+                  }
+                </div>
                 <div className="flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <h1 className="text-[20px] font-bold" style={{color:'var(--color-text-primary)'}}>{garage.name}</h1>
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>Actif</span>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {isNew && (
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{background:'#FFF3E0',color:'#B45309'}}>Nouveau</span>
+                      )}
+                      {isOpenNow
+                        ? <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>🟢 Ouvert maintenant</span>
+                        : todaySchedule
+                          ? <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{background:'#FCEBEB',color:'#A32D2D'}}>🔴 Fermé</span>
+                          : <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>Actif</span>
+                      }
+                    </div>
                   </div>
                   <p className="text-[12px] mt-1" style={{color:'var(--color-text-secondary)'}}>{garage.address}, {garage.zipCode} {garage.city}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Stars n={Math.round(garage.rating||0)} size={14}/>
-                    <span className="text-[13px] font-bold" style={{color:'var(--color-text-primary)'}}>{avg}</span>
-                    <span className="text-[12px]" style={{color:'var(--color-text-secondary)'}}>({garage.reviewCount} avis)</span>
-                    {garage.mechanicCount && (
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    {(garage.reviewCount ?? 0) > 0 ? (
+                      <>
+                        <Stars n={Math.round(garage.rating||0)} size={14}/>
+                        <span className="text-[13px] font-bold" style={{color:'var(--color-text-primary)'}}>{avg}</span>
+                        <span className="text-[12px]" style={{color:'var(--color-text-secondary)'}}>({garage.reviewCount} avis)</span>
+                      </>
+                    ) : (
+                      <span className="text-[12px] font-medium" style={{color:'var(--color-text-tertiary)'}}>Nouveau garage</span>
+                    )}
+                    {garage.mechanicCount != null && garage.mechanicCount > 0 && (
                       <span className="text-[11px] px-2 py-0.5 rounded-full" style={{background:'var(--color-background-secondary)',color:'var(--color-text-secondary)'}}>
-                        {garage.mechanicCount} poste{garage.mechanicCount>1?'s':''}
+                        {garage.mechanicCount} mécanicien{garage.mechanicCount>1?'s':''}
                       </span>
                     )}
                   </div>
@@ -248,7 +268,15 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                       </div>
                       <Stars n={r.rating} size={12}/>
                     </div>
-                    <p className="text-[13px] leading-relaxed" style={{color:'var(--color-text-secondary)'}}>{r.comment}</p>
+                    {r.comment && (
+                      <p className="text-[13px] leading-relaxed" style={{color:'var(--color-text-secondary)'}}>{r.comment}</p>
+                    )}
+                    {r.garageReply && (
+                      <div className="mt-2 pl-3 border-l-2 border-[#1D9E75]">
+                        <p className="text-[11px] font-medium mb-0.5" style={{color:'#085041'}}>Réponse du garage</p>
+                        <p className="text-[12px] leading-relaxed" style={{color:'var(--color-text-secondary)'}}>{r.garageReply}</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -318,27 +346,51 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                       <div>
                         <p className="text-[11px] font-medium mb-2 uppercase tracking-wide" style={{color:'var(--color-text-tertiary)'}}>Date</p>
                         <div className="grid grid-cols-7 gap-1 mb-4">
-                          {weekDates.map((d,i) => (
-                            <button key={d.iso} onClick={() => {setSelDateIdx(i);setSelTime('')}}
-                              className="flex flex-col items-center py-2 rounded-lg transition-colors"
-                              style={{background:selDateIdx===i?'#1D9E75':'var(--color-background-secondary)',color:selDateIdx===i?'#fff':'var(--color-text-secondary)'}}>
-                              <span className="text-[9px] font-medium">{d.day}</span>
-                              <span className="text-[13px] font-bold leading-tight">{d.date}</span>
-                            </button>
-                          ))}
+                          {weekDates.map((d,i) => {
+                            // Vérifier si le jour est fermé (convention app: 1=lun…7=dim)
+                            const jsDay = new Date(d.iso).getDay()
+                            const appDay = jsDay === 0 ? 7 : jsDay
+                            const schedule = garage?.schedules?.find((s: any) => s.dayOfWeek === appDay)
+                            const isClosed = schedule ? schedule.closed : false
+                            return (
+                              <button key={d.iso}
+                                onClick={() => { if (!isClosed) { setSelDateIdx(i); setSelTime('') } }}
+                                disabled={isClosed}
+                                className="flex flex-col items-center py-2 rounded-lg transition-colors"
+                                style={{
+                                  background: isClosed ? 'transparent' : selDateIdx===i ? '#1D9E75' : 'var(--color-background-secondary)',
+                                  color: isClosed ? 'var(--color-border-primary)' : selDateIdx===i ? '#fff' : 'var(--color-text-secondary)',
+                                  cursor: isClosed ? 'not-allowed' : 'pointer',
+                                  opacity: isClosed ? 0.4 : 1,
+                                }}>
+                                <span className="text-[9px] font-medium">{d.day}</span>
+                                <span className="text-[13px] font-bold leading-tight">{d.date}</span>
+                              </button>
+                            )
+                          })}
                         </div>
                         <p className="text-[11px] font-medium mb-2 uppercase tracking-wide" style={{color:'var(--color-text-tertiary)'}}>
-                          Créneau — {garage.mechanicCount||1} poste{(garage.mechanicCount||1)>1?'s':''}
+                          Créneaux disponibles
                         </p>
-                        <div className="grid grid-cols-3 gap-1.5">
-                          {TIME_SLOTS.map(t => (
-                            <button key={t} onClick={() => setSelTime(t)}
-                              className="py-2 rounded text-[12px] font-medium transition-colors"
-                              style={{background:selTime===t?'#1D9E75':'var(--color-background-primary)',border:`0.5px solid ${selTime===t?'#1D9E75':'var(--color-border-secondary)'}`,color:selTime===t?'#fff':'var(--color-text-primary)'}}>
-                              {t}
-                            </button>
-                          ))}
-                        </div>
+                        {slotsLoading ? (
+                          <div className="flex items-center gap-2 py-4 text-[12px]" style={{color:'var(--color-text-secondary)'}}>
+                            <IconLoader2 size={14} className="animate-spin"/> Chargement des créneaux…
+                          </div>
+                        ) : slots.length === 0 ? (
+                          <p className="text-[12px] py-3" style={{color:'var(--color-text-tertiary)'}}>
+                            Aucun créneau disponible ce jour. Choisissez une autre date.
+                          </p>
+                        ) : (
+                          <div className="grid grid-cols-3 gap-1.5">
+                            {slots.map(t => (
+                              <button key={t} onClick={() => setSelTime(t)}
+                                className="py-2 rounded text-[12px] font-medium transition-colors"
+                                style={{background:selTime===t?'#1D9E75':'var(--color-background-primary)',border:`0.5px solid ${selTime===t?'#1D9E75':'var(--color-border-secondary)'}`,color:selTime===t?'#fff':'var(--color-text-primary)'}}>
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -402,17 +454,29 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
 
               {/* Horaires */}
               <div className="px-5 py-4" style={{borderTop:'0.5px solid var(--color-border-tertiary)'}}>
-                <p className="text-[11px] font-medium mb-2.5 uppercase tracking-wide" style={{color:'var(--color-text-tertiary)'}}>Horaires</p>
+                <div className="flex items-center justify-between mb-2.5">
+                  <p className="text-[11px] font-medium uppercase tracking-wide" style={{color:'var(--color-text-tertiary)'}}>Horaires</p>
+                  {isOpenNow
+                    ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>🟢 Ouvert</span>
+                    : todaySchedule
+                      ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{background:'#FCEBEB',color:'#A32D2D'}}>🔴 Fermé</span>
+                      : null
+                  }
+                </div>
                 <div className="space-y-1">
-                  {(garage.schedules||[]).map((s:any) => (
-                    <div key={s.day} className="flex items-center justify-between">
-                      <span className="text-[12px]" style={{color:'var(--color-text-secondary)'}}>{s.day}</span>
-                      {s.closed
-                        ? <span className="text-[11px] font-medium" style={{color:'#E24B4A'}}>Fermé</span>
-                        : <span className="text-[12px] font-medium" style={{color:'var(--color-text-primary)'}}>{s.open} – {s.close}</span>
-                      }
-                    </div>
-                  ))}
+                  {(garage.schedules||[]).map((s:any) => {
+                    const isToday = s.day === todayName
+                    return (
+                      <div key={s.day} className="flex items-center justify-between rounded px-1.5 py-0.5 -mx-1.5"
+                        style={isToday ? {background:'#E1F5EE'} : {}}>
+                        <span className="text-[12px]" style={{color: isToday ? '#085041' : 'var(--color-text-secondary)', fontWeight: isToday ? 700 : 400}}>{s.day}</span>
+                        {s.closed
+                          ? <span className="text-[11px] font-medium" style={{color: isToday ? '#A32D2D' : '#E24B4A'}}>Fermé</span>
+                          : <span className="text-[12px] font-medium" style={{color: isToday ? '#085041' : 'var(--color-text-primary)'}}>{s.open} – {s.close}</span>
+                        }
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             </div>

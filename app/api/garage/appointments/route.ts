@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getGarageId } from '@/lib/getGarage'
 import { prisma } from '@/lib/prisma'
+import { isValidTime, sanitize } from '@/lib/validate'
 
 export async function GET(req: NextRequest) {
   const garageId = await getGarageId()
@@ -45,10 +46,30 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { clientId, serviceId, date, startTime, endTime, vehiclePlate, vehicleModel, notes } = body
+    const clientId    = sanitize(body.clientId    ?? '')
+    const serviceId   = sanitize(body.serviceId   ?? '')
+    const date        = sanitize(body.date        ?? '')
+    const startTime   = sanitize(body.startTime   ?? '')
+    const endTime     = sanitize(body.endTime     ?? '')
+    const vehiclePlate = sanitize(body.vehiclePlate ?? '')
+    const vehicleModel = sanitize(body.vehicleModel ?? '')
+    const notes       = sanitize(body.notes       ?? '')
 
     if (!clientId || !serviceId || !date || !startTime || !endTime) {
       return NextResponse.json({ error: 'Champs manquants.' }, { status: 400 })
+    }
+    if (!isValidTime(startTime) || !isValidTime(endTime)) {
+      return NextResponse.json({ error: 'Format d\'heure invalide (HH:MM attendu).' }, { status: 400 })
+    }
+    if (startTime >= endTime) {
+      return NextResponse.json({ error: 'L\'heure de début doit être avant l\'heure de fin.' }, { status: 400 })
+    }
+    const apptDate = new Date(date)
+    apptDate.setHours(0, 0, 0, 0)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (apptDate < today) {
+      return NextResponse.json({ error: 'La date du RDV ne peut pas être dans le passé.' }, { status: 400 })
     }
 
     const appt = await prisma.appointment.create({

@@ -14,20 +14,35 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { name, phone, address, city, zipCode, description, mechanicCount, slotDuration, schedules, services } = body
+    const { name, phone, address, city, zipCode, description, mechanicCount, slotDuration, schedules, services, notifPrefs } = body
+
+    const data: any = {
+      ...(name          !== undefined && { name }),
+      ...(phone         !== undefined && { phone }),
+      ...(address       !== undefined && { address }),
+      ...(city          !== undefined && { city }),
+      ...(zipCode       !== undefined && { zipCode }),
+      ...(description   !== undefined && { description }),
+      ...(mechanicCount !== undefined && { mechanicCount }),
+      ...(slotDuration  !== undefined && { slotDuration }),
+      ...(notifPrefs    !== undefined && { notifPrefs }),
+    }
+
+    // Geocode automatically when address or city changes
+    if (address !== undefined || city !== undefined) {
+      const q = encodeURIComponent(`${address ?? garage.address} ${city ?? garage.city} Belgium`)
+      const geo = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, {
+        headers: { 'User-Agent': 'MonGaragiste/1.0' },
+      }).then(r => r.json()).catch(() => [])
+      if (geo[0]) {
+        data.lat = parseFloat(geo[0].lat)
+        data.lng = parseFloat(geo[0].lon)
+      }
+    }
 
     const updated = await prisma.garage.update({
       where: { id: garage.id },
-      data: {
-        ...(name          !== undefined && { name }),
-        ...(phone         !== undefined && { phone }),
-        ...(address       !== undefined && { address }),
-        ...(city          !== undefined && { city }),
-        ...(zipCode       !== undefined && { zipCode }),
-        ...(description   !== undefined && { description }),
-        ...(mechanicCount !== undefined && { mechanicCount }),
-        ...(slotDuration  !== undefined && { slotDuration }),
-      },
+      data,
     })
 
     // Mettre à jour les horaires si fournis

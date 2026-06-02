@@ -5,7 +5,7 @@ import { TopBar } from '@/components/layout/TopBar'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SkeletonCard, SkeletonRow } from '@/components/ui/Skeleton'
 import Link from 'next/link'
-import { IconCalendar, IconCalendarWeek, IconClockPause, IconStar, IconArrowUp, IconCheck, IconX, IconBolt, IconCalendarPlus, IconUserPlus, IconSettings, IconBell } from '@tabler/icons-react'
+import { IconCalendar, IconCalendarWeek, IconClockPause, IconStar, IconArrowUp, IconCheck, IconX, IconBolt, IconCalendarPlus, IconUserPlus, IconSettings, IconBell, IconShare, IconCopy, IconExternalLink } from '@tabler/icons-react'
 
 const STATUS: Record<string, { label: string; bg: string; color: string }> = {
   PENDING:     { label: 'En attente',   bg: '#FAEEDA', color: '#633806' },
@@ -22,11 +22,12 @@ function fmtDate(d: string) {
 }
 
 export default function GarageDashboard() {
-  const [appts,  setAppts]  = useState<any[]>([])
-  const [stats,  setStats]  = useState<any>(null)
-  const [notifs, setNotifs] = useState<any[]>([])
-  const [garage, setGarage] = useState<any>(null)
+  const [appts,   setAppts]   = useState<any[]>([])
+  const [stats,   setStats]   = useState<any>(null)
+  const [notifs,  setNotifs]  = useState<any[]>([])
+  const [garage,  setGarage]  = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [copied,  setCopied]  = useState(false)
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
@@ -84,12 +85,61 @@ export default function GarageDashboard() {
               </p>
             )}
           </div>
-          <Link href="/garage/agenda"
-            className="px-4 py-2 rounded-lg text-[13px] font-medium text-white"
-            style={{ background: '#1D9E75' }}>
-            Voir l'agenda
-          </Link>
+          <div className="flex items-center gap-2">
+            {garage?.slug && (
+              <>
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/garage/${garage.slug}`
+                    navigator.clipboard.writeText(url).then(() => {
+                      setCopied(true)
+                      setTimeout(() => setCopied(false), 2000)
+                    })
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-colors"
+                  style={{ border: '0.5px solid var(--color-border-tertiary)', background: 'var(--color-background-primary)', color: copied ? '#1D9E75' : 'var(--color-text-secondary)' }}>
+                  {copied ? <IconCheck size={13}/> : <IconCopy size={13}/>}
+                  {copied ? 'Copié !' : 'Copier mon lien'}
+                </button>
+                <Link href={`/garage/${garage.slug}`} target="_blank"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-colors"
+                  style={{ border: '0.5px solid var(--color-border-tertiary)', background: 'var(--color-background-primary)', color: 'var(--color-text-secondary)' }}>
+                  <IconExternalLink size={13}/> Ma page
+                </Link>
+              </>
+            )}
+            <Link href="/garage/agenda"
+              className="px-4 py-2 rounded-lg text-[13px] font-medium text-white"
+              style={{ background: '#1D9E75' }}>
+              Voir l'agenda
+            </Link>
+          </div>
         </div>
+
+        {/* Bannière onboarding si garage incomplet */}
+        {!loading && garage && (!garage.services?.length || !garage.schedules?.length) && (
+          <div className="rounded-[10px] p-4 flex items-center gap-4"
+            style={{ background: '#FAEEDA', border: '0.5px solid #EF9F27' }}>
+            <span className="text-2xl flex-shrink-0">⚙️</span>
+            <div className="flex-1">
+              <p className="text-[13px] font-semibold" style={{ color: '#633806' }}>
+                Finalisez la configuration de votre garage
+              </p>
+              <p className="text-[12px] mt-0.5" style={{ color: '#854F0B' }}>
+                {!garage.services?.length && !garage.schedules?.length
+                  ? 'Ajoutez vos services et vos horaires pour recevoir des réservations.'
+                  : !garage.services?.length
+                    ? 'Ajoutez au moins un service pour que les clients puissent réserver.'
+                    : 'Configurez vos horaires d\'ouverture pour que les créneaux soient disponibles.'}
+              </p>
+            </div>
+            <Link href="/garage/settings"
+              className="px-3 py-2 rounded-lg text-[12px] font-medium text-white flex-shrink-0"
+              style={{ background: '#EF9F27' }}>
+              Configurer
+            </Link>
+          </div>
+        )}
 
         {/* Métriques */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
@@ -152,7 +202,9 @@ export default function GarageDashboard() {
                   {appts.map(a => {
                     const s = STATUS[a.status] ?? STATUS.PENDING
                     return (
-                      <div key={a.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                      <div key={a.id} className="flex items-center gap-3 px-4 py-3 transition-colors" style={{ '--hover-bg': 'var(--color-background-secondary)' } as React.CSSProperties}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-background-secondary)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                         <p className="text-[13px] font-semibold w-12 flex-shrink-0" style={{ color: 'var(--color-text-primary)' }}>
                           {a.startTime}
                         </p>

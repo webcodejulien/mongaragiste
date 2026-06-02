@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { TopBar } from '@/components/layout/TopBar'
 import {
   IconChevronLeft, IconChevronRight, IconPlus, IconX,
@@ -38,7 +38,7 @@ function apiToAppt(a: any): Appt {
   }
 }
 
-const HOURS = [8,9,10,11,12,13,14,15,16,17]
+const DEFAULT_HOURS = [8,9,10,11,12,13,14,15,16,17]
 const SLOT_H = 56 // px par heure
 
 /* ─── Config couleurs ────────────────────────────────────── */
@@ -60,10 +60,10 @@ function colorForAppt(a: Appt) { return C[STATUS_COLOR[a.status]] ?? C.teal }
 
 /* ─── Helpers temps ──────────────────────────────────────── */
 function toMin(t: string) { const [h,m] = t.split(':').map(Number); return h*60+m }
-function fmtTime(t: string) { return t }
 
 /* ─── Helpers semaine ────────────────────────────────────── */
 const DAY_FR = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam']
+const DAY_SHORT = ['D','L','M','M','J','V','S']
 const DAY_FULL = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
 const MONTH_FR = ['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc']
 
@@ -79,24 +79,40 @@ function addDays(d: Date, n: number): Date {
   const r = new Date(d); r.setDate(r.getDate() + n); return r
 }
 function isoDate(d: Date): string { return d.toISOString().split('T')[0] }
-function sameWeek(a: Appt, monday: Date): boolean {
-  const end = addDays(monday, 6)
-  const ad = new Date(a.date)
-  return ad >= monday && ad <= end
-}
 
-/* ─── (clients & services chargés depuis la DB dans le composant) ── */
+/* ─── Hook useIsMobile ───────────────────────────────────── */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)')
+    setIsMobile(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return isMobile
+}
 
 /* ════════════════════════════════════════════════════════════
    COMPOSANT PRINCIPAL
 ═══════════════════════════════════════════════════════════════ */
 export default function AgendaPage() {
+  const isMobile = useIsMobile()
   const [view, setView]     = useState<'week'|'day'>('week')
   const [monday, setMonday] = useState(() => getMonday(new Date()))
-  const [dayIdx, setDayIdx] = useState(0)
+  const [dayIdx, setDayIdx] = useState(() => {
+    // Initialiser sur le jour courant de la semaine (0=lun … 6=dim)
+    const today = new Date()
+    const day = today.getDay()
+    // getMonday donne le lundi, dayIdx 0=lun 4=ven pour weekDays (5 jours)
+    const idx = day === 0 ? 4 : Math.min(day - 1, 6)
+    return Math.max(0, idx)
+  })
   const [appts, setAppts]   = useState<Appt[]>([])
   const [loadingAppts, setLoadingAppts] = useState(true)
   const [garageServices, setGarageServices] = useState<any[]>([])
+  const [garageSchedules, setGarageSchedules] = useState<any[]>([])
+  const [garageSlotDuration, setGarageSlotDuration] = useState(30)
   const [selected, setSelected] = useState<Appt|null>(null)
   const [adding, setAdding]     = useState(false)
   const [addDate, setAddDate]   = useState('')
@@ -112,6 +128,11 @@ export default function AgendaPage() {
   const [newTime,    setNewTime]    = useState('09:00')
   const [newNotes,   setNewNotes]   = useState('')
 
+  // Sur mobile, forcer la vue jour
+  useEffect(() => {
+    if (isMobile) setView('day')
+  }, [isMobile])
+
   // Charger les RDV depuis la DB
   useEffect(() => {
     setLoadingAppts(true)
@@ -119,21 +140,48 @@ export default function AgendaPage() {
       .then(r => r.json())
       .then(d => { if (Array.isArray(d)) setAppts(d.map(apiToAppt)) })
       .finally(() => setLoadingAppts(false))
-    // Charger les services pour le formulaire d'ajout
+    // Charger les services + horaires pour le formulaire d'ajout
     fetch('/api/garage/me')
       .then(r => r.json())
-      .then(g => { if (g.services?.length) setGarageServices(g.services) })
+      .then(g => {
+        if (g.services?.length)   setGarageServices(g.services)
+        if (g.schedules?.length)  setGarageSchedules(g.schedules)
+        if (g.slotDuration)       setGarageSlotDuration(g.slotDuration)
+      })
   }, [])
 
+  // 7 jours à partir du lundi (pour les chips mobiles et le sélecteur de jour)
+  const allWeekDays = useMemo(() =>
+    Array.from({length:7}, (_,i) => addDays(monday, i))
+  , [monday])
+
+  // 5 jours ouvrés pour la vue semaine desktop
   const weekDays = useMemo(() =>
     Array.from({length:5}, (_,i) => addDays(monday, i))
   , [monday])
 
+  // Heures affichées selon les horaires du garage (min openTime → max closeTime)
+  const HOURS = useMemo(() => {
+    if (!garageSchedules.length) return DEFAULT_HOURS
+    const opens  = garageSchedules.filter(s => !s.isClosed).map(s => parseInt(s.openTime))
+    const closes = garageSchedules.filter(s => !s.isClosed).map(s => parseInt(s.closeTime))
+    if (!opens.length) return DEFAULT_HOURS
+    const minH = Math.min(...opens)
+    const maxH = Math.max(...closes)
+    return Array.from({ length: maxH - minH }, (_, i) => minH + i)
+  }, [garageSchedules])
+
+  const firstHour = HOURS[0] ?? 8
   const viewDate = addDays(monday, dayIdx)
 
   function prevWeek() { setMonday(d => addDays(d, -7)) }
   function nextWeek() { setMonday(d => addDays(d,  7)) }
-  function goToday()  { setMonday(getMonday(new Date())); setDayIdx(0) }
+  function goToday()  {
+    setMonday(getMonday(new Date()))
+    const today = new Date()
+    const day = today.getDay()
+    setDayIdx(day === 0 ? 4 : Math.min(day - 1, 6))
+  }
 
   function apptsForDay(date: string) {
     return appts.filter(a => a.date === date).sort((a,b) => toMin(a.startTime) - toMin(b.startTime))
@@ -148,7 +196,7 @@ export default function AgendaPage() {
 
   async function submitAdd() {
     if (!newClient || !newService) return
-    const svc = garageServices.find(s => s.name === newService) || { duration: 60 }
+    const svc = garageServices.find(s => s.name === newService) || { duration: garageSlotDuration }
     const dur = svc.duration
     const [h,m] = newTime.split(':').map(Number)
     const endMin = h*60 + m + dur
@@ -173,7 +221,7 @@ export default function AgendaPage() {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
           body: JSON.stringify({
-            clientId: null, // sera géré côté serveur si on a un vrai client
+            clientId: null,
             serviceId: svcObj.id,
             date: newDate, startTime: newTime, endTime,
             vehiclePlate: newPlate, vehicleModel: newVehicle, notes: newNotes,
@@ -211,6 +259,21 @@ export default function AgendaPage() {
   const todayAppts = apptsForDay(todayStr2)
   const subtitle = `${todayAppts.length} RDV aujourd'hui · ${appts.filter(a=>a.status==='PENDING').length} en attente`
 
+  /* ─── Calcul position absolue RDV sur la grille ─────────
+     topPx  = (startMin - firstHour*60) / 60 * SLOT_H
+     heightPx = durMin / 60 * SLOT_H  (min 24px)
+  ────────────────────────────────────────────────────────── */
+  function apptPosition(a: Appt) {
+    const startMin = toMin(a.startTime)
+    const endMin   = toMin(a.endTime)
+    const durMin   = Math.max(endMin - startMin, garageSlotDuration || 30)
+    const topPx    = ((startMin - firstHour * 60) / 60) * SLOT_H
+    const heightPx = Math.max((durMin / 60) * SLOT_H, 24)
+    return { topPx, heightPx }
+  }
+
+  const totalGridH = HOURS.length * SLOT_H
+
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <TopBar title="Agenda" subtitle={subtitle} />
@@ -219,38 +282,40 @@ export default function AgendaPage() {
         {/* ── Barre de contrôle ─────────────────────────── */}
         <div className="flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
-            {/* Vue semaine/jour */}
-            <div className="flex gap-0.5 p-0.5 rounded-lg" style={{ background:'var(--color-background-primary)', border:'0.5px solid var(--color-border-tertiary)' }}>
-              {(['week','day'] as const).map(v => (
-                <button key={v} onClick={() => setView(v)}
-                  className="px-3 py-1.5 rounded text-[12px] font-medium transition-colors"
-                  style={{ background: view===v ? '#1D9E75' : 'transparent', color: view===v ? '#fff' : 'var(--color-text-secondary)' }}>
-                  {v==='week' ? 'Semaine' : 'Jour'}
-                </button>
-              ))}
-            </div>
+            {/* Vue semaine/jour — masqué sur mobile */}
+            {!isMobile && (
+              <div className="flex gap-0.5 p-0.5 rounded-lg" style={{ background:'var(--color-background-primary)', border:'0.5px solid var(--color-border-tertiary)' }}>
+                {(['week','day'] as const).map(v => (
+                  <button key={v} onClick={() => setView(v)}
+                    className="px-3 py-1.5 rounded text-[12px] font-medium transition-colors"
+                    style={{ background: view===v ? '#1D9E75' : 'transparent', color: view===v ? '#fff' : 'var(--color-text-secondary)' }}>
+                    {v==='week' ? 'Semaine' : 'Jour'}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Navigation */}
             <button onClick={prevWeek} className="w-8 h-8 flex items-center justify-center rounded transition-colors"
               style={{ border:'0.5px solid var(--color-border-tertiary)', color:'var(--color-text-secondary)' }}>
               <IconChevronLeft size={15}/>
             </button>
-            <span className="text-[13px] font-medium min-w-[160px] text-center" style={{ color:'var(--color-text-primary)' }}>
+            <span className="text-[13px] font-medium min-w-[100px] lg:min-w-[160px] text-center" style={{ color:'var(--color-text-primary)' }}>
               {view==='week' ? weekLabel : dayLabel}
             </span>
             <button onClick={nextWeek} className="w-8 h-8 flex items-center justify-center rounded transition-colors"
               style={{ border:'0.5px solid var(--color-border-tertiary)', color:'var(--color-text-secondary)' }}>
               <IconChevronRight size={15}/>
             </button>
-            <button onClick={goToday} className="px-2.5 py-1.5 rounded text-[12px] transition-colors"
+            <button onClick={goToday} className="px-2.5 py-1.5 rounded text-[12px] transition-colors hidden lg:block"
               style={{ border:'0.5px solid var(--color-border-tertiary)', color:'var(--color-text-secondary)' }}>
               Aujourd'hui
             </button>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Légende */}
-            <div className="flex items-center gap-3">
+            {/* Légende — masquée sur mobile */}
+            <div className="hidden lg:flex items-center gap-3">
               {[['teal','Confirmé'],['amber','En attente'],['blue','En cours'],['done','Terminé']].map(([c,l]) => (
                 <div key={c} className="flex items-center gap-1.5 text-[11px]" style={{ color:'var(--color-text-secondary)' }}>
                   <span className="w-2 h-2 rounded-sm" style={{ background: C[c].border }}/>
@@ -261,13 +326,48 @@ export default function AgendaPage() {
             <button onClick={() => openAdd(view==='week' ? todayStr2 : isoDate(viewDate), 9)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white"
               style={{ background:'#1D9E75' }}>
-              <IconPlus size={13}/> Ajouter un RDV
+              <IconPlus size={13}/>
+              <span className="hidden sm:inline">Ajouter un RDV</span>
+              <span className="sm:hidden">Ajouter</span>
             </button>
           </div>
         </div>
 
-        {/* ══ VUE SEMAINE ══════════════════════════════════ */}
-        {view === 'week' && (
+        {/* ── Chips jours mobiles (vue jour uniquement, < lg) ── */}
+        {isMobile && view === 'day' && (
+          <div className="flex-shrink-0 -mx-4 px-4 overflow-x-auto">
+            <div className="flex gap-2 pb-1" style={{ minWidth: 'max-content' }}>
+              {allWeekDays.map((d, i) => {
+                const iso      = isoDate(d)
+                const isToday  = iso === todayStr2
+                const isActive = i === dayIdx
+                const count    = apptsForDay(iso).length
+                return (
+                  <button key={i} onClick={() => setDayIdx(i)}
+                    className="flex flex-col items-center px-3 py-2 rounded-xl transition-colors flex-shrink-0"
+                    style={{
+                      background: isActive ? '#1D9E75' : isToday ? '#E1F5EE' : 'var(--color-background-primary)',
+                      border: '0.5px solid ' + (isActive ? '#1D9E75' : isToday ? '#1D9E75' : 'var(--color-border-tertiary)'),
+                      minWidth: '44px',
+                    }}>
+                    <span className="text-[9px] font-medium" style={{ color: isActive ? '#fff' : isToday ? '#1D9E75' : 'var(--color-text-tertiary)' }}>
+                      {DAY_FR[d.getDay()]}
+                    </span>
+                    <span className="text-[15px] font-semibold leading-tight" style={{ color: isActive ? '#fff' : isToday ? '#1D9E75' : 'var(--color-text-primary)' }}>
+                      {d.getDate()}
+                    </span>
+                    {count > 0 && (
+                      <span className="w-1.5 h-1.5 rounded-full mt-0.5" style={{ background: isActive ? 'rgba(255,255,255,0.7)' : '#1D9E75' }}/>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ══ VUE SEMAINE (desktop uniquement) ═════════════ */}
+        {view === 'week' && !isMobile && (
           <div className="flex-1 rounded-[10px] overflow-hidden flex flex-col"
             style={{ background:'var(--color-background-primary)', border:'0.5px solid var(--color-border-tertiary)' }}>
             {/* En-têtes jours */}
@@ -277,17 +377,23 @@ export default function AgendaPage() {
                 const iso   = isoDate(d)
                 const isToday = iso === todayStr2
                 const count = apptsForDay(iso).length
+                const jsDay  = d.getDay()
+                const appDay = jsDay === 0 ? 7 : jsDay
+                const sched  = garageSchedules.find((s: any) => s.dayOfWeek === appDay)
+                const isClosed = sched ? sched.isClosed : false
                 return (
                   <div key={i} className="py-2 px-3 flex items-center justify-between"
                     onClick={() => { setDayIdx(i); setView('day') }}
                     style={{
-                      background: isToday ? '#E1F5EE' : 'var(--color-background-secondary)',
+                      background: isClosed ? 'var(--color-background-secondary)' : isToday ? '#E1F5EE' : 'var(--color-background-secondary)',
                       borderRight: i<4 ? '0.5px solid var(--color-border-tertiary)' : 'none',
                       cursor:'pointer',
+                      opacity: isClosed ? 0.5 : 1,
                     }}>
                     <div>
                       <p className="text-[10px] font-medium" style={{ color: isToday?'#1D9E75':'var(--color-text-tertiary)' }}>{DAY_FR[d.getDay()]}</p>
                       <p className="text-[16px] font-semibold leading-tight" style={{ color: isToday?'#1D9E75':'var(--color-text-primary)' }}>{d.getDate()}</p>
+                      {isClosed && <p className="text-[9px]" style={{ color:'var(--color-text-tertiary)' }}>Fermé</p>}
                     </div>
                     {count > 0 && (
                       <span className="text-[10px] font-medium w-5 h-5 rounded-full flex items-center justify-center"
@@ -300,68 +406,73 @@ export default function AgendaPage() {
               })}
             </div>
 
-            {/* Grille */}
+            {/* Grille — positionnement absolu pour respecter la durée réelle des RDV */}
             <div className="flex-1 overflow-y-auto">
-              <div className="grid" style={{ gridTemplateColumns:`52px repeat(5,1fr)` }}>
-                {/* Colonne heures + colonnes jours */}
-                {HOURS.map(h => (
-                  <>
-                    {/* Heure */}
-                    <div key={`h${h}`} className="py-0 flex items-start justify-end pr-2 pt-1"
-                      style={{ height:`${SLOT_H}px`, borderBottom:'0.5px solid var(--color-border-tertiary)', borderRight:'0.5px solid var(--color-border-tertiary)' }}>
+              <div className="grid" style={{ gridTemplateColumns:`52px repeat(5,1fr)`, height:`${totalGridH}px`, position:'relative' }}>
+                {/* Colonne heures */}
+                <div className="flex flex-col" style={{ borderRight:'0.5px solid var(--color-border-tertiary)', zIndex:1 }}>
+                  {HOURS.map(h => (
+                    <div key={`h${h}`} className="flex items-start justify-end pr-2 pt-1 flex-shrink-0"
+                      style={{ height:`${SLOT_H}px`, borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
                       <span className="text-[10px]" style={{ color:'var(--color-text-tertiary)' }}>{h}:00</span>
                     </div>
+                  ))}
+                </div>
 
-                    {/* Cellules jours */}
-                    {weekDays.map((d, di) => {
-                      const iso   = isoDate(d)
-                      const isToday = iso === todayStr2
-                      const dayAppts = apptsForDay(iso).filter(a => {
-                        const s = toMin(a.startTime); const e = toMin(a.endTime)
-                        return s >= h*60 && s < (h+1)*60
-                      })
-                      return (
-                        <div key={`${h}-${di}`} className="relative group"
-                          style={{
-                            height:`${SLOT_H}px`,
-                            borderBottom:'0.5px solid var(--color-border-tertiary)',
-                            borderRight: di<4 ? '0.5px solid var(--color-border-tertiary)' : 'none',
-                            background: isToday ? '#FAFFF9' : 'transparent',
-                          }}
+                {/* Colonnes jours */}
+                {weekDays.map((d, di) => {
+                  const iso     = isoDate(d)
+                  const isToday = iso === todayStr2
+                  const jsDay2  = d.getDay()
+                  const appDay2 = jsDay2 === 0 ? 7 : jsDay2
+                  const sched2  = garageSchedules.find((s: any) => s.dayOfWeek === appDay2)
+                  const isClosed2 = sched2 ? sched2.isClosed : false
+                  const dayAppts  = apptsForDay(iso)
+
+                  return (
+                    <div key={`col-${di}`} className="relative"
+                      style={{
+                        borderRight: di<4 ? '0.5px solid var(--color-border-tertiary)' : 'none',
+                        background: isClosed2
+                          ? 'repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(0,0,0,0.02) 4px,rgba(0,0,0,0.02) 8px)'
+                          : isToday ? '#FAFFF9' : 'transparent',
+                      }}>
+
+                      {/* Lignes d'heures */}
+                      {HOURS.map(h => (
+                        <div key={`line-${h}`} className="group absolute left-0 right-0 cursor-pointer"
+                          style={{ top:`${(h - firstHour) * SLOT_H}px`, height:`${SLOT_H}px`, borderBottom:'0.5px solid var(--color-border-tertiary)' }}
                           onClick={() => openAdd(iso, h)}>
-                          {/* Hover indicator */}
                           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                             style={{ background:'rgba(29,158,117,0.04)' }}>
                             <IconPlus size={12} style={{ color:'#1D9E75' }}/>
                           </div>
-
-                          {/* Appointments */}
-                          {dayAppts.map(a => {
-                            const col = colorForAppt(a)
-                            const startMin = toMin(a.startTime) - h*60
-                            const durMin   = toMin(a.endTime) - toMin(a.startTime)
-                            const topPct   = (startMin / 60) * 100
-                            const hPct     = Math.max((durMin / 60) * 100, 30)
-                            return (
-                              <div key={a.id}
-                                className="absolute left-0.5 right-0.5 rounded px-1.5 py-1 cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
-                                style={{
-                                  top:`${topPct}%`, height:`${hPct}%`,
-                                  background: col.bg,
-                                  borderLeft: `2.5px solid ${col.border}`,
-                                  zIndex:2,
-                                }}
-                                onClick={e => { e.stopPropagation(); setSelected(a) }}>
-                                <p className="text-[10px] font-semibold truncate leading-tight" style={{ color:col.text }}>{a.clientName}</p>
-                                <p className="text-[9px] truncate leading-tight" style={{ color:col.text, opacity:0.75 }}>{a.service}</p>
-                              </div>
-                            )
-                          })}
                         </div>
-                      )
-                    })}
-                  </>
-                ))}
+                      ))}
+
+                      {/* RDV positionnés absolument selon leur durée réelle */}
+                      {dayAppts.map(a => {
+                        const col = colorForAppt(a)
+                        const { topPx, heightPx } = apptPosition(a)
+                        return (
+                          <div key={a.id}
+                            className="absolute left-0.5 right-0.5 rounded px-1.5 py-1 cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
+                            style={{
+                              top:`${topPx}px`,
+                              height:`${heightPx}px`,
+                              background: col.bg,
+                              borderLeft: `2.5px solid ${col.border}`,
+                              zIndex: 2,
+                            }}
+                            onClick={e => { e.stopPropagation(); setSelected(a) }}>
+                            <p className="text-[10px] font-semibold truncate leading-tight" style={{ color:col.text }}>{a.clientName}</p>
+                            <p className="text-[9px] truncate leading-tight" style={{ color:col.text, opacity:0.75 }}>{a.service}</p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -370,8 +481,8 @@ export default function AgendaPage() {
         {/* ══ VUE JOUR ═════════════════════════════════════ */}
         {view === 'day' && (
           <div className="flex gap-3 flex-1 min-h-0">
-            {/* Sélecteur de jour (mini semaine) */}
-            <div className="w-48 flex-shrink-0 flex flex-col gap-1">
+            {/* Sélecteur de jour (mini semaine) — visible uniquement desktop */}
+            <div className="hidden lg:flex w-48 flex-shrink-0 flex-col gap-1">
               {weekDays.map((d, i) => {
                 const iso     = isoDate(d)
                 const isToday = iso === todayStr2

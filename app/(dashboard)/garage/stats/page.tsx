@@ -13,11 +13,12 @@ export default function StatsPage() {
   const [period,  setPeriod]  = useState<'7j'|'30j'|'3m'|'12m'>('30j')
 
   useEffect(() => {
-    fetch('/api/garage/stats')
+    setLoading(true)
+    fetch(`/api/garage/stats?period=${period}`)
       .then(r => r.json())
       .then(d => setStats(d?.error ? null : d))
       .finally(() => setLoading(false))
-  }, [])
+  }, [period])
 
   const noData = !loading && (!stats || (stats.thisMonth === 0 && stats.today === 0))
 

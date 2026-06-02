@@ -16,6 +16,7 @@ export async function GET() {
     include: {
       garage:  { select: { name: true, slug: true, address: true, city: true, phone: true } },
       service: { select: { name: true, price: true, duration: true } },
+      review:  { select: { id: true, rating: true } },
     },
     orderBy: { date: 'desc' },
   })

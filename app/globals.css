@@ -28,6 +28,23 @@
   --font-sans: 'Inter', -apple-system, sans-serif;
 }
 
+[data-theme="dark"] {
+  --color-background-primary:   #1a1a1a;
+  --color-background-secondary: #111111;
+  --color-background-tertiary:  #222222;
+
+  --color-text-primary:    #f0f0f0;
+  --color-text-secondary:  #a0a0a0;
+  --color-text-tertiary:   #666666;
+
+  --color-border-primary:   #444444;
+  --color-border-secondary: #333333;
+  --color-border-tertiary:  #2a2a2a;
+
+  --color-primary-light:    #0d3326;
+  --color-primary-dark:     #4ade80;
+}
+
 * { box-sizing: border-box; }
 
 body {

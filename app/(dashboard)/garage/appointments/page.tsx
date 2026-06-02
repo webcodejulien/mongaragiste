@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { TopBar } from '@/components/layout/TopBar'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SkeletonRow } from '@/components/ui/Skeleton'
-import { IconSearch, IconCheck, IconX, IconEye } from '@tabler/icons-react'
+import { IconSearch, IconCheck, IconX, IconEye, IconDownload } from '@tabler/icons-react'
 import Link from 'next/link'
 
 const STATUS: Record<string, { label: string; bg: string; color: string }> = {
@@ -71,7 +71,7 @@ export default function AppointmentsPage() {
               className="w-full pl-8 pr-3 py-2 text-[13px] rounded-lg focus:outline-none"
               style={{ border: '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-primary)', color: 'var(--color-text-primary)' }}/>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-wrap">
             {FILTERS.map((f, i) => (
               <button key={f} onClick={() => setFIdx(i)}
                 className="px-2.5 py-1.5 rounded text-[12px] font-medium transition-colors"
@@ -84,6 +84,11 @@ export default function AppointmentsPage() {
               </button>
             ))}
           </div>
+          <a href="/api/garage/export?type=appointments"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-medium ml-auto flex-shrink-0"
+            style={{ border: '0.5px solid var(--color-border-tertiary)', color: 'var(--color-text-secondary)', background: 'var(--color-background-primary)' }}>
+            <IconDownload size={13}/> Export CSV
+          </a>
         </div>
 
         <div className="rounded-[10px] overflow-hidden overflow-x-auto"

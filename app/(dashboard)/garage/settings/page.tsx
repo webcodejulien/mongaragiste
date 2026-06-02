@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { TopBar } from '@/components/layout/TopBar'
-import { IconCheck, IconPlus, IconTrash } from '@tabler/icons-react'
+import { IconCheck, IconPlus, IconTrash, IconLoader2, IconCamera } from '@tabler/icons-react'
 
 const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche']
 type Tab = 'info'|'equipe'|'schedule'|'services'|'notifications'
@@ -39,6 +39,11 @@ export default function SettingsPage() {
   const [saved,  setSaved]  = useState(false)
   const [loading, setLoading] = useState(true)
 
+  const [logoUrl,      setLogoUrl]     = useState<string | null>(null)
+  const [logoUploading, setLogoUploading] = useState(false)
+  const [logoError,    setLogoError]   = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [info, setInfo] = useState({ name:'', phone:'', address:'', city:'', zip:'', desc:'' })
   const [mechanicCount, setMechanic] = useState(1)
   const [slotDuration,  setSlot]     = useState(30)
@@ -63,10 +68,34 @@ export default function SettingsPage() {
             return s ? { dayOfWeek:i+1, openTime:s.openTime, closeTime:s.closeTime, isClosed:s.isClosed } : { dayOfWeek:i+1, openTime:'08:00', closeTime:'18:00', isClosed:i>=5 }
           }))
         }
+        if (g.logoUrl) setLogoUrl(g.logoUrl)
         if (g.services?.length) setServices(g.services)
+        if (g.notifPrefs && typeof g.notifPrefs === 'object') {
+          setNotifs(prev => ({ ...prev, ...(g.notifPrefs as typeof prev) }))
+        }
       })
       .finally(() => setLoading(false))
   }, [])
+
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoError('')
+    setLogoUploading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    try {
+      const res = await fetch('/api/garage/upload', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (!res.ok) { setLogoError(data.error || 'Erreur lors de l\'upload.') }
+      else { setLogoUrl(data.logoUrl) }
+    } catch {
+      setLogoError('Erreur réseau. Veuillez réessayer.')
+    } finally {
+      setLogoUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   function updateSch(i:number, field:string, val:string|boolean) {
     setSchedules(p => p.map((s,j) => j===i ? {...s,[field]:val} : s))
@@ -82,6 +111,7 @@ export default function SettingsPage() {
         mechanicCount, slotDuration: slotDuration,
         schedules: schedules.map(s => ({ dayOfWeek:s.dayOfWeek, openTime:s.openTime, closeTime:s.closeTime, isClosed:s.isClosed })),
         services: services.map(s => ({ name:s.name, duration:s.duration, price:s.price||null })),
+        notifPrefs: notifs,
       }),
     })
     setSaving(false); setSaved(true)
@@ -122,6 +152,43 @@ export default function SettingsPage() {
           {tab==='info' && (
             <div className="space-y-4">
               <h3 className="text-[14px] font-medium" style={{color:'var(--color-text-primary)'}}>Informations du garage</h3>
+
+              {/* Logo upload */}
+              <div>
+                <label className="block text-[12px] font-medium mb-2" style={{color:'var(--color-text-secondary)'}}>Logo du garage</label>
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-20 h-20 rounded-xl overflow-hidden flex items-center justify-center"
+                      style={{background:'var(--color-primary-light)',border:'0.5px solid var(--color-border-secondary)'}}>
+                      {logoUrl
+                        ? <img src={logoUrl} alt="Logo" className="w-full h-full object-cover"/>
+                        : <span className="text-2xl font-bold" style={{color:'var(--color-primary-dark)'}}>
+                            {info.name ? info.name.split(' ').slice(0,2).map(w=>w.charAt(0)).join('').toUpperCase() : '?'}
+                          </span>
+                      }
+                    </div>
+                    {logoUploading && (
+                      <div className="absolute inset-0 rounded-xl flex items-center justify-center" style={{background:'rgba(0,0,0,0.4)'}}>
+                        <IconLoader2 size={20} className="animate-spin text-white"/>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={logoUploading}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium disabled:opacity-60"
+                      style={{border:'0.5px solid var(--color-border-secondary)',color:'var(--color-text-primary)',background:'var(--color-background-secondary)'}}>
+                      <IconCamera size={13}/>
+                      {logoUploading ? 'Upload…' : 'Changer le logo'}
+                    </button>
+                    <p className="text-[11px] mt-1.5" style={{color:'var(--color-text-tertiary)'}}>JPG, PNG ou WebP — max 2 Mo</p>
+                    {logoError && <p className="text-[11px] mt-1" style={{color:'#A32D2D'}}>{logoError}</p>}
+                  </div>
+                </div>
+                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleLogoChange}/>
+              </div>
+
               <Field label="Nom du garage"><Inp value={info.name} onChange={v=>setInfo(p=>({...p,name:v}))} placeholder="Garage Dubois & Fils"/></Field>
               <Field label="Téléphone"><Inp value={info.phone} onChange={v=>setInfo(p=>({...p,phone:v}))} type="tel" placeholder="+32 2 123 45 67"/></Field>
               <Field label="Adresse"><Inp value={info.address} onChange={v=>setInfo(p=>({...p,address:v}))} placeholder="Rue de la Loi 42"/></Field>

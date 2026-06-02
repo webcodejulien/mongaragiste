@@ -1,23 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { IconBell, IconSearch, IconChevronDown } from '@tabler/icons-react'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
-const mockNotifs = [
-  { id: '1', title: 'Nouveau RDV', message: 'Luc Fontaine, demain 10h, Freins', time: 'Il y a 5 min', read: false, color: 'green' },
-  { id: '2', title: 'En attente', message: 'Alice Bernard n\'a pas encore confirmé', time: 'Il y a 22 min', read: false, color: 'amber' },
-  { id: '3', title: 'Nouveau RDV', message: 'Sara Ngom, jeudi 14h, Révision', time: 'Il y a 1h', read: false, color: 'green' },
-  { id: '4', title: 'Annulation', message: 'Pierre Collin a annulé son RDV de jeudi', time: 'Il y a 2h', read: false, color: 'red' },
-  { id: '5', title: 'Nouvel avis ★★★★★', message: '"Excellent travail, très pro !"', time: 'Il y a 3h', read: false, color: 'blue' },
-  { id: '6', title: 'RDV confirmé', message: 'Marc Dupont, aujourd\'hui 08h', time: 'Hier, 17h42', read: true, color: 'neutral' },
-]
-
-const iconColors: Record<string, string> = {
-  green:   'background:#E1F5EE;color:#1D9E75',
-  amber:   'background:#FAEEDA;color:#854F0B',
-  red:     'background:#FCEBEB;color:#A32D2D',
-  blue:    'background:#E6F1FB;color:#185FA5',
-  neutral: 'background:#F5F5F2;color:#6B6E72',
+const NOTIF_ICONS: Record<string, string> = {
+  NEW_APPOINTMENT:        '📅',
+  APPOINTMENT_CONFIRMED:  '✅',
+  APPOINTMENT_CANCELLED:  '❌',
+  NEW_REVIEW:             '⭐',
+  REMINDER_24H:           '⏰',
 }
 
 interface TopBarProps {
@@ -26,9 +18,47 @@ interface TopBarProps {
   garageName?: string
 }
 
-export function TopBar({ title, subtitle, garageName = 'Garage Dubois' }: TopBarProps) {
-  const [notifOpen, setNotifOpen] = useState(false)
-  const unread = mockNotifs.filter((n) => !n.read).length
+export function TopBar({ title, subtitle, garageName: garageProp }: TopBarProps) {
+  const [notifOpen,  setNotifOpen]  = useState(false)
+  const [notifs,     setNotifs]     = useState<any[]>([])
+  const [loaded,     setLoaded]     = useState(false)
+  const [garageName,   setGarageName]   = useState(garageProp ?? '')
+  const [garageLogoUrl, setGarageLogoUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/garage/notifications')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setNotifs(d) })
+      .finally(() => setLoaded(true))
+  }, [])
+
+  useEffect(() => {
+    if (garageProp) { setGarageName(garageProp); return }
+    fetch('/api/garage/me')
+      .then(r => r.json())
+      .then(d => {
+        if (d?.name) setGarageName(d.name)
+        if (d?.logoUrl) setGarageLogoUrl(d.logoUrl)
+      })
+      .catch(() => {})
+  }, [garageProp])
+
+  const unread = notifs.filter(n => !n.isRead).length
+
+  function fmtTime(d: string) {
+    const dt  = new Date(d)
+    const now = new Date()
+    const diff = Math.floor((now.getTime() - dt.getTime()) / 1000)
+    if (diff < 60)   return 'À l\'instant'
+    if (diff < 3600) return `Il y a ${Math.floor(diff/60)} min`
+    if (diff < 86400)return `Il y a ${Math.floor(diff/3600)}h`
+    return dt.toLocaleDateString('fr-BE')
+  }
+
+  async function markAllRead() {
+    await fetch('/api/garage/notifications', { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({}) })
+    setNotifs(p => p.map(n => ({ ...n, isRead: true })))
+  }
 
   return (
     <header className="h-[52px] flex items-center justify-between px-5 sticky top-0 z-10"
@@ -40,77 +70,105 @@ export function TopBar({ title, subtitle, garageName = 'Garage Dubois' }: TopBar
       </div>
 
       <div className="flex items-center gap-2.5">
-        {/* Search */}
-        <button className="w-[34px] h-[34px] flex items-center justify-center rounded transition-colors"
-          style={{ border: '0.5px solid var(--color-border-tertiary)', color: 'var(--color-text-secondary)' }}>
-          <IconSearch size={17} />
-        </button>
+        {/* Theme toggle */}
+        <ThemeToggle />
 
         {/* Notifications */}
         <div className="relative">
           <button
             onClick={() => setNotifOpen(!notifOpen)}
             className="w-[34px] h-[34px] flex items-center justify-center rounded transition-colors relative"
-            style={{ border: '0.5px solid var(--color-border-tertiary)', color: 'var(--color-text-secondary)' }}
-          >
+            style={{ border: '0.5px solid var(--color-border-tertiary)', color: 'var(--color-text-secondary)' }}>
             <IconBell size={17} />
             {unread > 0 && (
-              <span className="absolute top-[6px] right-[6px] w-[7px] h-[7px] rounded-full bg-red-500" />
+              <span className="absolute top-[5px] right-[5px] w-[7px] h-[7px] rounded-full"
+                style={{ background: '#E24B4A' }} />
             )}
           </button>
 
           {notifOpen && (
-            <div className="absolute right-0 top-11 w-80 rounded-lg shadow-lg z-50 overflow-hidden"
+            <div className="absolute right-0 top-11 w-80 rounded-lg shadow-xl z-50 overflow-hidden"
               style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-secondary)' }}>
               <div className="flex items-center justify-between px-4 py-2.5"
                 style={{ borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
-                <span className="text-[13px] font-medium" style={{ color: 'var(--color-text-primary)' }}>Notifications</span>
+                <span className="text-[13px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                  Notifications
+                </span>
                 {unread > 0 && (
                   <span className="text-[11px] font-medium px-2 py-px rounded-full"
                     style={{ background: '#FCEBEB', color: '#A32D2D' }}>
-                    {unread} nouvelles
+                    {unread} nouvelle{unread > 1 ? 's' : ''}
                   </span>
                 )}
               </div>
+
               <div className="max-h-72 overflow-y-auto">
-                {mockNotifs.map((n) => (
+                {!loaded ? (
+                  <div className="px-4 py-6 text-center text-[12px]" style={{ color: 'var(--color-text-tertiary)' }}>
+                    Chargement…
+                  </div>
+                ) : notifs.length === 0 ? (
+                  <div className="px-4 py-6 text-center text-[12px]" style={{ color: 'var(--color-text-tertiary)' }}>
+                    Aucune notification
+                  </div>
+                ) : notifs.slice(0, 8).map(n => (
                   <div key={n.id}
-                    className="flex items-start gap-2.5 px-3.5 py-2.5 transition-colors cursor-pointer"
+                    className="flex items-start gap-2.5 px-3.5 py-2.5 transition-colors"
                     style={{
                       borderBottom: '0.5px solid var(--color-border-tertiary)',
-                      background: !n.read ? 'var(--color-primary-light)' : 'transparent',
+                      background: !n.isRead ? 'var(--color-primary-light)' : 'transparent',
                     }}>
-                    <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ ...(iconColors[n.color].split(';').reduce((acc, s) => { const [k,v]=s.split(':'); if(k&&v) acc[k.trim()]=v.trim(); return acc }, {} as Record<string,string>)) }}>
-                      <span className="text-[12px]">
-                        {n.color==='green'?'📅':n.color==='amber'?'⏰':n.color==='red'?'❌':n.color==='blue'?'⭐':'✓'}
-                      </span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-[12px] leading-snug" style={{ color: 'var(--color-text-primary)' }}>
-                        <strong>{n.title}</strong> — {n.message}
+                    <span className="text-base flex-shrink-0 mt-0.5">
+                      {NOTIF_ICONS[n.type] ?? '🔔'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-medium leading-tight" style={{ color: 'var(--color-text-primary)' }}>
+                        {n.title}
                       </p>
-                      <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>{n.time}</p>
+                      <p className="text-[11px] mt-0.5 leading-snug truncate" style={{ color: 'var(--color-text-secondary)' }}>
+                        {n.message}
+                      </p>
+                      <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>
+                        {fmtTime(n.createdAt)}
+                      </p>
                     </div>
+                    {!n.isRead && (
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
+                        style={{ background: '#E24B4A' }} />
+                    )}
                   </div>
                 ))}
               </div>
-              <div className="px-4 py-2" style={{ borderTop: '0.5px solid var(--color-border-tertiary)' }}>
-                <button className="text-[12px] font-medium" style={{ color: 'var(--color-primary)' }}>
-                  Tout marquer comme lu
-                </button>
+
+              <div className="flex items-center justify-between px-4 py-2"
+                style={{ borderTop: '0.5px solid var(--color-border-tertiary)' }}>
+                {unread > 0 ? (
+                  <button onClick={markAllRead}
+                    className="text-[12px] font-medium" style={{ color: '#1D9E75' }}>
+                    Tout marquer lu
+                  </button>
+                ) : <span/>}
+                <a href="/garage/notifications" className="text-[12px]" style={{ color: 'var(--color-text-tertiary)' }}>
+                  Voir tout →
+                </a>
               </div>
             </div>
           )}
         </div>
 
         {/* Avatar */}
-        <div className="flex items-center gap-2 pl-2.5" style={{ borderLeft: '0.5px solid var(--color-border-tertiary)' }}>
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium"
-            style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
-            {garageName.charAt(0)}
-          </div>
-          <span className="text-[13px] font-medium" style={{ color: 'var(--color-text-primary)' }}>{garageName}</span>
+        <div className="flex items-center gap-2 pl-2.5"
+          style={{ borderLeft: '0.5px solid var(--color-border-tertiary)' }}>
+          {garageLogoUrl
+            ? <img src={garageLogoUrl} alt={garageName} className="w-7 h-7 rounded-full object-cover flex-shrink-0"/>
+            : <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium"
+                style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
+                {garageName.charAt(0)}
+              </div>
+          }
+          <span className="text-[13px] font-medium hidden sm:block" style={{ color: 'var(--color-text-primary)' }}>
+            {garageName}
+          </span>
           <IconChevronDown size={14} style={{ color: 'var(--color-text-secondary)' }} />
         </div>
       </div>

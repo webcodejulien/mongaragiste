@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   IconLayoutDashboard, IconCalendar, IconClipboardList,
   IconUsers, IconChartBar, IconStar, IconBell,
@@ -16,7 +16,7 @@ const NAV = [
     items: [
       { href: '/garage',               label: 'Dashboard',      icon: IconLayoutDashboard },
       { href: '/garage/agenda',        label: 'Agenda',         icon: IconCalendar },
-      { href: '/garage/appointments',  label: 'Rendez-vous',    icon: IconClipboardList, badge: 0, badgeColor: 'amber' },
+      { href: '/garage/appointments',  label: 'Rendez-vous',    icon: IconClipboardList },
       { href: '/garage/clients',       label: 'Clients',        icon: IconUsers },
     ],
   },
@@ -25,7 +25,7 @@ const NAV = [
     items: [
       { href: '/garage/stats',         label: 'Statistiques',   icon: IconChartBar },
       { href: '/garage/reviews',       label: 'Avis clients',   icon: IconStar },
-      { href: '/garage/notifications', label: 'Notifications',  icon: IconBell, badge: 0, badgeColor: 'red' },
+      { href: '/garage/notifications', label: 'Notifications',  icon: IconBell },
       { href: '/garage/billing',       label: 'Facturation',    icon: IconReceipt },
     ],
   },
@@ -38,15 +38,38 @@ const NAV = [
   },
 ]
 
+const PLAN_LABEL: Record<string, string> = {
+  STARTER: 'Plan Starter',
+  PRO:     'Plan Pro',
+  PREMIUM: 'Plan Premium',
+}
+
+function useGarageInfo() {
+  const [garage, setGarage] = useState<{ name: string; slug: string; plan: string; logoUrl?: string | null } | null>(null)
+  useEffect(() => {
+    fetch('/api/garage/me')
+      .then(r => r.json())
+      .then(d => { if (d?.name) setGarage({ name: d.name, slug: d.slug, plan: d.plan ?? 'STARTER', logoUrl: d.logoUrl ?? null }) })
+      .catch(() => {})
+  }, [])
+  return garage
+}
+
+function initials(name: string) {
+  return name.split(' ').slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase()
+}
+
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
+  const garage   = useGarageInfo()
+
   return (
     <>
       {/* Logo */}
       <div className="flex items-center justify-between px-4 py-4"
         style={{ borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="flex items-center gap-2">
-          <IconCircleFilled size={8} className="text-primary-400" style={{ color: '#1D9E75' }} />
+          <IconCircleFilled size={8} style={{ color: '#1D9E75' }} />
           <span className="text-[14px] font-medium" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
         </div>
         {onClose && (
@@ -59,15 +82,20 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       {/* Garage info */}
       <div className="px-4 py-3.5" style={{ borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0"
-            style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
-            GD
-          </div>
+          {garage?.logoUrl
+            ? <img src={garage.logoUrl} alt={garage.name} className="w-9 h-9 rounded-full object-cover flex-shrink-0"/>
+            : <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0"
+                style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
+                {garage ? initials(garage.name) : '…'}
+              </div>
+          }
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium leading-tight truncate" style={{ color: 'var(--color-text-primary)' }}>
-              Garage Dubois
+              {garage?.name ?? '…'}
             </p>
-            <p className="text-[11px] font-medium mt-0.5" style={{ color: '#1D9E75' }}>Plan Pro</p>
+            <p className="text-[11px] font-medium mt-0.5" style={{ color: '#1D9E75' }}>
+              {PLAN_LABEL[garage?.plan ?? ''] ?? 'Plan Starter'}
+            </p>
           </div>
           <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#1D9E75' }} />
         </div>
@@ -82,7 +110,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
               {group.section}
             </p>
             {group.items.map((item) => {
-              const Icon = item.icon
+              const Icon   = item.icon
               const active = pathname === item.href
               return (
                 <Link
@@ -91,18 +119,12 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
                   onClick={onClose}
                   className="flex items-center gap-[9px] px-[10px] py-2 rounded mx-[6px] my-px text-[13px] transition-colors"
                   style={{
-                    color: active ? 'var(--color-primary-dark)' : 'var(--color-text-secondary)',
+                    color:      active ? 'var(--color-primary-dark)' : 'var(--color-text-secondary)',
                     background: active ? 'var(--color-primary-light)' : 'transparent',
                     fontWeight: active ? '500' : '400',
                   }}>
                   <Icon size={16} />
                   <span className="flex-1">{item.label}</span>
-                  {item.badge ? (
-                    <span className="text-[10px] font-medium px-1.5 py-px rounded-full text-white"
-                      style={{ background: item.badgeColor === 'red' ? '#E24B4A' : '#EF9F27' }}>
-                      {item.badge}
-                    </span>
-                  ) : null}
                 </Link>
               )
             })}
@@ -112,11 +134,14 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
       {/* Footer */}
       <div className="p-3" style={{ borderTop: '0.5px solid var(--color-border-tertiary)' }}>
-        <Link href="/" onClick={onClose}
+        <Link
+          href={garage?.slug ? `/garage/${garage.slug}` : '/'}
+          target="_blank"
+          onClick={onClose}
           className="flex items-center gap-[9px] px-[10px] py-2 rounded text-[13px] transition-colors w-full"
           style={{ color: 'var(--color-text-secondary)' }}>
           <IconExternalLink size={16} />
-          <span>Page publique</span>
+          <span>Ma page publique</span>
         </Link>
         <Link href="/api/auth/signout"
           className="flex items-center gap-[9px] px-[10px] py-2 rounded text-[13px] transition-colors w-full"
