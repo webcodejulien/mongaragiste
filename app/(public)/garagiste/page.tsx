@@ -156,11 +156,6 @@ export default function GaragistePage() {
               style={{ background: '#1D9E75' }}>
               Commencer gratuitement →
             </Link>
-            <Link href="/search"
-              className="px-6 py-3 rounded-lg text-[15px] font-medium inline-flex items-center gap-2"
-              style={{ border: '0.5px solid var(--color-border-secondary)', color: 'var(--color-text-secondary)', background: 'var(--color-background-primary)' }}>
-              Voir la démo
-            </Link>
           </div>
           <p className="text-[12px] mt-4" style={{ color: 'var(--color-text-tertiary)' }}>
             ✓ Gratuit pour commencer &nbsp;·&nbsp; ✓ Sans carte bancaire &nbsp;·&nbsp; ✓ En ligne en 2 minutes
