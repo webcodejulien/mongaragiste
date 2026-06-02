@@ -35,9 +35,10 @@ function Inp({ value, onChange, placeholder, type='text', rows }: { value:string
 
 export default function SettingsPage() {
   const [tab, setTab]       = useState<Tab>('info')
-  const [saving, setSaving] = useState(false)
-  const [saved,  setSaved]  = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [saving,   setSaving]  = useState(false)
+  const [saved,    setSaved]   = useState(false)
+  const [saveError,setSaveError] = useState('')
+  const [loading,  setLoading] = useState(true)
 
   const [logoUrl,      setLogoUrl]     = useState<string | null>(null)
   const [logoUploading, setLogoUploading] = useState(false)
@@ -103,19 +104,31 @@ export default function SettingsPage() {
 
   async function save() {
     setSaving(true)
-    await fetch('/api/garage/me', {
-      method: 'PATCH',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        name:info.name, phone:info.phone, address:info.address, city:info.city, zipCode:info.zip, description:info.desc, vatNumber:info.vatNumber||null, iban:info.iban||null,
-        mechanicCount, slotDuration: slotDuration,
-        schedules: schedules.map(s => ({ dayOfWeek:s.dayOfWeek, openTime:s.openTime, closeTime:s.closeTime, isClosed:s.isClosed })),
-        services: services.map(s => ({ name:s.name, duration:s.duration, price:s.price||null })),
-        notifPrefs: notifs,
-      }),
-    })
-    setSaving(false); setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
+    setSaveError('')
+    try {
+      const res = await fetch('/api/garage/me', {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          name:info.name, phone:info.phone, address:info.address, city:info.city, zipCode:info.zip, description:info.desc, vatNumber:info.vatNumber||null, iban:info.iban||null,
+          mechanicCount, slotDuration,
+          schedules: schedules.map(s => ({ dayOfWeek:s.dayOfWeek, openTime:s.openTime, closeTime:s.closeTime, isClosed:s.isClosed })),
+          services: services.map(s => ({ name:s.name, duration:Number(s.duration)||60, price:s.price ? Number(s.price) : null })),
+          notifPrefs: notifs,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setSaveError(data.error || 'Erreur lors de la sauvegarde.')
+      } else {
+        setSaved(true)
+        setTimeout(() => setSaved(false), 2500)
+      }
+    } catch {
+      setSaveError('Erreur réseau. Vérifiez votre connexion.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const TABS: {id:Tab;label:string}[] = [
@@ -343,6 +356,7 @@ export default function SettingsPage() {
             {saving ? 'Enregistrement…' : 'Enregistrer les modifications'}
           </button>
           {saved && <span className="flex items-center gap-1.5 text-[12px] font-medium" style={{color:'#1D9E75'}}><IconCheck size={13}/> Sauvegardé !</span>}
+          {saveError && <span className="text-[12px] font-medium" style={{color:'#A32D2D'}}>⚠️ {saveError}</span>}
         </div>
       </main>
     </div>
