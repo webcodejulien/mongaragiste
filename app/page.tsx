@@ -19,12 +19,7 @@ const STEPS = [
   { n:'3', title:'Réservez',   desc:'Choisissez votre créneau et confirmez en quelques secondes.',          icon:'✅' },
 ]
 
-const STATS = [
-  { value:'200+', label:'Garages vérifiés' },
-  { value:'4.8★', label:'Note moyenne' },
-  { value:'15k+', label:'RDV pris' },
-  { value:'100%', label:'Gratuit pour les clients' },
-]
+// STATS are fetched dynamically in the page component below
 
 function StarRow({ n }: { n: number }) {
   return (
@@ -39,12 +34,28 @@ function StarRow({ n }: { n: number }) {
 }
 
 export default async function HomePage() {
-  const garages = await prisma.garage.findMany({
-    where:   { status: 'ACTIVE' },
-    include: { services: { select: { name: true } } },
-    orderBy: { rating: 'desc' },
-    take:    6,
-  }).catch(() => [])
+  const [garages, garageCount, appointmentCount, cityRows] = await Promise.all([
+    prisma.garage.findMany({
+      where:   { status: 'ACTIVE' },
+      include: { services: { select: { name: true } } },
+      orderBy: { rating: 'desc' },
+      take:    6,
+    }).catch(() => []),
+    prisma.garage.count({ where: { status: 'ACTIVE' } }).catch(() => 0),
+    prisma.appointment.count().catch(() => 0),
+    prisma.garage.findMany({
+      where:  { status: 'ACTIVE' },
+      select: { city: true },
+      distinct: ['city'],
+    }).catch(() => []),
+  ])
+
+  const STATS = [
+    { value: garageCount > 0 ? `${garageCount}+` : '—',        label: 'Garages vérifiés' },
+    { value: '4.8★',                                             label: 'Note moyenne' },
+    { value: appointmentCount > 0 ? `${appointmentCount}+` : '—', label: 'RDV pris' },
+    { value: cityRows.length > 0 ? `${cityRows.length}` : '—', label: 'Villes couvertes' },
+  ]
 
   return (
     <div className="min-h-screen" style={{ fontFamily:'var(--font-sans)', background:'var(--color-background-secondary)' }}>

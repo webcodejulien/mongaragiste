@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { name, phone, address, city, zipCode, description, mechanicCount, slotDuration, schedules, services } = body
+    const { name, phone, address, city, zipCode, description, mechanicCount, slotDuration, schedules, services, notifPrefs } = body
 
     const updated = await prisma.garage.update({
       where: { id: garage.id },
@@ -27,6 +27,7 @@ export async function PATCH(req: NextRequest) {
         ...(description   !== undefined && { description }),
         ...(mechanicCount !== undefined && { mechanicCount }),
         ...(slotDuration  !== undefined && { slotDuration }),
+        ...(notifPrefs    !== undefined && { notifPrefs }),
       },
     })
 

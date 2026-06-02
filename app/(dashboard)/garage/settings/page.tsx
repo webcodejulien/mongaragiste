@@ -64,6 +64,9 @@ export default function SettingsPage() {
           }))
         }
         if (g.services?.length) setServices(g.services)
+        if (g.notifPrefs && typeof g.notifPrefs === 'object') {
+          setNotifs(prev => ({ ...prev, ...(g.notifPrefs as typeof prev) }))
+        }
       })
       .finally(() => setLoading(false))
   }, [])
@@ -82,6 +85,7 @@ export default function SettingsPage() {
         mechanicCount, slotDuration: slotDuration,
         schedules: schedules.map(s => ({ dayOfWeek:s.dayOfWeek, openTime:s.openTime, closeTime:s.closeTime, isClosed:s.isClosed })),
         services: services.map(s => ({ name:s.name, duration:s.duration, price:s.price||null })),
+        notifPrefs: notifs,
       }),
     })
     setSaving(false); setSaved(true)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { IconSearch, IconMapPin, IconStar, IconClock, IconAdjustments, IconLoader2 } from '@tabler/icons-react'
@@ -37,6 +37,14 @@ function SearchContent() {
   const [loading,  setLoading]  = useState(true)
   const [services, setServices] = useState<string[]>([])
   const [cities,   setCities]   = useState<string[]>([])
+
+  /* Autocomplétion ville */
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const suggestRef = useRef<HTMLDivElement>(null)
+
+  const citySuggestions = query.length >= 1
+    ? cities.filter(c => c.toLowerCase().includes(query.toLowerCase())).slice(0, 8)
+    : []
 
   /* Fetch depuis la vraie API */
   useEffect(() => {
@@ -81,8 +89,38 @@ function SearchContent() {
       .finally(() => setLoading(false))
   }, [city, service, query, sort])
 
+  /* Fermer la liste si clic en dehors */
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (suggestRef.current && !suggestRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
   function clear() { setQuery(''); setCity(''); setService('') }
   const hasFilters = !!(city || service)
+
+  /* Calcul ouvert/fermé en temps réel */
+  function isOpenNow(g: any): boolean | null {
+    const schedules: any[] = g.schedules ?? []
+    if (!schedules.length) return null
+    const now = new Date()
+    const jsDay = now.getDay()          // 0=dim
+    const appDay = jsDay === 0 ? 7 : jsDay  // 1=lun…7=dim
+    const sched = schedules.find((s: any) => s.dayOfWeek === appDay)
+    if (!sched) return null
+    if (sched.isClosed) return false
+    if (!sched.openTime || !sched.closeTime) return null
+    const [oh, om] = sched.openTime.split(':').map(Number)
+    const [ch, cm] = sched.closeTime.split(':').map(Number)
+    const nowMin = now.getHours() * 60 + now.getMinutes()
+    const openMin = oh * 60 + om
+    const closeMin = ch * 60 + cm
+    return nowMin >= openMin && nowMin < closeMin
+  }
 
   function priceFrom(g: any) {
     const prices = (g.services ?? []).map((s: any) => s.price).filter((p: any) => p != null && p > 0)
@@ -94,12 +132,29 @@ function SearchContent() {
       {/* Barre de recherche */}
       <div className="rounded-xl p-2 flex gap-2 mb-6"
         style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
-        <div className="flex-1 flex items-center gap-2 px-3">
+        <div className="flex-1 flex items-center gap-2 px-3 relative" ref={suggestRef}>
           <IconSearch size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }}/>
-          <input value={query} onChange={e => setQuery(e.target.value)}
+          <input value={query}
+            onChange={e => { setQuery(e.target.value); setShowSuggestions(true) }}
+            onFocus={() => setShowSuggestions(true)}
             placeholder="Garage ou ville…"
             className="flex-1 text-[13px] bg-transparent focus:outline-none"
             style={{ color: 'var(--color-text-primary)' }}/>
+          {/* Suggestions d'autocomplétion */}
+          {showSuggestions && citySuggestions.length > 0 && (
+            <div className="absolute left-0 top-full mt-1 w-full z-50 rounded-[10px] overflow-hidden shadow-md"
+              style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
+              {citySuggestions.map(c => (
+                <button key={c}
+                  onMouseDown={e => { e.preventDefault(); setCity(c); setQuery(c); setShowSuggestions(false) }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[var(--color-background-secondary)]"
+                  style={{ color: 'var(--color-text-primary)' }}>
+                  <IconMapPin size={12} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }}/>
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div className="w-px" style={{ background: 'var(--color-border-tertiary)' }}/>
         <select value={service} onChange={e => setService(e.target.value)}
@@ -198,10 +253,12 @@ function SearchContent() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start gap-2 mb-1">
                     <p className="text-[15px] font-semibold truncate" style={{ color: 'var(--color-text-primary)' }}>{g.name}</p>
-                    {g.status === 'ACTIVE' && (
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0"
-                        style={{ background: '#E1F5EE', color: '#085041' }}>Dispo</span>
-                    )}
+                    {(() => {
+                      const open = isOpenNow(g)
+                      if (open === true)  return <span className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: '#E1F5EE', color: '#085041' }}>Ouvert</span>
+                      if (open === false) return <span className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: '#FCEBEB', color: '#A32D2D' }}>Fermé</span>
+                      return null
+                    })()}
                   </div>
                   <div className="flex items-center gap-1.5 mb-2">
                     <IconMapPin size={11} style={{ color: 'var(--color-text-tertiary)' }}/>
@@ -220,6 +277,12 @@ function SearchContent() {
                         +{svcNames.length - 4}
                       </span>
                     )}
+                    {svcNames.length > 0 && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full"
+                        style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
+                        {svcNames.length} service{svcNames.length > 1 ? 's' : ''}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -230,10 +293,10 @@ function SearchContent() {
                       <span className="text-[13px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>
                         {(g.rating ?? 0).toFixed(1)}
                       </span>
-                      <span className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>({g.reviewCount})</span>
+                      <span className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>({g.reviewCount} avis)</span>
                     </div>
                   ) : (
-                    <p className="text-[11px] mb-1" style={{ color: 'var(--color-text-tertiary)' }}>Nouveau</p>
+                    <p className="text-[11px] mb-1" style={{ color: 'var(--color-text-tertiary)' }}>Aucun avis</p>
                   )}
                   <p className="text-[11px] mb-3" style={{ color: 'var(--color-text-secondary)' }}>
                     {g.phone}

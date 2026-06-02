@@ -134,6 +134,11 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
 
   const avg = garage.rating?.toFixed(1) || '—'
 
+  /* Badge "Nouveau" si créé il y a moins de 30 jours */
+  const isNew = garage.createdAt
+    ? (Date.now() - new Date(garage.createdAt).getTime()) < 30 * 24 * 60 * 60 * 1000
+    : false
+
   return (
     <div className="min-h-screen" style={{background:'var(--color-background-secondary)'}}>
       <header className="sticky top-0 z-30 h-14" style={{background:'var(--color-background-primary)',borderBottom:'0.5px solid var(--color-border-tertiary)'}}>
@@ -160,16 +165,27 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                 <div className="flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <h1 className="text-[20px] font-bold" style={{color:'var(--color-text-primary)'}}>{garage.name}</h1>
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>Actif</span>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {isNew && (
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{background:'#FFF3E0',color:'#B45309'}}>Nouveau</span>
+                      )}
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>Actif</span>
+                    </div>
                   </div>
                   <p className="text-[12px] mt-1" style={{color:'var(--color-text-secondary)'}}>{garage.address}, {garage.zipCode} {garage.city}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Stars n={Math.round(garage.rating||0)} size={14}/>
-                    <span className="text-[13px] font-bold" style={{color:'var(--color-text-primary)'}}>{avg}</span>
-                    <span className="text-[12px]" style={{color:'var(--color-text-secondary)'}}>({garage.reviewCount} avis)</span>
-                    {garage.mechanicCount && (
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    {(garage.reviewCount ?? 0) > 0 ? (
+                      <>
+                        <Stars n={Math.round(garage.rating||0)} size={14}/>
+                        <span className="text-[13px] font-bold" style={{color:'var(--color-text-primary)'}}>{avg}</span>
+                        <span className="text-[12px]" style={{color:'var(--color-text-secondary)'}}>({garage.reviewCount} avis)</span>
+                      </>
+                    ) : (
+                      <span className="text-[12px] font-medium" style={{color:'var(--color-text-tertiary)'}}>Nouveau garage</span>
+                    )}
+                    {garage.mechanicCount != null && garage.mechanicCount > 0 && (
                       <span className="text-[11px] px-2 py-0.5 rounded-full" style={{background:'var(--color-background-secondary)',color:'var(--color-text-secondary)'}}>
-                        {garage.mechanicCount} poste{garage.mechanicCount>1?'s':''}
+                        {garage.mechanicCount} mécanicien{garage.mechanicCount>1?'s':''}
                       </span>
                     )}
                   </div>
