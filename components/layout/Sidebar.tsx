@@ -6,7 +6,7 @@ import { useState } from 'react'
 import {
   IconLayoutDashboard, IconCalendar, IconClipboardList,
   IconUsers, IconChartBar, IconStar, IconBell,
-  IconReceipt, IconSettings, IconHelp,
+  IconReceipt, IconSettings, IconHelp, IconQrcode,
   IconExternalLink, IconLogout, IconCircleFilled, IconMenu2, IconX,
 } from '@tabler/icons-react'
 import { useLang } from '@/components/LangToggle'
@@ -31,6 +31,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         { href: '/garage/stats',         label: t.stats,         icon: IconChartBar },
         { href: '/garage/reviews',       label: t.reviews,       icon: IconStar },
         { href: '/garage/notifications', label: t.notifications, icon: IconBell, badge: 0, badgeColor: 'red' },
+        { href: '/garage/qrcode',         label: 'QR Code',       icon: IconQrcode },
         { href: '/garage/billing',       label: t.billing,       icon: IconReceipt },
       ],
     },
