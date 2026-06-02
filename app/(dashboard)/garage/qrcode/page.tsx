@@ -137,7 +137,7 @@ export default function QRCodePage() {
           {/* Conseils d'utilisation */}
           <div className="no-print mt-6 grid sm:grid-cols-3 gap-4">
             {[
-              { icon: '🖨️', title: 'Imprimez', desc: 'Format A5 — idéal pour l'accueil ou la façade de votre garage.' },
+              { icon: '🖨️', title: 'Imprimez', desc: "Format A5 — idéal pour l'accueil ou la façade de votre garage." },
               { icon: '📱', title: 'Partagez', desc: 'Envoyez le lien par WhatsApp, SMS ou email à vos clients.' },
               { icon: '🌐', title: 'Publiez', desc: 'Ajoutez le lien sur votre page Facebook ou site internet.' },
             ].map(tip => (
