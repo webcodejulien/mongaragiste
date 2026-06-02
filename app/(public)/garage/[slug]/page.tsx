@@ -6,10 +6,14 @@ import {
   IconMapPin, IconPhone, IconClock, IconStar, IconStarFilled,
   IconCheck, IconArrowLeft, IconCar, IconUser, IconLoader2,
 } from '@tabler/icons-react'
-
-const BOOKING_STEPS = ['Service','Créneau','Vos infos','Confirmation']
+import { useLang } from '@/components/LangToggle'
 
 const DAY_NAMES = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
+
+function useBookingSteps() {
+  const { t } = useLang()
+  return [t.garage.step1, t.garage.step2, t.garage.step3, t.garage.step4]
+}
 
 
 function Stars({ n, size=14 }: { n:number; size?:number }) {
@@ -33,6 +37,8 @@ function getWeekDates() {
 }
 
 export default function GarageProfilePage({ params }: { params: { slug: string } }) {
+  const { t } = useLang()
+  const BOOKING_STEPS = useBookingSteps()
   const [garage,   setGarage]   = useState<any>(null)
   const [services, setServices] = useState<any[]>([])
   const [loading,  setLoading]  = useState(true)
@@ -203,9 +209,9 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                         <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{background:'#FFF3E0',color:'#B45309'}}>Nouveau</span>
                       )}
                       {isOpenNow
-                        ? <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>🟢 Ouvert maintenant</span>
+                        ? <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>🟢 {t.garage.openNow}</span>
                         : todaySchedule
-                          ? <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{background:'#FCEBEB',color:'#A32D2D'}}>🔴 Fermé</span>
+                          ? <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{background:'#FCEBEB',color:'#A32D2D'}}>🔴 {t.garage.closed}</span>
                           : <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>Actif</span>
                       }
                     </div>
@@ -216,14 +222,14 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                       <>
                         <Stars n={Math.round(garage.rating||0)} size={14}/>
                         <span className="text-[13px] font-bold" style={{color:'var(--color-text-primary)'}}>{avg}</span>
-                        <span className="text-[12px]" style={{color:'var(--color-text-secondary)'}}>({garage.reviewCount} avis)</span>
+                        <span className="text-[12px]" style={{color:'var(--color-text-secondary)'}}>({garage.reviewCount} {t.garage.reviews})</span>
                       </>
                     ) : (
-                      <span className="text-[12px] font-medium" style={{color:'var(--color-text-tertiary)'}}>Nouveau garage</span>
+                      <span className="text-[12px] font-medium" style={{color:'var(--color-text-tertiary)'}}>{t.garage.noReviews}</span>
                     )}
                     {garage.mechanicCount != null && garage.mechanicCount > 0 && (
                       <span className="text-[11px] px-2 py-0.5 rounded-full" style={{background:'var(--color-background-secondary)',color:'var(--color-text-secondary)'}}>
-                        {garage.mechanicCount} mécanicien{garage.mechanicCount>1?'s':''}
+                        {garage.mechanicCount} {t.garage.mechanics}
                       </span>
                     )}
                   </div>
@@ -307,21 +313,21 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                   <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{background:'#E1F5EE'}}>
                     <IconCheck size={26} style={{color:'#1D9E75'}}/>
                   </div>
-                  <h3 className="text-[16px] font-semibold mb-2" style={{color:'var(--color-text-primary)'}}>Demande envoyée !</h3>
+                  <h3 className="text-[16px] font-semibold mb-2" style={{color:'var(--color-text-primary)'}}>{t.garage.successTitle}</h3>
                   <p className="text-[12px] mb-2 leading-relaxed" style={{color:'var(--color-text-secondary)'}}>
                     <strong>{selService?.name}</strong> · {selDate?.day} {selDate?.date} {selDate?.month} à {selTime}
                   </p>
                   <p className="text-[12px] mb-5" style={{color:'var(--color-text-secondary)'}}>
-                    Vous recevrez un email de confirmation dès que le garage aura accepté votre demande.
+                    {t.garage.successMsg}
                   </p>
                   <button onClick={reset} className="text-[13px] font-medium" style={{color:'#1D9E75'}}>
-                    Prendre un autre RDV
+                    {t.garage.anotherBtn}
                   </button>
                 </div>
               ) : (
                 <>
                   <div className="px-5 py-4" style={{borderBottom:'0.5px solid var(--color-border-tertiary)'}}>
-                    <p className="text-[14px] font-semibold" style={{color:'var(--color-text-primary)'}}>Prendre rendez-vous</p>
+                    <p className="text-[14px] font-semibold" style={{color:'var(--color-text-primary)'}}>{t.garage.bookTitle}</p>
                     <div className="flex items-center gap-1.5 mt-2">
                       {BOOKING_STEPS.map((s,i) => (
                         <div key={s} className="flex items-center gap-1.5">
@@ -394,7 +400,7 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                           </div>
                         ) : slots.length === 0 ? (
                           <p className="text-[12px] py-3" style={{color:'var(--color-text-tertiary)'}}>
-                            Aucun créneau disponible ce jour. Choisissez une autre date.
+                            {t.garage.noSlots}
                           </p>
                         ) : (
                           <div className="grid grid-cols-3 gap-1.5">
@@ -461,7 +467,7 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                         className="flex-1 py-2.5 rounded-lg text-[13px] font-medium text-white disabled:opacity-60 flex items-center justify-center gap-2"
                         style={{background:'#1D9E75'}}>
                         {submitting && <IconLoader2 size={14} className="animate-spin"/>}
-                        {submitting ? 'Envoi…' : 'Confirmer la demande'}
+                        {submitting ? 'Envoi…' : t.garage.confirmBtn}
                       </button>
                     )}
                   </div>
@@ -471,11 +477,11 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
               {/* Horaires */}
               <div className="px-5 py-4" style={{borderTop:'0.5px solid var(--color-border-tertiary)'}}>
                 <div className="flex items-center justify-between mb-2.5">
-                  <p className="text-[11px] font-medium uppercase tracking-wide" style={{color:'var(--color-text-tertiary)'}}>Horaires</p>
+                  <p className="text-[11px] font-medium uppercase tracking-wide" style={{color:'var(--color-text-tertiary)'}}>{t.garage.schedule}</p>
                   {isOpenNow
-                    ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>🟢 Ouvert</span>
+                    ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>🟢 {t.search.open}</span>
                     : todaySchedule
-                      ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{background:'#FCEBEB',color:'#A32D2D'}}>🔴 Fermé</span>
+                      ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{background:'#FCEBEB',color:'#A32D2D'}}>🔴 {t.garage.closed}</span>
                       : null
                   }
                 </div>

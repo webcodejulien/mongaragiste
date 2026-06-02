@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { IconSearch, IconMapPin, IconStar, IconClock, IconAdjustments, IconLoader2, IconCurrentLocation } from '@tabler/icons-react'
+import { useLang } from '@/components/LangToggle'
 
 const SORT_OPTIONS = [
   { value: 'rating',  label: 'Mieux notés' },
@@ -24,6 +25,7 @@ function Stars({ n, size = 12 }: { n: number; size?: number }) {
 }
 
 function SearchContent() {
+  const { t } = useLang()
   const params = useSearchParams()
 
   const [query,       setQuery]       = useState(params.get('q')       || '')
@@ -184,7 +186,7 @@ function SearchContent() {
           <input value={query}
             onChange={e => { setQuery(e.target.value); setShowSuggestions(true) }}
             onFocus={() => setShowSuggestions(true)}
-            placeholder="Garage ou ville…"
+            placeholder={t.search.placeholder}
             className="flex-1 text-[13px] bg-transparent focus:outline-none"
             style={{ color: 'var(--color-text-primary)' }}/>
           {/* Suggestions d'autocomplétion */}
@@ -225,7 +227,7 @@ function SearchContent() {
             ? <IconLoader2 size={14} className="animate-spin"/>
             : <IconCurrentLocation size={14}/>
           }
-          {geoLoading ? 'Localisation…' : userLat !== null ? 'Près de moi ✓' : 'Près de moi'}
+          {geoLoading ? 'Localisation…' : userLat !== null ? `${t.search.nearMe} ✓` : t.search.nearMe}
         </button>
         <button onClick={() => setShowFilters(p => !p)}
           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium flex-shrink-0 transition-colors"
@@ -306,7 +308,7 @@ function SearchContent() {
       ) : garages.length === 0 ? (
         <div className="rounded-xl py-16 text-center"
           style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
-          <p className="text-[14px] font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>Aucun garage trouvé</p>
+          <p className="text-[14px] font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>{t.search.noResult}</p>
           <p className="text-[12px] mb-4" style={{ color: 'var(--color-text-secondary)' }}>Essayez d'élargir vos critères</p>
           <button onClick={clear} className="text-[13px] font-medium" style={{ color: '#1D9E75' }}>Réinitialiser les filtres</button>
         </div>
@@ -328,8 +330,8 @@ function SearchContent() {
                     <p className="text-[15px] font-semibold truncate" style={{ color: 'var(--color-text-primary)' }}>{g.name}</p>
                     {(() => {
                       const open = isOpenNow(g)
-                      if (open === true)  return <span className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: '#E1F5EE', color: '#085041' }}>Ouvert</span>
-                      if (open === false) return <span className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: '#FCEBEB', color: '#A32D2D' }}>Fermé</span>
+                      if (open === true)  return <span className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: '#E1F5EE', color: '#085041' }}>{t.search.open}</span>
+                      if (open === false) return <span className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: '#FCEBEB', color: '#A32D2D' }}>{t.search.closed}</span>
                       return null
                     })()}
                   </div>
