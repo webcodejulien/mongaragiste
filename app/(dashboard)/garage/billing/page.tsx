@@ -7,44 +7,46 @@ import { IconCrown, IconCheck, IconArrowUp } from '@tabler/icons-react'
 const PLANS = [
   {
     key: 'STARTER',
-    name: 'Starter',
-    price: 'Gratuit',
-    priceDetail: 'pour toujours',
+    name: 'Essential',
+    price: '9 €',
+    priceDetail: '/ mois HTVA',
     color: '#6B6E72',
     features: [
-      'Profil garage public',
-      "Jusqu'à 50 RDV / mois",
+      'Page garage publique (SEO)',
+      "Jusqu'à 100 RDV / mois",
       'Agenda en ligne',
-      'Notifications in-app',
+      'Notifications email client',
+      'Avis clients vérifiés',
     ],
   },
   {
     key: 'PRO',
     name: 'Pro',
-    price: '29 €',
-    priceDetail: '/ mois HT',
+    price: '19 €',
+    priceDetail: '/ mois HTVA',
     color: '#1D9E75',
     badge: 'Populaire',
     features: [
-      'Tout Starter inclus',
+      'Tout Essential inclus',
       'RDV illimités',
       'Rappels SMS clients',
       'Statistiques avancées',
+      'Export CSV',
       'Support prioritaire',
     ],
   },
   {
     key: 'PREMIUM',
     name: 'Premium',
-    price: '59 €',
-    priceDetail: '/ mois HT',
+    price: '29 €',
+    priceDetail: '/ mois HTVA',
     color: '#854F0B',
     features: [
       'Tout Pro inclus',
       'Multi-garages',
+      'SMS illimités',
       'API & intégrations',
       'Manager de compte dédié',
-      'Facturation automatique',
     ],
   },
 ]
@@ -83,7 +85,7 @@ export default function BillingPage() {
             </p>
             <p className="text-[12px] mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
               {plan === 'STARTER'
-                ? 'Passez au plan Pro pour accéder aux statistiques avancées et aux RDV illimités.'
+                ? 'Passez au plan Pro (19 €/mois) pour les RDV illimités, les rappels SMS et les stats avancées.'
                 : 'Merci de faire confiance à MonGaragiste pour votre activité.'}
             </p>
           </div>
@@ -174,10 +176,10 @@ export default function BillingPage() {
         )}
 
         {plan === 'STARTER' && (
-          <div className="rounded-[10px] p-5" style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
-            <p className="text-[13px] font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>Vous êtes en période de découverte gratuite</p>
-            <p className="text-[12px]" style={{ color: 'var(--color-text-secondary)' }}>
-              Le plan Starter est gratuit sans engagement. Passez au plan Pro pour débloquer les RDV illimités et les statistiques avancées.
+          <div className="rounded-[10px] p-5" style={{ background: '#FAEEDA', border: '0.5px solid #EF9F27' }}>
+            <p className="text-[13px] font-medium mb-1" style={{ color: '#633806' }}>🎁 2 mois offerts sur tous les plans</p>
+            <p className="text-[12px]" style={{ color: '#854F0B' }}>
+              Profitez de 2 mois offerts lors de votre passage au plan Essential, Pro ou Premium. Contactez-nous à <strong>hello@mongaragiste.app</strong> pour en bénéficier.
             </p>
           </div>
         )}
