@@ -273,20 +273,32 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
             </div>
 
             {/* Avis */}
-            {(garage.reviews||[]).length > 0 && (
-              <div className="rounded-xl overflow-hidden" style={{background:'var(--color-background-primary)',border:'0.5px solid var(--color-border-tertiary)'}}>
-                <div className="px-5 py-3.5 flex items-center justify-between" style={{borderBottom:'0.5px solid var(--color-border-tertiary)'}}>
-                  <h2 className="text-[14px] font-semibold" style={{color:'var(--color-text-primary)'}}>Avis clients</h2>
-                  <div className="flex items-center gap-2"><Stars n={Math.round(garage.rating||0)} size={12}/><span className="text-[12px] font-bold" style={{color:'var(--color-text-primary)'}}>{avg}</span></div>
+            <div className="rounded-xl overflow-hidden" style={{background:'var(--color-background-primary)',border:'0.5px solid var(--color-border-tertiary)'}}>
+              <div className="px-5 py-3.5 flex items-center justify-between" style={{borderBottom:'0.5px solid var(--color-border-tertiary)'}}>
+                <h2 className="text-[14px] font-semibold" style={{color:'var(--color-text-primary)'}}>Avis clients</h2>
+                <div className="flex items-center gap-3">
+                  {(garage.reviews||[]).length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Stars n={Math.round(garage.rating||0)} size={12}/>
+                      <span className="text-[12px] font-bold" style={{color:'var(--color-text-primary)'}}>{avg}</span>
+                    </div>
+                  )}
                 </div>
-                {garage.reviews.map((r:any,i:number) => (
+              </div>
+              {(garage.reviews||[]).length === 0 ? (
+                <div className="px-5 py-6 text-center">
+                  <p className="text-[13px] mb-1" style={{color:'var(--color-text-secondary)'}}>Aucun avis pour l'instant.</p>
+                  <p className="text-[12px]" style={{color:'var(--color-text-tertiary)'}}>Soyez le premier à donner votre avis !</p>
+                </div>
+              ) : (
+                garage.reviews.map((r:any,i:number) => (
                   <div key={i} className="px-5 py-4" style={{borderBottom:i<garage.reviews.length-1?'0.5px solid var(--color-border-tertiary)':'none'}}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold" style={{background:'var(--color-primary-light)',color:'var(--color-primary-dark)'}}>{r.initials}</div>
                         <div>
                           <p className="text-[13px] font-medium" style={{color:'var(--color-text-primary)'}}>{r.author}</p>
-                          <p className="text-[11px]" style={{color:'var(--color-text-tertiary)'}}>{r.service} · {r.date}</p>
+                          <p className="text-[11px]" style={{color:'var(--color-text-tertiary)'}}>{r.service ? `${r.service} · ` : ''}{r.date}</p>
                         </div>
                       </div>
                       <Stars n={r.rating} size={12}/>
@@ -301,9 +313,9 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
-            )}
+                ))
+              )}
+            </div>
           </div>
 
           {/* Droite : Booking */}

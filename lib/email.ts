@@ -153,12 +153,14 @@ export function tplBookingCancelled({
 }
 
 export function tplReviewRequest({
-  clientName, garageName, garageSlug,
+  clientName, garageName, garageSlug, appointmentId,
 }: {
-  clientName: string; garageName: string; garageSlug: string
+  clientName: string; garageName: string; garageSlug: string; appointmentId?: string
 }) {
-  const baseUrl  = process.env.NEXTAUTH_URL ?? 'https://mongaragiste-app.vercel.app'
-  const reviewUrl = `${baseUrl}/mon-compte`
+  const baseUrl   = process.env.NEXTAUTH_URL ?? 'https://mongaragiste-app.vercel.app'
+  const reviewUrl = appointmentId
+    ? `${baseUrl}/garage/${garageSlug}/review?appointment=${appointmentId}`
+    : `${baseUrl}/garage/${garageSlug}/review`
   return {
     subject: `Comment s'est passé votre passage chez ${garageName} ?`,
     html: `
