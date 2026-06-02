@@ -1,0 +1,81 @@
+'use client'
+
+import { useLang } from './LangToggle'
+
+const T = {
+  fr: {
+    badge:        '✓ 200+ garages vérifiés en Belgique',
+    heroTitle:    'Votre garagiste,\nà portée de clic.',
+    heroSub:      'Trouvez, comparez et réservez votre garagiste en ligne.\nVidange, freins, révision — choisissez votre créneau directement.',
+    searchBtn:    'Rechercher',
+    searchCity:   'Ville ou commune (ex: Bruxelles)',
+    searchSvc:    'Tous les services',
+    statLabels:   ['Garages vérifiés', 'Note moyenne', 'RDV pris', 'Villes couvertes'],
+    quickSearch:  'Recherche rapide :',
+    garagesTitle: 'Garages disponibles',
+    garagesSub:   'Triés par note',
+    soonTitle:    'Bientôt disponible près de vous',
+    soonSub:      'Les garages partenaires arrivent très bientôt dans votre région',
+    seeAll:       'Voir tout',
+    noGarageTitle:'Vous êtes garagiste ?',
+    noGarageSub:  "Inscrivez votre garage et commencez à recevoir des réservations en ligne dès aujourd'hui.",
+    noGarageBtn:  'Inscrire mon garage gratuitement',
+    dispo:        'Dispo',
+    newGarage:    'Nouveau garage',
+    howTitle:     'Comment ça marche ?',
+    howSub:       'Réservez votre rendez-vous en 3 étapes simples',
+    stepLabels:   ['Recherchez', 'Comparez', 'Réservez'],
+    stepDescs:    [
+      'Entrez votre ville et sélectionnez le service dont vous avez besoin.',
+      'Consultez les avis, les prix et les disponibilités en temps réel.',
+      'Choisissez votre créneau et confirmez en quelques secondes.',
+    ],
+    proTitle:     'Vous êtes garagiste ?',
+    proSub:       'Rejoignez MonGaragiste et recevez des réservations en ligne 24h/24. Inscription en 2 minutes.',
+    proBtn:       'Inscrire mon garage gratuitement',
+    proLink:      'En savoir plus →',
+    footerTagline:'— Votre garagiste, à portée de clic.',
+    footerLinks:  ['CGU', 'Confidentialité', 'Contact'],
+    footerPro:    'Pour les garagistes',
+  },
+  nl: {
+    badge:        '✓ 200+ geverifieerde garages in België',
+    heroTitle:    'Uw garagist,\nop één klik.',
+    heroSub:      'Vind, vergelijk en boek uw garagist online.\nOlieverversing, remmen, revisie — kies uw tijdslot direct.',
+    searchBtn:    'Zoeken',
+    searchCity:   'Stad of gemeente (bv. Brussel)',
+    searchSvc:    'Alle diensten',
+    statLabels:   ['Geverifieerde garages', 'Gemiddelde score', 'Afspraken gemaakt', 'Steden'],
+    quickSearch:  'Snel zoeken:',
+    garagesTitle: 'Beschikbare garages',
+    garagesSub:   'Gesorteerd op beoordeling',
+    soonTitle:    'Binnenkort beschikbaar bij u in de buurt',
+    soonSub:      'Partnergarages komen binnenkort aan in uw regio',
+    seeAll:       'Alles zien',
+    noGarageTitle:'Bent u een garagist?',
+    noGarageSub:  'Registreer uw garage en begin vandaag nog online reserveringen te ontvangen.',
+    noGarageBtn:  'Mijn garage registreren',
+    dispo:        'Beschikbaar',
+    newGarage:    'Nieuwe garage',
+    howTitle:     'Hoe werkt het?',
+    howSub:       'Boek uw afspraak in 3 eenvoudige stappen',
+    stepLabels:   ['Zoeken', 'Vergelijken', 'Reserveren'],
+    stepDescs:    [
+      'Voer uw stad in en selecteer de dienst die u nodig hebt.',
+      'Bekijk beoordelingen, prijzen en beschikbaarheid in realtime.',
+      'Kies uw tijdslot en bevestig in enkele seconden.',
+    ],
+    proTitle:     'Bent u een garagist?',
+    proSub:       'Sluit u aan bij MonGaragiste en ontvang 24/7 online reserveringen. Registratie in 2 minuten.',
+    proBtn:       'Mijn garage registreren',
+    proLink:      'Meer informatie →',
+    footerTagline:'— Uw garagist, op één klik.',
+    footerLinks:  ['AVG', 'Privacy', 'Contact'],
+    footerPro:    'Voor garagisten',
+  },
+}
+
+export function useLandingT() {
+  const { lang } = useLang()
+  return T[lang] ?? T.fr
+}

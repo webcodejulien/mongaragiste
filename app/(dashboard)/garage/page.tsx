@@ -5,7 +5,13 @@ import { TopBar } from '@/components/layout/TopBar'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SkeletonCard, SkeletonRow } from '@/components/ui/Skeleton'
 import Link from 'next/link'
-import { IconCalendar, IconCalendarWeek, IconClockPause, IconStar, IconArrowUp, IconCheck, IconX, IconBolt, IconCalendarPlus, IconUserPlus, IconSettings, IconBell, IconShare, IconCopy, IconExternalLink } from '@tabler/icons-react'
+import {
+  IconCalendar, IconCalendarWeek, IconClockPause, IconStar,
+  IconCheck, IconX, IconBolt, IconCalendarPlus, IconUserPlus,
+  IconSettings, IconBell, IconCopy, IconExternalLink,
+  IconPhone, IconPlayerPlay, IconAlertTriangle,
+  IconChevronRight,
+} from '@tabler/icons-react'
 
 const STATUS: Record<string, { label: string; bg: string; color: string }> = {
   PENDING:     { label: 'En attente',   bg: '#FAEEDA', color: '#633806' },
@@ -15,29 +21,41 @@ const STATUS: Record<string, { label: string; bg: string; color: string }> = {
   CANCELLED:   { label: 'Annulé',       bg: '#FCEBEB', color: '#A32D2D' },
 }
 
-function fmtDate(d: string) {
-  const dt = new Date(d)
-  const months = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc']
-  return `${dt.getDate()} ${months[dt.getMonth()]}`
+function fmtTime() {
+  const now = new Date()
+  return now.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })
 }
 
 export default function GarageDashboard() {
-  const [appts,   setAppts]   = useState<any[]>([])
-  const [stats,   setStats]   = useState<any>(null)
-  const [notifs,  setNotifs]  = useState<any[]>([])
-  const [garage,  setGarage]  = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [copied,  setCopied]  = useState(false)
+  const [appts,     setAppts]     = useState<any[]>([])
+  const [tomorrowAppts, setTomorrowAppts] = useState<any[]>([])
+  const [stats,     setStats]     = useState<any>(null)
+  const [notifs,    setNotifs]    = useState<any[]>([])
+  const [garage,    setGarage]    = useState<any>(null)
+  const [loading,   setLoading]   = useState(true)
+  const [copied,    setCopied]    = useState(false)
+  const [currentTime, setCurrentTime] = useState(fmtTime())
 
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const timer = setInterval(() => setCurrentTime(fmtTime()), 30000)
+    return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    const today    = new Date()
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1)
+    const todayStr    = today.toISOString().split('T')[0]
+    const tomorrowStr = tomorrow.toISOString().split('T')[0]
+
     Promise.all([
-      fetch(`/api/garage/appointments?date=${today}`).then(r => r.json()),
+      fetch(`/api/garage/appointments?date=${todayStr}`).then(r => r.json()),
+      fetch(`/api/garage/appointments?date=${tomorrowStr}`).then(r => r.json()),
       fetch('/api/garage/stats').then(r => r.json()),
       fetch('/api/garage/notifications').then(r => r.json()),
       fetch('/api/garage/me').then(r => r.json()),
-    ]).then(([a, s, n, g]) => {
+    ]).then(([a, tmrw, s, n, g]) => {
       setAppts(Array.isArray(a) ? a : [])
+      setTomorrowAppts(Array.isArray(tmrw) ? tmrw : [])
       setStats(s?.error ? null : s)
       setNotifs(Array.isArray(n) ? n : [])
       setGarage(g?.error ? null : g)
@@ -51,14 +69,16 @@ export default function GarageDashboard() {
       body: JSON.stringify({ status }),
     })
     setAppts(p => p.map(a => a.id === id ? { ...a, status } : a))
+    setTomorrowAppts(p => p.map(a => a.id === id ? { ...a, status } : a))
   }
 
   const now = new Date()
   const DAY = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
   const MON = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']
-  const subtitle = `${DAY[now.getDay()]} ${now.getDate()} ${MON[now.getMonth()]} ${now.getFullYear()}`
-  const garageName = garage?.name ?? 'votre garage'
-  const unread = notifs.filter(n => !n.isRead).length
+  const subtitle    = `${DAY[now.getDay()]} ${now.getDate()} ${MON[now.getMonth()]} ${now.getFullYear()}`
+  const garageName  = garage?.name ?? 'votre garage'
+  const unread      = notifs.filter(n => !n.isRead).length
+  const pendingCount = appts.filter(a => a.status === 'PENDING').length
 
   const DAYS_SHORT = ['Lun','Mar','Mer','Jeu','Ven','Sam']
   const weekBars = DAYS_SHORT.map((d, i) => {
@@ -74,6 +94,8 @@ export default function GarageDashboard() {
       <TopBar title="Dashboard" subtitle={subtitle} garageName={garage?.name} />
 
       <main className="flex-1 p-5 space-y-4">
+
+        {/* Header avec heure et liens */}
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-[16px] font-bold" style={{ color: 'var(--color-text-primary)' }}>
@@ -141,6 +163,23 @@ export default function GarageDashboard() {
           </div>
         )}
 
+        {/* Bannière actions requises */}
+        {!loading && pendingCount > 0 && (
+          <div className="rounded-[10px] px-4 py-3 flex items-center gap-3"
+            style={{ background: '#FAEEDA', border: '0.5px solid #EF9F27' }}>
+            <IconAlertTriangle size={16} style={{ color: '#BA7517', flexShrink: 0 }} />
+            <p className="flex-1 text-[13px] font-semibold" style={{ color: '#633806' }}>
+              {pendingCount} demande{pendingCount > 1 ? 's' : ''} en attente de confirmation
+            </p>
+            <a
+              href="#rdv-jour"
+              className="flex items-center gap-1 text-[12px] font-medium flex-shrink-0"
+              style={{ color: '#BA7517' }}>
+              Confirmer maintenant <IconChevronRight size={13}/>
+            </a>
+          </div>
+        )}
+
         {/* Métriques */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
           {loading ? (
@@ -167,16 +206,43 @@ export default function GarageDashboard() {
           })}
         </div>
 
+        {/* Barre navigation rapide */}
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { href: '/garage/agenda',       label: 'Agenda',      icon: IconCalendar },
+            { href: '/garage/agenda',       label: 'Ajouter RDV', icon: IconCalendarPlus },
+            { href: '/garage/clients',      label: 'Clients',     icon: IconUserPlus },
+            { href: '/garage/settings',     label: 'Paramètres',  icon: IconSettings },
+          ].map(a => {
+            const Icon = a.icon
+            return (
+              <Link key={a.label} href={a.href}
+                className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-[10px] text-[12px] font-medium transition-colors"
+                style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)', color: 'var(--color-text-secondary)' }}>
+                <Icon size={15} style={{ color: '#1D9E75' }}/>
+                {a.label}
+              </Link>
+            )
+          })}
+        </div>
+
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4">
-          {/* RDV aujourd'hui */}
+          {/* Colonne principale */}
           <div className="space-y-4">
-            <div className="rounded-[10px] overflow-hidden"
+
+            {/* Programme du jour */}
+            <div id="rdv-jour" className="rounded-[10px] overflow-hidden"
               style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
               <div className="flex items-center justify-between px-4 py-3"
-                style={{ borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
-                <p className="text-[13px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                  Rendez-vous du jour
-                </p>
+                style={{ borderBottom: '0.5px solid var(--color-border-tertiary)', background: 'var(--color-background-secondary)' }}>
+                <div>
+                  <p className="text-[13px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                    📅 Programme du jour
+                  </p>
+                  <p className="text-[11px] mt-0.5 font-medium" style={{ color: '#1D9E75' }}>
+                    Il est {currentTime}
+                  </p>
+                </div>
                 <Link href="/garage/appointments" className="text-[12px] font-medium" style={{ color: '#1D9E75' }}>
                   Tous les RDV →
                 </Link>
@@ -201,16 +267,112 @@ export default function GarageDashboard() {
                 <div className="divide-y" style={{ borderColor: 'var(--color-border-tertiary)' }}>
                   {appts.map(a => {
                     const s = STATUS[a.status] ?? STATUS.PENDING
+                    const clientName = `${a.client?.firstName ?? ''} ${a.client?.lastName ?? ''}`.trim()
+                    const phone = a.client?.phone
                     return (
-                      <div key={a.id} className="flex items-center gap-3 px-4 py-3 transition-colors" style={{ '--hover-bg': 'var(--color-background-secondary)' } as React.CSSProperties}
+                      <div key={a.id} className="px-4 py-3 transition-colors"
                         onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-background-secondary)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                        <p className="text-[13px] font-semibold w-12 flex-shrink-0" style={{ color: 'var(--color-text-primary)' }}>
+                        <div className="flex items-center gap-3">
+                          {/* Heure */}
+                          <p className="text-[14px] font-bold w-12 flex-shrink-0" style={{ color: 'var(--color-text-primary)' }}>
+                            {a.startTime}
+                          </p>
+                          {/* Info client + service */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-[13px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                                {clientName}
+                              </p>
+                              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0"
+                                style={{ background: s.bg, color: s.color }}>{s.label}</span>
+                            </div>
+                            <p className="text-[11px] truncate mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
+                              {a.service?.name}{a.vehicleModel ? ` · ${a.vehicleModel}` : ''}
+                              {a.vehiclePlate ? ` · ${a.vehiclePlate}` : ''}
+                            </p>
+                          </div>
+                          {/* Téléphone cliquable */}
+                          {phone && (
+                            <a href={`tel:${phone}`}
+                              className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium flex-shrink-0 transition-colors"
+                              style={{ background: 'var(--color-background-secondary)', color: 'var(--color-text-secondary)', border: '0.5px solid var(--color-border-tertiary)' }}
+                              title={`Appeler ${clientName}`}>
+                              <IconPhone size={12} style={{ color: '#1D9E75' }}/> {phone}
+                            </a>
+                          )}
+                        </div>
+                        {/* Boutons d'action selon statut */}
+                        {['PENDING','CONFIRMED','IN_PROGRESS'].includes(a.status) && (
+                          <div className="flex gap-2 mt-2.5 ml-15">
+                            {a.status === 'PENDING' && (
+                              <>
+                                <button
+                                  onClick={() => updateStatus(a.id, 'CONFIRMED')}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors"
+                                  style={{ background: '#1D9E75', color: '#fff' }}>
+                                  <IconCheck size={13}/> Confirmer
+                                </button>
+                                <button
+                                  onClick={() => updateStatus(a.id, 'CANCELLED')}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors"
+                                  style={{ background: '#FCEBEB', color: '#A32D2D' }}>
+                                  <IconX size={13}/> Refuser
+                                </button>
+                              </>
+                            )}
+                            {a.status === 'CONFIRMED' && (
+                              <button
+                                onClick={() => updateStatus(a.id, 'IN_PROGRESS')}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors"
+                                style={{ background: '#E6F1FB', color: '#185FA5' }}>
+                                <IconPlayerPlay size={13}/> Démarrer
+                              </button>
+                            )}
+                            {a.status === 'IN_PROGRESS' && (
+                              <button
+                                onClick={() => updateStatus(a.id, 'DONE')}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors"
+                                style={{ background: '#E1F5EE', color: '#085041' }}>
+                                <IconCheck size={13}/> Terminé
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* À venir dans 24h */}
+            {!loading && tomorrowAppts.length > 0 && (
+              <div className="rounded-[10px] overflow-hidden"
+                style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
+                <div className="flex items-center justify-between px-4 py-3"
+                  style={{ borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
+                  <p className="text-[13px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                    À venir — demain ({tomorrowAppts.length} RDV)
+                  </p>
+                  <Link href="/garage/agenda" className="text-[12px] font-medium" style={{ color: '#1D9E75' }}>
+                    Voir l'agenda →
+                  </Link>
+                </div>
+                <div className="divide-y" style={{ borderColor: 'var(--color-border-tertiary)' }}>
+                  {tomorrowAppts.slice(0, 4).map(a => {
+                    const s = STATUS[a.status] ?? STATUS.PENDING
+                    const clientName = `${a.client?.firstName ?? ''} ${a.client?.lastName ?? ''}`.trim()
+                    return (
+                      <div key={a.id} className="flex items-center gap-3 px-4 py-2.5 transition-colors"
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-background-secondary)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                        <p className="text-[12px] font-semibold w-12 flex-shrink-0" style={{ color: 'var(--color-text-secondary)' }}>
                           {a.startTime}
                         </p>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>
-                            {a.client?.firstName} {a.client?.lastName}
+                          <p className="text-[12px] font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>
+                            {clientName}
                           </p>
                           <p className="text-[11px] truncate" style={{ color: 'var(--color-text-secondary)' }}>
                             {a.service?.name}{a.vehicleModel ? ` · ${a.vehicleModel}` : ''}
@@ -218,28 +380,27 @@ export default function GarageDashboard() {
                         </div>
                         <span className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0"
                           style={{ background: s.bg, color: s.color }}>{s.label}</span>
-                        <div className="flex gap-1 flex-shrink-0">
-                          {a.status === 'PENDING' && (
-                            <button onClick={() => updateStatus(a.id, 'CONFIRMED')}
-                              className="p-1.5 rounded transition-colors" style={{ background: '#E1F5EE', color: '#085041' }}
-                              title="Confirmer">
-                              <IconCheck size={12} />
-                            </button>
-                          )}
-                          {['PENDING','CONFIRMED'].includes(a.status) && (
-                            <button onClick={() => updateStatus(a.id, 'CANCELLED')}
-                              className="p-1.5 rounded transition-colors" style={{ background: '#FCEBEB', color: '#A32D2D' }}
-                              title="Annuler">
-                              <IconX size={12} />
-                            </button>
-                          )}
-                        </div>
+                        {a.status === 'PENDING' && (
+                          <button
+                            onClick={() => updateStatus(a.id, 'CONFIRMED')}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold flex-shrink-0"
+                            style={{ background: '#1D9E75', color: '#fff' }}>
+                            <IconCheck size={11}/> Confirmer
+                          </button>
+                        )}
                       </div>
                     )
                   })}
+                  {tomorrowAppts.length > 4 && (
+                    <div className="px-4 py-2 text-center">
+                      <Link href="/garage/agenda" className="text-[11px]" style={{ color: '#1D9E75' }}>
+                        +{tomorrowAppts.length - 4} autres RDV demain →
+                      </Link>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Bar chart semaine */}
             <div className="rounded-[10px] p-4"
@@ -321,14 +482,14 @@ export default function GarageDashboard() {
               </div>
               <div className="grid grid-cols-2 gap-px" style={{ background: 'var(--color-border-tertiary)' }}>
                 {[
-                  { href: '/garage/agenda',      label: 'Ajouter un RDV',   icon: IconCalendarPlus },
-                  { href: '/garage/clients',     label: 'Nouveau client',   icon: IconUserPlus },
-                  { href: '/garage/notifications',label: 'Notifications',   icon: IconBell },
-                  { href: '/garage/settings',    label: 'Paramètres',       icon: IconSettings },
+                  { href: '/garage/agenda',       label: 'Ajouter un RDV',  icon: IconCalendarPlus },
+                  { href: '/garage/clients',       label: 'Nouveau client',  icon: IconUserPlus },
+                  { href: '/garage/notifications', label: 'Notifications',   icon: IconBell },
+                  { href: '/garage/settings',      label: 'Paramètres',      icon: IconSettings },
                 ].map(a => {
                   const Icon = a.icon
                   return (
-                    <Link key={a.href} href={a.href}
+                    <Link key={a.href + a.label} href={a.href}
                       className="flex flex-col items-center gap-1.5 py-3 px-2 text-center transition-colors"
                       style={{ background: 'var(--color-background-primary)', color: 'var(--color-text-secondary)', fontSize: '11px' }}>
                       <Icon size={18} style={{ color: '#1D9E75' }}/>

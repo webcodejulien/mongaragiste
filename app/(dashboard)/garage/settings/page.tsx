@@ -44,7 +44,7 @@ export default function SettingsPage() {
   const [logoError,    setLogoError]   = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [info, setInfo] = useState({ name:'', phone:'', address:'', city:'', zip:'', desc:'' })
+  const [info, setInfo] = useState({ name:'', phone:'', address:'', city:'', zip:'', desc:'', vatNumber:'', iban:'' })
   const [mechanicCount, setMechanic] = useState(1)
   const [slotDuration,  setSlot]     = useState(30)
   const [schedules,     setSchedules] = useState(DAYS.map((_,i) => ({ dayOfWeek:i+1, openTime:'08:00', closeTime:'18:00', isClosed:i>=5 })))
@@ -59,7 +59,7 @@ export default function SettingsPage() {
       .then(r => r.json())
       .then(g => {
         if (g.error) return
-        setInfo({ name:g.name||'', phone:g.phone||'', address:g.address||'', city:g.city||'', zip:g.zipCode||'', desc:g.description||'' })
+        setInfo({ name:g.name||'', phone:g.phone||'', address:g.address||'', city:g.city||'', zip:g.zipCode||'', desc:g.description||'', vatNumber:g.vatNumber||'', iban:g.iban||'' })
         setMechanic(g.mechanicCount || 1)
         setSlot(g.slotDuration || 30)
         if (g.schedules?.length) {
@@ -107,7 +107,7 @@ export default function SettingsPage() {
       method: 'PATCH',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        name:info.name, phone:info.phone, address:info.address, city:info.city, zipCode:info.zip, description:info.desc,
+        name:info.name, phone:info.phone, address:info.address, city:info.city, zipCode:info.zip, description:info.desc, vatNumber:info.vatNumber||null, iban:info.iban||null,
         mechanicCount, slotDuration: slotDuration,
         schedules: schedules.map(s => ({ dayOfWeek:s.dayOfWeek, openTime:s.openTime, closeTime:s.closeTime, isClosed:s.isClosed })),
         services: services.map(s => ({ name:s.name, duration:s.duration, price:s.price||null })),
@@ -197,6 +197,10 @@ export default function SettingsPage() {
                 <Field label="Code postal"><Inp value={info.zip} onChange={v=>setInfo(p=>({...p,zip:v}))} placeholder="1000"/></Field>
               </div>
               <Field label="Description"><Inp value={info.desc} onChange={v=>setInfo(p=>({...p,desc:v}))} rows={3} placeholder="Présentez votre garage…"/></Field>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="N° TVA (pour les factures)"><Inp value={info.vatNumber} onChange={v=>setInfo(p=>({...p,vatNumber:v}))} placeholder="BE 0123.456.789"/></Field>
+                <Field label="IBAN (coordonnées bancaires)"><Inp value={info.iban} onChange={v=>setInfo(p=>({...p,iban:v}))} placeholder="BE68 5390 0754 7034"/></Field>
+              </div>
             </div>
           )}
 

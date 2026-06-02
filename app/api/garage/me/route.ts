@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { name, phone, address, city, zipCode, description, mechanicCount, slotDuration, schedules, services, notifPrefs } = body
+    const { name, phone, address, city, zipCode, description, mechanicCount, slotDuration, schedules, services, notifPrefs, vatNumber, iban } = body
 
     const data: any = {
       ...(name          !== undefined && { name }),
@@ -26,6 +26,8 @@ export async function PATCH(req: NextRequest) {
       ...(mechanicCount !== undefined && { mechanicCount }),
       ...(slotDuration  !== undefined && { slotDuration }),
       ...(notifPrefs    !== undefined && { notifPrefs }),
+      ...(vatNumber     !== undefined && { vatNumber: vatNumber || null }),
+      ...(iban          !== undefined && { iban: iban || null }),
     }
 
     // Geocode automatically when address or city changes

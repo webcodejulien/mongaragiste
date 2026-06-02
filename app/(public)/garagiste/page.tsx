@@ -3,91 +3,121 @@ import type { Metadata } from 'next'
 import { LangToggle } from '@/components/LangToggle'
 
 export const metadata: Metadata = {
-  title: 'MonGaragiste pour les professionnels — Développez votre activité',
-  description: 'Rejoignez MonGaragiste et recevez des réservations en ligne 24h/24. Agenda intelligent, notifications automatiques, avis clients et statistiques.',
+  title: 'MonGaragiste Pro — Gérez votre garage, recevez des RDV en ligne',
+  description: 'Agenda en ligne, notifications automatiques, QR code, facturation et statistiques pour garagistes belges. Commencez dès aujourd\'hui.',
 }
+
+const PAINS = [
+  { icon: '📞', text: 'Téléphone qui sonne pendant les réparations' },
+  { icon: '📝', text: 'Agenda papier perdu ou illisible' },
+  { icon: '❌', text: 'Clients qui ne se présentent pas (no-show)' },
+  { icon: '🕐', text: 'Fermeture = plus de prises de RDV' },
+  { icon: '🧾', text: 'Factures rédigées à la main' },
+  { icon: '😤', text: 'Historique client introuvable' },
+]
 
 const FEATURES = [
   {
     icon: '📅',
-    title: 'Agenda en ligne',
-    desc: 'Gérez vos rendez-vous depuis n\'importe quel appareil. Vos créneaux se mettent à jour en temps réel selon vos horaires et le nombre de mécaniciens disponibles.',
+    title: 'Agenda intelligent',
+    desc: 'Visualisez votre journée d\'un coup d\'œil. Confirmez, déplacez ou annulez un RDV en un clic. Vos créneaux s\'adaptent automatiquement à votre équipe et vos horaires.',
   },
   {
     icon: '🔔',
-    title: 'Notifications automatiques',
-    desc: 'Chaque nouvelle réservation vous est signalée par email et SMS. Vos clients reçoivent automatiquement une confirmation et un rappel 24h avant.',
+    title: 'Zéro no-show',
+    desc: 'Rappel automatique par email et SMS 24h avant chaque RDV. Vos clients se souviennent, vous perdez moins de temps.',
   },
   {
-    icon: '⭐',
-    title: 'Avis clients vérifiés',
-    desc: 'Collectez des avis authentiques après chaque rendez-vous. Répondez publiquement et renforcez la confiance de vos nouveaux clients.',
+    icon: '📲',
+    title: 'QR Code imprimable',
+    desc: 'Affichez votre QR code sur votre vitrine ou comptoir. Les clients scannent et réservent directement — même quand vous êtes sous une voiture.',
+  },
+  {
+    icon: '🧾',
+    title: 'Factures en 1 clic',
+    desc: 'Générez une facture professionnelle avec votre N° TVA, IBAN et toutes les coordonnées client. Prête à imprimer ou envoyer en PDF.',
   },
   {
     icon: '📊',
-    title: 'Statistiques & revenus',
-    desc: 'Suivez votre chiffre d\'affaires, vos services les plus demandés et l\'évolution de votre activité mois par mois.',
+    title: 'Pilotez votre activité',
+    desc: 'CA mensuel, taux de remplissage, services les plus demandés, clients fidèles. Toutes vos données en un tableau de bord.',
   },
   {
-    icon: '👥',
-    title: 'Gestion des clients',
-    desc: 'Accédez à l\'historique complet de chaque client — véhicules, interventions passées, préférences — en un clic.',
-  },
-  {
-    icon: '🔗',
-    title: 'Page publique personnalisée',
-    desc: 'Votre garage dispose d\'une page dédiée sur MonGaragiste, référencée sur Google. Partagez votre lien de réservation sur tous vos canaux.',
+    icon: '⭐',
+    title: 'Réputation en ligne',
+    desc: 'Collectez des avis vérifiés après chaque passage. Répondez publiquement. Votre note s\'affiche sur votre page et dans les recherches.',
   },
 ]
 
 const STEPS = [
   {
     n: '01',
-    title: 'Créez votre profil',
-    desc: 'Inscrivez-vous en 2 minutes. Renseignez vos services, vos horaires et le nombre de mécaniciens disponibles.',
     icon: '✏️',
+    title: 'Créez votre profil',
+    desc: 'Inscrivez-vous en 2 minutes. Renseignez vos services, horaires, nombre de mécaniciens. Votre page est immédiatement en ligne.',
   },
   {
     n: '02',
-    title: 'Publiez votre page',
-    desc: 'Votre garage apparaît immédiatement dans la recherche MonGaragiste et sur Google. Les clients trouvent vos disponibilités en temps réel.',
-    icon: '🌐',
+    icon: '📲',
+    title: 'Partagez votre lien',
+    desc: 'Imprimez votre QR code, partagez votre lien sur WhatsApp, Facebook ou par SMS. Vos clients trouvent vos créneaux disponibles en temps réel.',
   },
   {
     n: '03',
-    title: 'Recevez des réservations',
-    desc: 'Les clients réservent 24h/24, même quand vous dormez. Confirmez en un clic depuis votre tableau de bord.',
-    icon: '✅',
+    icon: '🔧',
+    title: 'Travaillez, on gère le reste',
+    desc: 'Confirmations, rappels, historique clients, factures — tout est automatisé. Vous vous concentrez sur la mécanique.',
   },
 ]
 
 const PLANS = [
   {
-    name: 'Starter',
-    price: 'Gratuit',
-    sub: 'pour toujours',
-    features: ['Page garage publique', 'Jusqu\'à 50 RDV / mois', 'Agenda en ligne', 'Notifications email'],
-    cta: 'Commencer gratuitement',
+    name: 'Essential',
+    price: '59 €',
+    sub: '/ mois HTVA',
+    features: [
+      'Page garage publique + QR code',
+      "Jusqu'à 100 RDV / mois",
+      'Agenda en ligne',
+      'Notifications email client',
+      'Avis clients vérifiés',
+      'Facturation PDF',
+      'Statistiques de base',
+    ],
+    cta: 'Commencer',
     href: '/register/garage',
     highlight: false,
   },
   {
     name: 'Pro',
-    price: '29 €',
-    sub: '/ mois HT',
+    price: '69 €',
+    sub: '/ mois HTVA',
     badge: 'Le plus populaire',
-    features: ['Tout Starter inclus', 'RDV illimités', 'Rappels SMS clients', 'Statistiques avancées', 'Export CSV', 'Support prioritaire'],
-    cta: 'Essayer Pro',
+    features: [
+      'Tout Essential inclus',
+      'RDV illimités',
+      'Rappels SMS clients',
+      'Statistiques avancées',
+      'Export CSV clients & RDV',
+      'Support prioritaire',
+    ],
+    cta: 'Commencer',
     href: '/register/garage',
     highlight: true,
   },
   {
     name: 'Premium',
-    price: '59 €',
-    sub: '/ mois HT',
-    features: ['Tout Pro inclus', 'Multi-garages', 'API & intégrations', 'Manager de compte dédié'],
-    cta: 'Contacter les ventes',
-    href: 'mailto:hello@mongaragiste.app',
+    price: '79 €',
+    sub: '/ mois HTVA',
+    features: [
+      'Tout Pro inclus',
+      'Multi-garages',
+      'SMS illimités',
+      'Manager de compte dédié',
+      'Formation en ligne incluse',
+    ],
+    cta: 'Commencer',
+    href: '/register/garage',
     highlight: false,
   },
 ]
@@ -96,19 +126,19 @@ const TESTIMONIALS = [
   {
     name: 'Marc D.',
     garage: 'Garage Dubois, Bruxelles',
-    text: 'Depuis MonGaragiste, j\'ai réduit les no-shows de 60%. Les rappels automatiques font tout le travail.',
+    text: 'Depuis MonGaragiste, j\'ai réduit les no-shows de 60%. Les rappels automatiques font tout le travail à ma place.',
     stars: 5,
   },
   {
     name: 'Sophie V.',
     garage: 'Auto Services Verviers',
-    text: 'Je reçois des réservations pendant mes vacances. C\'est exactement ce dont j\'avais besoin pour développer mon activité.',
+    text: 'Je reçois des réservations même le week-end. Le QR code sur ma vitrine ramène des nouveaux clients chaque semaine.',
     stars: 5,
   },
   {
     name: 'Thomas L.',
     garage: 'Garage Leroy, Liège',
-    text: 'L\'agenda est super intuitif et mes clients adorent pouvoir réserver en ligne à n\'importe quelle heure.',
+    text: 'Plus de papier, plus de post-its. Tout est dans le tableau de bord. J\'ai gagné au moins 1h par jour.',
     stars: 5,
   },
 ]
@@ -133,7 +163,7 @@ export default function GaragistePage() {
             <Link href="/register/garage"
               className="px-4 py-2 rounded-lg text-[13px] font-semibold text-white"
               style={{ background: '#1D9E75' }}>
-              Inscription gratuite
+              Inscrire mon garage
             </Link>
           </div>
         </div>
@@ -143,24 +173,29 @@ export default function GaragistePage() {
       <section className="max-w-6xl mx-auto px-5 py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div>
           <span className="inline-block text-[12px] font-semibold px-3 py-1 rounded-full mb-5" style={{ background: '#E1F5EE', color: '#085041' }}>
-            🚀 Rejoignez 100+ garages belges
+            🔧 Conçu pour les garagistes belges
           </span>
-          <h1 className="text-[42px] lg:text-[52px] font-bold leading-tight mb-5" style={{ color: 'var(--color-text-primary)' }}>
-            Faites gagner du temps à vos clients,{' '}
-            <span style={{ color: '#1D9E75' }}>travaillez plus sereinement.</span>
+          <h1 className="text-[42px] lg:text-[50px] font-bold leading-tight mb-5" style={{ color: 'var(--color-text-primary)' }}>
+            Arrêtez de perdre du temps.<br />
+            <span style={{ color: '#1D9E75' }}>Vos clients réservent,<br />vous travaillez.</span>
           </h1>
           <p className="text-[17px] leading-relaxed mb-8" style={{ color: 'var(--color-text-secondary)' }}>
-            MonGaragiste vous donne une page publique, un agenda en ligne et des outils de communication pour que vos clients puissent réserver 24h/24 — sans vous déranger.
+            MonGaragiste s'occupe de votre agenda, vos rappels, vos factures et votre réputation en ligne. Vous vous concentrez sur ce que vous faites de mieux : la mécanique.
           </p>
           <div className="flex items-center gap-3 flex-wrap">
             <Link href="/register/garage"
               className="px-6 py-3 rounded-lg text-[15px] font-semibold text-white inline-flex items-center gap-2"
               style={{ background: '#1D9E75' }}>
-              Commencer gratuitement →
+              Inscrire mon garage →
+            </Link>
+            <Link href="/login"
+              className="px-6 py-3 rounded-lg text-[15px] font-medium"
+              style={{ color: 'var(--color-text-secondary)', border: '0.5px solid var(--color-border-secondary)' }}>
+              Se connecter
             </Link>
           </div>
           <p className="text-[12px] mt-4" style={{ color: 'var(--color-text-tertiary)' }}>
-            ✓ Gratuit pour commencer &nbsp;·&nbsp; ✓ Sans carte bancaire &nbsp;·&nbsp; ✓ En ligne en 2 minutes
+            ✓ En ligne en 2 minutes &nbsp;·&nbsp; ✓ Sans formation technique &nbsp;·&nbsp; ✓ Support belge
           </p>
         </div>
 
@@ -170,47 +205,70 @@ export default function GaragistePage() {
             <div className="w-3 h-3 rounded-full bg-red-400" />
             <div className="w-3 h-3 rounded-full bg-yellow-400" />
             <div className="w-3 h-3 rounded-full bg-green-400" />
-            <span className="text-[11px] ml-2" style={{ color: 'var(--color-text-tertiary)' }}>mongaragiste.app/garage</span>
+            <span className="text-[11px] ml-2" style={{ color: 'var(--color-text-tertiary)' }}>Tableau de bord — Garage Martin</span>
           </div>
           <div className="p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[16px] font-bold" style={{ color: 'var(--color-text-primary)' }}>Bonjour, Garage Martin 👋</p>
-                <p className="text-[12px]" style={{ color: 'var(--color-text-secondary)' }}>Lundi 2 juin 2026</p>
+                <p className="text-[15px] font-bold" style={{ color: 'var(--color-text-primary)' }}>Bonjour Marc 👋</p>
+                <p className="text-[12px]" style={{ color: 'var(--color-text-secondary)' }}>Lundi 2 juin · 8 RDV aujourd'hui</p>
               </div>
+              <span className="text-[11px] px-2 py-1 rounded-full font-medium" style={{ background: '#FAEEDA', color: '#633806' }}>3 en attente</span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'RDV aujourd\'hui', val: '8', color: '#1D9E75' },
-                { label: 'En attente', val: '3', color: '#EF9F27' },
-                { label: 'CA ce mois', val: '2 840 €', color: '#1D9E75' },
-                { label: 'Avis clients', val: '4.9 ★', color: '#EF9F27' },
+                { label: 'CA ce mois', val: '3 280 €', color: '#1D9E75' },
+                { label: 'Taux remplissage', val: '87%', color: '#185FA5' },
+                { label: 'Note clients', val: '4.9 ★', color: '#EF9F27' },
               ].map(m => (
                 <div key={m.label} className="rounded-xl p-3" style={{ background: 'var(--color-background-secondary)', border: '0.5px solid var(--color-border-tertiary)' }}>
-                  <p className="text-[10px] mb-1" style={{ color: 'var(--color-text-tertiary)' }}>{m.label}</p>
-                  <p className="text-[22px] font-bold" style={{ color: m.color }}>{m.val}</p>
+                  <p className="text-[9px] mb-1" style={{ color: 'var(--color-text-tertiary)' }}>{m.label}</p>
+                  <p className="text-[16px] font-bold" style={{ color: m.color }}>{m.val}</p>
                 </div>
               ))}
             </div>
             <div className="rounded-xl p-3 space-y-2" style={{ background: 'var(--color-background-secondary)', border: '0.5px solid var(--color-border-tertiary)' }}>
-              <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-tertiary)' }}>RDV du jour</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-tertiary)' }}>Programme du jour</p>
               {[
-                { time: '09:00', client: 'Pierre M.', service: 'Vidange', status: 'Confirmé', color: '#E1F5EE', tc: '#085041' },
-                { time: '10:45', client: 'Alice B.', service: 'Freins', status: 'En attente', color: '#FAEEDA', tc: '#633806' },
-                { time: '14:00', client: 'Jean D.', service: 'Pneus', status: 'Confirmé', color: '#E1F5EE', tc: '#085041' },
+                { time: '09:00', client: 'Pierre M.', service: 'Vidange + filtres', status: '✅ Confirmé' },
+                { time: '10:45', client: 'Alice B.', service: 'Freins AV', status: '⏳ En attente' },
+                { time: '14:00', client: 'Jean D.', service: 'Pneus hiver', status: '✅ Confirmé' },
               ].map(r => (
                 <div key={r.time} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono w-12" style={{ color: '#1D9E75' }}>{r.time}</span>
+                    <span className="text-[11px] font-mono w-12 font-bold" style={{ color: '#1D9E75' }}>{r.time}</span>
                     <div>
                       <p className="text-[12px] font-medium" style={{ color: 'var(--color-text-primary)' }}>{r.client}</p>
                       <p className="text-[10px]" style={{ color: 'var(--color-text-tertiary)' }}>{r.service}</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ background: r.color, color: r.tc }}>{r.status}</span>
+                  <span className="text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>{r.status}</span>
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Les galères qu'on règle */}
+      <section style={{ background: 'var(--color-background-primary)', borderTop: '0.5px solid var(--color-border-tertiary)', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
+        <div className="max-w-6xl mx-auto px-5 py-16">
+          <div className="text-center mb-10">
+            <h2 className="text-[28px] font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+              Ça vous parle ?
+            </h2>
+            <p className="text-[15px]" style={{ color: 'var(--color-text-secondary)' }}>
+              MonGaragiste règle ces problèmes dès le premier jour.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 max-w-3xl mx-auto">
+            {PAINS.map(p => (
+              <div key={p.text} className="flex items-center gap-3 px-4 py-3 rounded-xl"
+                style={{ background: 'var(--color-background-secondary)', border: '0.5px solid var(--color-border-tertiary)' }}>
+                <span className="text-xl flex-shrink-0">{p.icon}</span>
+                <p className="text-[12px] leading-snug" style={{ color: 'var(--color-text-secondary)' }}>{p.text}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -219,10 +277,10 @@ export default function GaragistePage() {
       <section style={{ background: '#1D9E75' }}>
         <div className="max-w-6xl mx-auto px-5 py-10 grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
           {[
-            { val: '100+', label: 'Garages inscrits' },
-            { val: '2 min', label: 'Pour créer votre profil' },
+            { val: '1h+', label: 'Gagnée par jour en moyenne' },
+            { val: '-60%', label: 'De no-shows grâce aux rappels' },
             { val: '24/7', label: 'Réservations ouvertes' },
-            { val: '0 €', label: 'Pour commencer' },
+            { val: '2 min', label: 'Pour créer votre profil' },
           ].map(s => (
             <div key={s.label}>
               <p className="text-[32px] font-bold text-white">{s.val}</p>
@@ -236,18 +294,15 @@ export default function GaragistePage() {
       <section className="max-w-6xl mx-auto px-5 py-20">
         <div className="text-center mb-14">
           <h2 className="text-[32px] font-bold mb-3" style={{ color: 'var(--color-text-primary)' }}>
-            Comment ça fonctionne ?
+            Opérationnel en 3 étapes
           </h2>
-          <p className="text-[15px]" style={{ color: 'var(--color-text-secondary)' }}>
-            En 3 étapes simples, votre garage est en ligne et prêt à recevoir des réservations.
-          </p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {STEPS.map((s, i) => (
+          {STEPS.map(s => (
             <div key={s.n} className="rounded-2xl p-7 relative" style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
               <div className="text-4xl mb-4">{s.icon}</div>
               <span className="absolute top-5 right-5 text-[11px] font-bold px-2 py-1 rounded-full" style={{ background: '#E1F5EE', color: '#1D9E75' }}>
-                Étape {s.n}
+                {s.n}
               </span>
               <h3 className="text-[18px] font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>{s.title}</h3>
               <p className="text-[13px] leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>{s.desc}</p>
@@ -261,7 +316,7 @@ export default function GaragistePage() {
         <div className="max-w-6xl mx-auto px-5 py-20">
           <div className="text-center mb-14">
             <h2 className="text-[32px] font-bold mb-3" style={{ color: 'var(--color-text-primary)' }}>
-              Tout ce dont vous avez besoin
+              Tout ce dont vous avez besoin, rien de plus
             </h2>
             <p className="text-[15px]" style={{ color: 'var(--color-text-secondary)' }}>
               Des outils pensés pour les garagistes, pas pour les informaticiens.
@@ -283,7 +338,7 @@ export default function GaragistePage() {
       <section className="max-w-6xl mx-auto px-5 py-20">
         <div className="text-center mb-14">
           <h2 className="text-[32px] font-bold mb-3" style={{ color: 'var(--color-text-primary)' }}>
-            Ce que disent nos garagistes
+            Ce que disent les garagistes
           </h2>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -310,8 +365,8 @@ export default function GaragistePage() {
       <section style={{ background: 'var(--color-background-primary)', borderTop: '0.5px solid var(--color-border-tertiary)', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="max-w-6xl mx-auto px-5 py-20">
           <div className="text-center mb-14">
-            <h2 className="text-[32px] font-bold mb-3" style={{ color: 'var(--color-text-primary)' }}>Tarifs simples et transparents</h2>
-            <p className="text-[15px]" style={{ color: 'var(--color-text-secondary)' }}>Commencez gratuitement, évoluez quand vous êtes prêt.</p>
+            <h2 className="text-[32px] font-bold mb-3" style={{ color: 'var(--color-text-primary)' }}>Tarifs clairs, sans surprise</h2>
+            <p className="text-[15px]" style={{ color: 'var(--color-text-secondary)' }}>Un abonnement mensuel, sans engagement, résiliable à tout moment.</p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 max-w-4xl mx-auto">
             {PLANS.map(plan => (
@@ -329,7 +384,7 @@ export default function GaragistePage() {
                 <p className="text-[16px] font-bold mb-1" style={{ color: plan.highlight ? '#fff' : 'var(--color-text-primary)' }}>
                   {plan.name}
                 </p>
-                <div className="mb-5">
+                <div className="mb-2">
                   <span className="text-[32px] font-bold" style={{ color: plan.highlight ? '#fff' : 'var(--color-text-primary)' }}>{plan.price}</span>
                   <span className="text-[12px] ml-1" style={{ color: plan.highlight ? 'rgba(255,255,255,0.7)' : 'var(--color-text-tertiary)' }}>{plan.sub}</span>
                 </div>
@@ -357,18 +412,18 @@ export default function GaragistePage() {
       {/* CTA final */}
       <section className="max-w-6xl mx-auto px-5 py-20 text-center">
         <h2 className="text-[36px] font-bold mb-4" style={{ color: 'var(--color-text-primary)' }}>
-          Prêt à développer votre activité ?
+          Votre garage mérite mieux qu'un agenda papier.
         </h2>
         <p className="text-[16px] mb-8 max-w-xl mx-auto" style={{ color: 'var(--color-text-secondary)' }}>
-          Rejoignez les garages belges qui utilisent déjà MonGaragiste pour recevoir des réservations en ligne.
+          Rejoignez les garages belges qui ont modernisé leur prise de rendez-vous et récupèrent des heures chaque semaine.
         </p>
         <Link href="/register/garage"
           className="px-8 py-4 rounded-xl text-[15px] font-bold text-white inline-block"
           style={{ background: '#1D9E75' }}>
-          Créer mon profil gratuitement →
+          Inscrire mon garage →
         </Link>
         <p className="text-[12px] mt-4" style={{ color: 'var(--color-text-tertiary)' }}>
-          Sans engagement · Sans carte bancaire · En ligne en 2 minutes
+          Sans engagement · Résiliable à tout moment · Support belge inclus
         </p>
       </section>
 
@@ -379,9 +434,11 @@ export default function GaragistePage() {
             <span className="w-2 h-2 rounded-full" style={{ background: '#1D9E75' }} />
             <span className="text-[13px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-5 flex-wrap">
             <Link href="/" className="text-[12px]" style={{ color: 'var(--color-text-tertiary)' }}>Trouver un garage</Link>
-            <Link href="/login" className="text-[12px]" style={{ color: 'var(--color-text-tertiary)' }}>Connexion</Link>
+            <Link href="/cgu" className="text-[12px]" style={{ color: 'var(--color-text-tertiary)' }}>CGU</Link>
+            <Link href="/confidentialite" className="text-[12px]" style={{ color: 'var(--color-text-tertiary)' }}>Confidentialité</Link>
+            <Link href="/contact" className="text-[12px]" style={{ color: 'var(--color-text-tertiary)' }}>Contact</Link>
             <Link href="/register/garage" className="text-[12px]" style={{ color: '#1D9E75', fontWeight: 600 }}>S'inscrire</Link>
           </div>
         </div>

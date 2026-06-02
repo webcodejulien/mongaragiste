@@ -114,6 +114,8 @@ model Garage {
   mechanicCount Int             @default(1)
   slotDuration  Int             @default(30)
   notifPrefs    Json            @default("{}")
+  vatNumber     String?
+  iban          String?
   logoUrl       String?
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt

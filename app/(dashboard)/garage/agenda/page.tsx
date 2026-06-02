@@ -55,6 +55,9 @@ const STATUS_COLOR: Record<Status, string> = {
 const STATUS_LABEL: Record<Status, string> = {
   CONFIRMED:'Confirmé', PENDING:'En attente', IN_PROGRESS:'En cours', DONE:'Terminé', CANCELLED:'Annulé'
 }
+const STATUS_ICON: Record<Status, string> = {
+  PENDING:'⏳', CONFIRMED:'✅', IN_PROGRESS:'🔧', DONE:'✓', CANCELLED:'✗'
+}
 
 function colorForAppt(a: Appt) { return C[STATUS_COLOR[a.status]] ?? C.teal }
 
@@ -93,12 +96,36 @@ function useIsMobile() {
   return isMobile
 }
 
+/* ─── Hook useCurrentTimePx — position ligne heure actuelle ─ */
+function useCurrentTimePx(firstHour: number) {
+  const [topPx, setTopPx] = useState<number | null>(null)
+  useEffect(() => {
+    function compute() {
+      const now = new Date()
+      const totalMin = now.getHours() * 60 + now.getMinutes()
+      const px = ((totalMin - firstHour * 60) / 60) * SLOT_H
+      setTopPx(px)
+    }
+    compute()
+    const id = setInterval(compute, 60_000)
+    return () => clearInterval(id)
+  }, [firstHour])
+  return topPx
+}
+
 /* ════════════════════════════════════════════════════════════
    COMPOSANT PRINCIPAL
 ═══════════════════════════════════════════════════════════════ */
 export default function AgendaPage() {
   const isMobile = useIsMobile()
-  const [view, setView]     = useState<'week'|'day'>('week')
+
+  // Initialiser la vue : jour si matin (< 12h) ou mobile
+  const [view, setView] = useState<'week'|'day'>(() => {
+    if (typeof window === 'undefined') return 'week'
+    if (window.matchMedia('(max-width: 1023px)').matches) return 'day'
+    return new Date().getHours() < 12 ? 'day' : 'week'
+  })
+
   const [monday, setMonday] = useState(() => getMonday(new Date()))
   const [dayIdx, setDayIdx] = useState(() => {
     // Initialiser sur le jour courant de la semaine (0=lun … 6=dim)
@@ -173,6 +200,13 @@ export default function AgendaPage() {
 
   const firstHour = HOURS[0] ?? 8
   const viewDate = addDays(monday, dayIdx)
+
+  // Ligne heure actuelle
+  const currentTimePx = useCurrentTimePx(firstHour)
+  const todayStr2 = isoDate(new Date())
+
+  // Vérifier si aujourd'hui est dans la semaine visible (pour la ligne rouge)
+  const todayIsInWeek = weekDays.some(d => isoDate(d) === todayStr2)
 
   function prevWeek() { setMonday(d => addDays(d, -7)) }
   function nextWeek() { setMonday(d => addDays(d,  7)) }
@@ -251,7 +285,6 @@ export default function AgendaPage() {
     await fetch(`/api/garage/appointments/${id}`, { method: 'DELETE' }).catch(console.error)
   }
 
-  const todayStr2 = isoDate(new Date())
   const weekLabel = `${weekDays[0].getDate()} – ${weekDays[4].getDate()} ${MONTH_FR[weekDays[4].getMonth()]} ${weekDays[4].getFullYear()}`
   const dayLabel  = `${DAY_FULL[viewDate.getDay()]} ${viewDate.getDate()} ${MONTH_FR[viewDate.getMonth()]}`
 
@@ -324,11 +357,10 @@ export default function AgendaPage() {
               ))}
             </div>
             <button onClick={() => openAdd(view==='week' ? todayStr2 : isoDate(viewDate), 9)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white"
               style={{ background:'#1D9E75' }}>
               <IconPlus size={13}/>
               <span className="hidden sm:inline">Ajouter un RDV</span>
-              <span className="sm:hidden">Ajouter</span>
             </button>
           </div>
         </div>
@@ -450,6 +482,23 @@ export default function AgendaPage() {
                         </div>
                       ))}
 
+                      {/* Ligne heure actuelle (uniquement sur la colonne d'aujourd'hui) */}
+                      {isToday && currentTimePx !== null && currentTimePx >= 0 && currentTimePx <= totalGridH && (
+                        <div className="absolute left-0 right-0 pointer-events-none" style={{ top:`${currentTimePx}px`, zIndex:10 }}>
+                          <div style={{ position:'relative', height:0 }}>
+                            <div style={{
+                              position:'absolute', left:0, right:0, height:'2px',
+                              background:'#E24B4A', opacity:0.85,
+                            }}/>
+                            <div style={{
+                              position:'absolute', left:'-4px', top:'-4px',
+                              width:'8px', height:'8px', borderRadius:'50%',
+                              background:'#E24B4A',
+                            }}/>
+                          </div>
+                        </div>
+                      )}
+
                       {/* RDV positionnés absolument selon leur durée réelle */}
                       {dayAppts.map(a => {
                         const col = colorForAppt(a)
@@ -465,7 +514,9 @@ export default function AgendaPage() {
                               zIndex: 2,
                             }}
                             onClick={e => { e.stopPropagation(); setSelected(a) }}>
-                            <p className="text-[10px] font-semibold truncate leading-tight" style={{ color:col.text }}>{a.clientName}</p>
+                            <p className="text-[10px] font-semibold truncate leading-tight" style={{ color:col.text }}>
+                              <span className="mr-0.5">{STATUS_ICON[a.status]}</span>{a.clientName}
+                            </p>
                             <p className="text-[9px] truncate leading-tight" style={{ color:col.text, opacity:0.75 }}>{a.service}</p>
                           </div>
                         )
@@ -553,7 +604,9 @@ export default function AgendaPage() {
                           </div>
                           <div className="w-[3px] self-stretch rounded-full flex-shrink-0" style={{ background:col.border }}/>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-medium truncate" style={{ color:'var(--color-text-primary)' }}>{a.clientName}</p>
+                            <p className="text-[13px] font-medium truncate" style={{ color:'var(--color-text-primary)' }}>
+                              <span className="mr-1">{STATUS_ICON[a.status]}</span>{a.clientName}
+                            </p>
                             <p className="text-[11px] truncate" style={{ color:'var(--color-text-secondary)' }}>
                               {a.service} · {a.vehicle}
                             </p>
@@ -574,43 +627,120 @@ export default function AgendaPage() {
         )}
       </main>
 
+      {/* ══ BOUTON FLOTTANT "+" ════════════════════════════ */}
+      <button
+        onClick={() => openAdd(isoDate(viewDate), new Date().getHours() || 9)}
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-xl flex items-center justify-center z-40 text-white text-2xl"
+        style={{ background:'#1D9E75' }}
+        aria-label="Ajouter un rendez-vous">
+        +
+      </button>
+
       {/* ══ MODAL DÉTAIL RDV ════════════════════════════════ */}
       {selected && (
         <Modal onClose={() => setSelected(null)}>
           <div>
-            <div className="flex items-start justify-between mb-5">
+            <div className="flex items-start justify-between mb-4">
               <div>
                 <h2 className="text-[16px] font-semibold" style={{ color:'var(--color-text-primary)' }}>{selected.clientName}</h2>
-                <p className="text-[12px] mt-0.5" style={{ color:'var(--color-text-secondary)' }}>{selected.service}</p>
+                <p className="text-[13px] font-medium mt-0.5" style={{ color:'var(--color-text-secondary)' }}>{selected.service}</p>
               </div>
               <span className="text-[11px] font-medium px-2.5 py-1 rounded-full"
                 style={{ background:colorForAppt(selected).bg, color:colorForAppt(selected).text }}>
-                {STATUS_LABEL[selected.status]}
+                {STATUS_ICON[selected.status]} {STATUS_LABEL[selected.status]}
               </span>
             </div>
 
+            {/* Véhicule en évidence */}
+            {(selected.vehicle || selected.plate) && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-4"
+                style={{ background:'var(--color-background-secondary)', border:'0.5px solid var(--color-border-tertiary)' }}>
+                <IconCar size={18} style={{ color:'#1D9E75', flexShrink:0 }}/>
+                <div>
+                  {selected.vehicle && <p className="text-[13px] font-semibold" style={{ color:'var(--color-text-primary)' }}>{selected.vehicle}</p>}
+                  {selected.plate && <p className="text-[12px] font-mono tracking-widest" style={{ color:'var(--color-text-secondary)' }}>{selected.plate}</p>}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2.5 mb-5">
-              <Row icon={IconClock}  label="Horaire"    value={`${selected.date} · ${selected.startTime} – ${selected.endTime}`} />
-              <Row icon={IconPhone}  label="Téléphone"  value={selected.clientPhone} />
-              <Row icon={IconCar}    label="Véhicule"   value={`${selected.vehicle} · ${selected.plate}`} />
-              {selected.notes && <Row icon={IconUser} label="Notes" value={selected.notes} />}
+              <Row icon={IconClock} label="Horaire" value={`${selected.date} · ${selected.startTime} – ${selected.endTime}`} />
+              {selected.clientPhone ? (
+                <div className="flex items-start gap-2.5">
+                  <IconPhone size={14} className="mt-0.5 flex-shrink-0" style={{ color:'var(--color-text-tertiary)' }}/>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide font-medium" style={{ color:'var(--color-text-tertiary)' }}>Téléphone</p>
+                    <a href={`tel:${selected.clientPhone}`} className="text-[13px] font-medium" style={{ color:'#1D9E75' }}>
+                      {selected.clientPhone}
+                    </a>
+                  </div>
+                </div>
+              ) : null}
+              {selected.notes && (
+                <div className="flex items-start gap-2.5">
+                  <IconUser size={14} className="mt-0.5 flex-shrink-0" style={{ color:'var(--color-text-tertiary)' }}/>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide font-medium" style={{ color:'var(--color-text-tertiary)' }}>Notes</p>
+                    <p className="text-[13px] italic" style={{ color:'var(--color-text-primary)' }}>{selected.notes}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Changer statut */}
+            {/* Boutons de changement de statut contextuels */}
             <div className="mb-5">
-              <p className="text-[11px] font-medium mb-2 uppercase tracking-wide" style={{ color:'var(--color-text-tertiary)' }}>Changer le statut</p>
-              <div className="flex flex-wrap gap-2">
-                {(['CONFIRMED','IN_PROGRESS','DONE','CANCELLED'] as Status[]).map(s => (
-                  <button key={s} onClick={() => updateStatus(selected.id, s)}
-                    className="px-3 py-1.5 rounded-lg text-[12px] font-medium border transition-colors"
-                    style={{
-                      background: selected.status===s ? C[STATUS_COLOR[s]].bg : 'transparent',
-                      borderColor: selected.status===s ? C[STATUS_COLOR[s]].border : 'var(--color-border-secondary)',
-                      color: selected.status===s ? C[STATUS_COLOR[s]].text : 'var(--color-text-secondary)',
-                    }}>
-                    {selected.status===s && '✓ '}{STATUS_LABEL[s]}
+              <p className="text-[11px] font-medium mb-3 uppercase tracking-wide" style={{ color:'var(--color-text-tertiary)' }}>Actions rapides</p>
+              <div className="flex flex-col gap-2">
+                {selected.status === 'PENDING' && (
+                  <>
+                    <button onClick={() => updateStatus(selected.id, 'CONFIRMED')}
+                      className="w-full py-2.5 rounded-xl text-[13px] font-semibold flex items-center justify-center gap-2"
+                      style={{ background:'#1D9E75', color:'#fff' }}>
+                      ✓ Confirmer le RDV
+                    </button>
+                    <button onClick={() => updateStatus(selected.id, 'CANCELLED')}
+                      className="w-full py-2.5 rounded-xl text-[13px] font-semibold flex items-center justify-center gap-2"
+                      style={{ background:'#FCEBEB', color:'#A32D2D' }}>
+                      ✗ Annuler le RDV
+                    </button>
+                  </>
+                )}
+                {selected.status === 'CONFIRMED' && (
+                  <>
+                    <button onClick={() => updateStatus(selected.id, 'IN_PROGRESS')}
+                      className="w-full py-2.5 rounded-xl text-[13px] font-semibold flex items-center justify-center gap-2"
+                      style={{ background:'#3B82F6', color:'#fff' }}>
+                      ▶ Démarrer le travail
+                    </button>
+                    <button onClick={() => updateStatus(selected.id, 'CANCELLED')}
+                      className="w-full py-2.5 rounded-xl text-[13px] font-semibold flex items-center justify-center gap-2"
+                      style={{ background:'#FCEBEB', color:'#A32D2D' }}>
+                      ✗ Annuler le RDV
+                    </button>
+                  </>
+                )}
+                {selected.status === 'IN_PROGRESS' && (
+                  <button onClick={() => updateStatus(selected.id, 'DONE')}
+                    className="w-full py-2.5 rounded-xl text-[13px] font-semibold flex items-center justify-center gap-2"
+                    style={{ background:'#1D9E75', color:'#fff' }}>
+                    ✓ Marquer comme terminé
                   </button>
-                ))}
+                )}
+                {(selected.status === 'DONE' || selected.status === 'CANCELLED') && (
+                  <div className="flex flex-wrap gap-2">
+                    {(['CONFIRMED','IN_PROGRESS','DONE','CANCELLED'] as Status[]).map(s => (
+                      <button key={s} onClick={() => updateStatus(selected.id, s)}
+                        className="px-3 py-1.5 rounded-lg text-[12px] font-medium border transition-colors"
+                        style={{
+                          background: selected.status===s ? C[STATUS_COLOR[s]].bg : 'transparent',
+                          borderColor: selected.status===s ? C[STATUS_COLOR[s]].border : 'var(--color-border-secondary)',
+                          color: selected.status===s ? C[STATUS_COLOR[s]].text : 'var(--color-text-secondary)',
+                        }}>
+                        {selected.status===s && '✓ '}{STATUS_LABEL[s]}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

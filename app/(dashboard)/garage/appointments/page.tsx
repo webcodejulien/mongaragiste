@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { TopBar } from '@/components/layout/TopBar'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SkeletonRow } from '@/components/ui/Skeleton'
-import { IconSearch, IconCheck, IconX, IconEye, IconDownload } from '@tabler/icons-react'
+import { IconSearch, IconCheck, IconX, IconDownload, IconPhone, IconFileInvoice } from '@tabler/icons-react'
 import Link from 'next/link'
 
 const STATUS: Record<string, { label: string; bg: string; color: string }> = {
@@ -23,6 +23,23 @@ function fmtDate(d: string) {
   const days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam']
   const months = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc']
   return `${days[dt.getDay()]} ${dt.getDate()} ${months[dt.getMonth()]}`
+}
+
+function isToday(dateStr: string) {
+  const d = new Date(dateStr)
+  const now = new Date()
+  return d.getFullYear() === now.getFullYear() &&
+         d.getMonth() === now.getMonth() &&
+         d.getDate() === now.getDate()
+}
+
+function isTodayOrPast(dateStr: string) {
+  const d = new Date(dateStr)
+  const now = new Date()
+  // Compare date only (ignore time)
+  const dDay = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return dDay <= today
 }
 
 export default function AppointmentsPage() {
@@ -56,13 +73,60 @@ export default function AppointmentsPage() {
     return matchQ && matchS
   })
 
-  const pending = all.filter(a => a.status === 'PENDING').length
+  const pendingItems = all.filter(a => a.status === 'PENDING')
+  const pending = pendingItems.length
+
+  // Counts per status key for filter badges
+  const counts: Record<string, number> = {}
+  all.forEach(a => { counts[a.status] = (counts[a.status] ?? 0) + 1 })
+  function filterCount(i: number) {
+    if (i === 0) return all.length
+    return counts[KEYS[i]] ?? 0
+  }
 
   return (
     <div className="flex flex-col flex-1">
       <TopBar title="Rendez-vous" subtitle={pending > 0 ? `${pending} en attente de confirmation` : undefined}/>
 
       <main className="flex-1 p-5">
+
+        {/* Section urgences */}
+        {!loading && pendingItems.length > 0 && (
+          <div className="mb-5 rounded-[10px] p-4"
+            style={{ background: '#FFF8EF', border: '1px solid #F5C97A' }}>
+            <p className="text-[13px] font-semibold mb-3" style={{ color: '#633806' }}>
+              🔔 {pendingItems.length} demande{pendingItems.length > 1 ? 's' : ''} en attente
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {pendingItems.map(a => (
+                <div key={a.id} className="flex items-center gap-3 rounded-lg px-3 py-2.5"
+                  style={{ background: '#fff', border: '0.5px solid #F5C97A', minWidth: '260px', maxWidth: '380px', flex: '1 1 260px' }}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--color-text-primary)' }}>
+                      {a.client?.firstName} {a.client?.lastName}
+                    </p>
+                    <p className="text-[12px] truncate" style={{ color: 'var(--color-text-secondary)' }}>
+                      {a.service?.name ?? '—'} · {fmtDate(a.date)} à {a.startTime}
+                    </p>
+                  </div>
+                  <div className="flex gap-1.5 flex-shrink-0">
+                    <button onClick={() => updateStatus(a.id, 'CONFIRMED')}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded text-[12px] font-medium"
+                      style={{ background: '#E1F5EE', color: '#085041' }}>
+                      <IconCheck size={12}/> Confirmer
+                    </button>
+                    <button onClick={() => updateStatus(a.id, 'CANCELLED')}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded text-[12px] font-medium"
+                      style={{ background: '#FCEBEB', color: '#A32D2D' }}>
+                      <IconX size={12}/> Refuser
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center gap-3 mb-4">
           <div className="relative max-w-xs flex-1">
             <IconSearch size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-tertiary)' }}/>
@@ -80,7 +144,7 @@ export default function AppointmentsPage() {
                   color: fIdx===i ? '#fff' : 'var(--color-text-secondary)',
                   border: fIdx===i ? 'none' : '0.5px solid var(--color-border-tertiary)',
                 }}>
-                {f}
+                {f} ({filterCount(i)})
               </button>
             ))}
           </div>
@@ -95,7 +159,7 @@ export default function AppointmentsPage() {
           style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
           <div style={{ minWidth: '700px' }}>
           <div className="grid text-[11px] font-medium uppercase tracking-wide px-4 py-2.5"
-            style={{ gridTemplateColumns:'90px 1fr 160px 150px 110px 110px', color:'var(--color-text-secondary)', background:'var(--color-background-secondary)', borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
+            style={{ gridTemplateColumns:'90px 1fr 160px 150px 110px 130px', color:'var(--color-text-secondary)', background:'var(--color-background-secondary)', borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
             <span>Date/Heure</span><span>Client</span><span>Service</span><span>Véhicule</span><span>Statut</span><span className="text-right">Actions</span>
           </div>
 
@@ -118,13 +182,15 @@ export default function AppointmentsPage() {
             />
           ) : (
             <div>
-              {filtered.map((a, i) => {
+              {filtered.map((a) => {
                 const s = STATUS[a.status] ?? STATUS.PENDING
                 const isExp = expanded === a.id
+                const phone = a.client?.phone
+                const showDone = a.status === 'CONFIRMED' && isTodayOrPast(a.date)
                 return (
                   <div key={a.id}>
                     <div className="grid items-center px-4 py-2.5 cursor-pointer transition-colors hover:bg-gray-50"
-                      style={{ gridTemplateColumns:'90px 1fr 160px 150px 110px 110px', borderBottom:'0.5px solid var(--color-border-tertiary)' }}
+                      style={{ gridTemplateColumns:'90px 1fr 160px 150px 110px 130px', borderBottom:'0.5px solid var(--color-border-tertiary)' }}
                       onClick={() => setExpanded(isExp ? null : a.id)}>
                       <div>
                         <p className="text-[13px] font-medium" style={{ color:'var(--color-text-primary)' }}>{a.startTime}</p>
@@ -132,7 +198,16 @@ export default function AppointmentsPage() {
                       </div>
                       <div>
                         <p className="text-[13px] font-medium" style={{ color:'var(--color-text-primary)' }}>{a.client?.firstName} {a.client?.lastName}</p>
-                        <p className="text-[11px]" style={{ color:'var(--color-text-secondary)' }}>{a.client?.user?.email}</p>
+                        {phone ? (
+                          <a href={`tel:${phone}`}
+                            className="text-[11px] flex items-center gap-0.5 w-fit"
+                            style={{ color:'#1D9E75' }}
+                            onClick={e => e.stopPropagation()}>
+                            <IconPhone size={10}/>{phone}
+                          </a>
+                        ) : (
+                          <p className="text-[11px]" style={{ color:'var(--color-text-secondary)' }}>{a.client?.user?.email}</p>
+                        )}
                       </div>
                       <p className="text-[13px]" style={{ color:'var(--color-text-primary)' }}>{a.service?.name}</p>
                       <div>
@@ -144,15 +219,33 @@ export default function AppointmentsPage() {
                       <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                         {a.status === 'PENDING' && (
                           <button onClick={() => updateStatus(a.id,'CONFIRMED')}
-                            className="p-1.5 rounded" style={{ background:'#E1F5EE', color:'#085041' }}>
+                            className="p-1.5 rounded" style={{ background:'#E1F5EE', color:'#085041' }}
+                            title="Confirmer">
                             <IconCheck size={13}/>
+                          </button>
+                        )}
+                        {showDone && (
+                          <button onClick={() => updateStatus(a.id,'DONE')}
+                            className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium"
+                            style={{ background:'#E1F5EE', color:'#085041' }}
+                            title="Marquer comme terminé">
+                            <IconCheck size={12}/> Terminé
                           </button>
                         )}
                         {['PENDING','CONFIRMED'].includes(a.status) && (
                           <button onClick={() => updateStatus(a.id,'CANCELLED')}
-                            className="p-1.5 rounded" style={{ background:'#FCEBEB', color:'#A32D2D' }}>
+                            className="p-1.5 rounded" style={{ background:'#FCEBEB', color:'#A32D2D' }}
+                            title="Annuler">
                             <IconX size={13}/>
                           </button>
+                        )}
+                        {a.status === 'DONE' && (
+                          <Link href={`/garage/appointments/${a.id}/invoice`}
+                            className="p-1.5 rounded flex items-center"
+                            style={{ background:'#E6F1FB', color:'#185FA5' }}
+                            title="Générer la facture">
+                            <IconFileInvoice size={13}/>
+                          </Link>
                         )}
                       </div>
                     </div>
@@ -169,7 +262,12 @@ export default function AppointmentsPage() {
           )}
           </div>{/* end minWidth wrapper */}
         </div>
-        {!loading && <p className="text-[11px] mt-2" style={{ color:'var(--color-text-tertiary)' }}>{filtered.length} résultat(s)</p>}
+        {!loading && (
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-[11px]" style={{ color:'var(--color-text-tertiary)' }}>{filtered.length} résultat(s)</p>
+            <p className="text-[11px]" style={{ color:'var(--color-text-tertiary)' }}>Cliquez sur une ligne pour voir les détails</p>
+          </div>
+        )}
       </main>
     </div>
   )

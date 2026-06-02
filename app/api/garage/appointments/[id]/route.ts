@@ -89,8 +89,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (status === 'DONE' && clientEmail) {
     const tpl = tplReviewRequest({
       clientName,
-      garageName:  appt.garage.name,
-      garageSlug:  appt.garage.slug,
+      garageName:    appt.garage.name,
+      garageSlug:    appt.garage.slug,
+      appointmentId: appt.id,
     })
     sendEmail({ to: [{ email: clientEmail, name: clientName }], subject: tpl.subject, html: tpl.html }).catch(console.error)
   }

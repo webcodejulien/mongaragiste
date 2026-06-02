@@ -4,45 +4,17 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import {
-  IconLayoutDashboard, IconCalendar, IconClipboardList,
-  IconUsers, IconChartBar, IconStar, IconBell,
-  IconReceipt, IconSettings, IconHelp, IconQrcode,
-  IconExternalLink, IconLogout, IconCircleFilled, IconMenu2, IconX,
+  IconCircleFilled, IconCalendar, IconUser,
+  IconMenu2, IconX, IconLogout, IconHome,
 } from '@tabler/icons-react'
-import { useLang } from '@/components/LangToggle'
+
+const NAV = [
+  { href: '/client/appointments', label: 'Mes rendez-vous', icon: IconCalendar },
+  { href: '/client/profile',      label: 'Mon profil',      icon: IconUser },
+]
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
-  const { t } = useLang()
-
-  const NAV = [
-    {
-      section: 'PRINCIPAL',
-      items: [
-        { href: '/garage',               label: t.dashboard,     icon: IconLayoutDashboard },
-        { href: '/garage/agenda',        label: t.agenda,        icon: IconCalendar },
-        { href: '/garage/appointments',  label: t.appointments,  icon: IconClipboardList, badge: 0, badgeColor: 'amber' },
-        { href: '/garage/clients',       label: t.clients,       icon: IconUsers },
-      ],
-    },
-    {
-      section: 'GESTION',
-      items: [
-        { href: '/garage/stats',         label: t.stats,         icon: IconChartBar },
-        { href: '/garage/reviews',       label: t.reviews,       icon: IconStar },
-        { href: '/garage/notifications', label: t.notifications, icon: IconBell, badge: 0, badgeColor: 'red' },
-        { href: '/garage/qrcode',         label: 'QR Code',       icon: IconQrcode },
-        { href: '/garage/billing',       label: t.billing,       icon: IconReceipt },
-      ],
-    },
-    {
-      section: 'COMPTE',
-      items: [
-        { href: '/garage/settings',      label: t.settings,      icon: IconSettings },
-        { href: '/garage/help',          label: t.help,          icon: IconHelp },
-      ],
-    },
-  ]
 
   return (
     <>
@@ -50,7 +22,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       <div className="flex items-center justify-between px-4 py-4"
         style={{ borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="flex items-center gap-2">
-          <IconCircleFilled size={8} className="text-primary-400" style={{ color: '#1D9E75' }} />
+          <IconCircleFilled size={8} style={{ color: '#1D9E75' }} />
           <span className="text-[14px] font-medium" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
         </div>
         {onClose && (
@@ -60,58 +32,49 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         )}
       </div>
 
-      {/* Garage info */}
+      {/* Client label */}
       <div className="px-4 py-3.5" style={{ borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0"
             style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
-            GD
+            C
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium leading-tight truncate" style={{ color: 'var(--color-text-primary)' }}>
-              Garage Dubois
+              Espace client
             </p>
-            <p className="text-[11px] font-medium mt-0.5" style={{ color: '#1D9E75' }}>Plan Pro</p>
+            <p className="text-[11px] font-medium mt-0.5" style={{ color: '#1D9E75' }}>Tableau de bord</p>
           </div>
-          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#1D9E75' }} />
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-2">
-        {NAV.map((group) => (
-          <div key={group.section}>
-            <p className="px-3 pt-3 pb-1 text-[10px] font-medium tracking-[0.6px] uppercase"
-              style={{ color: 'var(--color-text-secondary)' }}>
-              {group.section}
-            </p>
-            {group.items.map((item) => {
-              const Icon = item.icon
-              const active = pathname === item.href
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  className="flex items-center gap-[9px] px-[10px] py-2 rounded mx-[6px] my-px text-[13px] transition-colors"
-                  style={{
-                    color: active ? 'var(--color-primary-dark)' : 'var(--color-text-secondary)',
-                    background: active ? 'var(--color-primary-light)' : 'transparent',
-                    fontWeight: active ? '500' : '400',
-                  }}>
-                  <Icon size={16} />
-                  <span className="flex-1">{item.label}</span>
-                  {item.badge ? (
-                    <span className="text-[10px] font-medium px-1.5 py-px rounded-full text-white"
-                      style={{ background: item.badgeColor === 'red' ? '#E24B4A' : '#EF9F27' }}>
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </Link>
-              )
-            })}
-          </div>
-        ))}
+        <div>
+          <p className="px-3 pt-3 pb-1 text-[10px] font-medium tracking-[0.6px] uppercase"
+            style={{ color: 'var(--color-text-secondary)' }}>
+            MON COMPTE
+          </p>
+          {NAV.map((item) => {
+            const Icon = item.icon
+            const active = pathname.startsWith(item.href)
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                className="flex items-center gap-[9px] px-[10px] py-2 rounded mx-[6px] my-px text-[13px] transition-colors"
+                style={{
+                  color: active ? 'var(--color-primary-dark)' : 'var(--color-text-secondary)',
+                  background: active ? 'var(--color-primary-light)' : 'transparent',
+                  fontWeight: active ? '500' : '400',
+                }}>
+                <Icon size={16} />
+                <span className="flex-1">{item.label}</span>
+              </Link>
+            )
+          })}
+        </div>
       </nav>
 
       {/* Footer */}
@@ -119,25 +82,25 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         <Link href="/" onClick={onClose}
           className="flex items-center gap-[9px] px-[10px] py-2 rounded text-[13px] transition-colors w-full"
           style={{ color: 'var(--color-text-secondary)' }}>
-          <IconExternalLink size={16} />
-          <span>Page publique</span>
+          <IconHome size={16} />
+          <span>Trouver un garage</span>
         </Link>
         <Link href="/api/auth/signout"
           className="flex items-center gap-[9px] px-[10px] py-2 rounded text-[13px] transition-colors w-full"
           style={{ color: 'var(--color-text-secondary)' }}>
           <IconLogout size={16} />
-          <span>{t.logout}</span>
+          <span>Déconnexion</span>
         </Link>
       </div>
     </>
   )
 }
 
-export function Sidebar() {
+export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <>
+    <div className="flex min-h-screen" style={{ background: 'var(--color-background-secondary)' }}>
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 w-[200px] hidden lg:flex flex-col z-20"
         style={{ background: 'var(--color-background-primary)', borderRight: '0.5px solid var(--color-border-tertiary)' }}>
@@ -156,7 +119,7 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Mobile drawer overlay */}
+      {/* Mobile drawer */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 flex">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
@@ -166,6 +129,11 @@ export function Sidebar() {
           </aside>
         </div>
       )}
-    </>
+
+      {/* Main content */}
+      <div className="flex-1 lg:ml-[200px] flex flex-col pt-14 lg:pt-0">
+        {children}
+      </div>
+    </div>
   )
 }

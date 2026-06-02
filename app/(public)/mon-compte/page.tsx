@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { IconCalendar, IconCheck, IconX, IconClock, IconArrowRight, IconLogout, IconUser, IconPencil, IconDeviceFloppy, IconStarFilled, IconStar, IconMessageCircle } from '@tabler/icons-react'
+import { useLang } from '@/components/LangToggle'
 
 function StarPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   const [hover, setHover] = useState(0)
@@ -44,6 +45,7 @@ function fmtDate(d:string) {
 }
 
 export default function MonComptePage() {
+  const { t } = useLang()
   const { data: session, status } = useSession()
   const router = useRouter()
   const [appts,   setAppts]   = useState<any[]>([])
@@ -147,7 +149,7 @@ export default function MonComptePage() {
             <span className="text-[13px]" style={{color:'var(--color-text-secondary)'}}>{user?.email}</span>
             <button onClick={() => signOut({callbackUrl:'/'})}
               className="flex items-center gap-1.5 text-[12px]" style={{color:'var(--color-text-tertiary)'}}>
-              <IconLogout size={13}/> Déconnexion
+              <IconLogout size={13}/> {t.account.logout}
             </button>
           </div>
         </div>
@@ -155,8 +157,8 @@ export default function MonComptePage() {
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-[22px] font-bold" style={{color:'var(--color-text-primary)'}}>Mon compte</h1>
-          <p className="text-[13px] mt-1" style={{color:'var(--color-text-secondary)'}}>Gérez votre profil et vos rendez-vous</p>
+          <h1 className="text-[22px] font-bold" style={{color:'var(--color-text-primary)'}}>{t.account.title}</h1>
+          <p className="text-[13px] mt-1" style={{color:'var(--color-text-secondary)'}}>{t.account.subtitle}</p>
         </div>
 
         {/* Profil */}
@@ -178,7 +180,7 @@ export default function MonComptePage() {
               <button onClick={() => setEditingProfile(p => !p)}
                 className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg transition-colors"
                 style={{border:'0.5px solid var(--color-border-tertiary)',color:'var(--color-text-secondary)'}}>
-                <IconPencil size={13}/> {editingProfile ? 'Annuler' : 'Modifier'}
+                <IconPencil size={13}/> {editingProfile ? t.account.cancel2 : t.account.edit}
               </button>
             </div>
 
@@ -208,7 +210,7 @@ export default function MonComptePage() {
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-white disabled:opacity-50"
                   style={{background:'#1D9E75'}}>
                   <IconDeviceFloppy size={14}/>
-                  {savingProfile ? 'Enregistrement…' : 'Enregistrer'}
+                  {savingProfile ? 'Enregistrement…' : t.account.save}
                 </button>
               </div>
             ) : (
@@ -235,16 +237,16 @@ export default function MonComptePage() {
         {/* À venir */}
         <div className="mb-6">
           <h2 className="text-[15px] font-semibold mb-3" style={{color:'var(--color-text-primary)'}}>
-            Rendez-vous à venir ({upcoming.length})
+            {t.account.upcoming} ({upcoming.length})
           </h2>
           {loading ? (
             <div className="rounded-xl h-32 animate-pulse" style={{background:'var(--color-background-primary)'}}/>
           ) : upcoming.length === 0 ? (
             <div className="rounded-xl p-8 text-center" style={{background:'var(--color-background-primary)',border:'0.5px solid var(--color-border-tertiary)'}}>
-              <p className="text-[14px] font-medium mb-2" style={{color:'var(--color-text-primary)'}}>Aucun RDV à venir</p>
-              <p className="text-[13px] mb-4" style={{color:'var(--color-text-secondary)'}}>Trouvez un garage près de chez vous et réservez en ligne.</p>
+              <p className="text-[14px] font-medium mb-2" style={{color:'var(--color-text-primary)'}}>{t.account.noUpcoming}</p>
+              <p className="text-[13px] mb-4" style={{color:'var(--color-text-secondary)'}}>{t.account.noUpcomingDesc}</p>
               <Link href="/search" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-medium text-white" style={{background:'#1D9E75'}}>
-                Trouver un garage <IconArrowRight size={14}/>
+                {t.account.findGarage} <IconArrowRight size={14}/>
               </Link>
             </div>
           ) : (
@@ -268,7 +270,7 @@ export default function MonComptePage() {
                       {['PENDING','CONFIRMED'].includes(a.status) && (
                         <button onClick={() => cancel(a.id)}
                           className="text-[11px] font-medium" style={{color:'#A32D2D'}}>
-                          Annuler
+                          {t.account.cancel}
                         </button>
                       )}
                     </div>
@@ -283,7 +285,7 @@ export default function MonComptePage() {
         {!loading && past.length > 0 && (
           <div>
             <h2 className="text-[15px] font-semibold mb-3" style={{color:'var(--color-text-primary)'}}>
-              Historique ({past.length})
+              {t.account.history} ({past.length})
             </h2>
             <div className="rounded-xl overflow-hidden" style={{background:'var(--color-background-primary)',border:'0.5px solid var(--color-border-tertiary)'}}>
               {past.map((a, i) => {
@@ -301,14 +303,14 @@ export default function MonComptePage() {
                       <div className="flex items-center gap-2">
                         {alreadyDone && (
                           <span className="text-[11px] flex items-center gap-1" style={{color:'#1D9E75'}}>
-                            <IconStarFilled size={11}/> Avis publié
+                            <IconStarFilled size={11}/> {t.account.reviewPublished}
                           </span>
                         )}
                         {canReview && (
                           <button onClick={() => { setReviewingId(a.id); setReviewRating(5); setReviewText('') }}
                             className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-lg"
                             style={{border:'0.5px solid var(--color-border-tertiary)',color:'var(--color-text-secondary)'}}>
-                            <IconMessageCircle size={11}/> Laisser un avis
+                            <IconMessageCircle size={11}/> {t.account.leaveReview}
                           </button>
                         )}
                         <span className="text-[11px] font-medium px-2.5 py-1 rounded-full" style={{background:s.bg,color:s.color}}>{s.label}</span>
@@ -337,7 +339,7 @@ export default function MonComptePage() {
                             <button onClick={() => setReviewingId(null)}
                               className="px-4 py-2 rounded-lg text-[12px]"
                               style={{background:'var(--color-background-primary)',color:'var(--color-text-secondary)',border:'0.5px solid var(--color-border-tertiary)'}}>
-                              Annuler
+                              {t.account.cancel2}
                             </button>
                           </div>
                         </div>
