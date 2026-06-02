@@ -64,14 +64,16 @@ export async function PATCH(req: NextRequest) {
     // Mettre à jour les services si fournis
     if (services) {
       await prisma.garageService.deleteMany({ where: { garageId: garage.id } })
-      await prisma.garageService.createMany({
-        data: services.map((s: any) => ({
-          garageId: garage.id,
-          name:     s.name,
-          duration: s.duration,
-          price:    s.price ?? null,
-        })),
-      })
+      if (services.length > 0) {
+        await prisma.garageService.createMany({
+          data: services.map((s: any) => ({
+            garageId: garage.id,
+            name:     String(s.name),
+            duration: parseInt(s.duration, 10) || 60,
+            price:    s.price != null ? parseFloat(s.price) : null,
+          })),
+        })
+      }
     }
 
     return NextResponse.json(updated)
