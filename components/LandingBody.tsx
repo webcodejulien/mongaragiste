@@ -92,7 +92,9 @@ export function LandingBody({ garages, garageCount, appointmentCount, cityCount 
     navRegister:  nl ? 'Garage registreren' : 'Inscrire mon garage',
     footerTagline:nl ? '— Uw garagist, op één klik.' : '— Votre garagiste, à portée de clic.',
     footerPro:    nl ? 'Voor garagisten'    : 'Pour les garagistes',
-    footerLinks:  nl ? ['AVG','Privacy','Contact'] : ['CGU','Confidentialité','Contact'],
+    footerLinks:  nl
+      ? [{ label:'AVG', href:'/cgu' }, { label:'Privacy', href:'/confidentialite' }, { label:'Contact', href:'/contact' }]
+      : [{ label:'CGU', href:'/cgu' }, { label:'Confidentialité', href:'/confidentialite' }, { label:'Contact', href:'/contact' }],
     copyright:    nl ? '© 2024 MonGaragiste' : '© 2024 MonGaragiste',
   }
 
@@ -317,7 +319,7 @@ export function LandingBody({ garages, garageCount, appointmentCount, cityCount 
           </div>
           <div className="flex items-center gap-5 flex-wrap">
             {T.footerLinks.map(l => (
-              <Link key={l} href="#" className="text-[12px]" style={{ color:'var(--color-text-tertiary)' }}>{l}</Link>
+              <Link key={l.href} href={l.href} className="text-[12px]" style={{ color:'var(--color-text-tertiary)' }}>{l.label}</Link>
             ))}
             <Link href="/garagiste" className="text-[12px] font-medium" style={{ color:'#1D9E75' }}>{T.footerPro}</Link>
           </div>
