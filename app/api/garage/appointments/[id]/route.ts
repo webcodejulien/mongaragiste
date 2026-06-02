@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getGarageId } from '@/lib/getGarage'
 import { prisma } from '@/lib/prisma'
-import { sendEmail, tplBookingConfirmed, tplBookingCancelled } from '@/lib/email'
+import { sendEmail, tplBookingConfirmed, tplBookingCancelled, tplReviewRequest } from '@/lib/email'
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const garageId = await getGarageId()
@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     include: {
       client:  { include: { user: { select: { email: true } } } },
       service: true,
-      garage:  { select: { name: true, phone: true } },
+      garage:  { select: { name: true, phone: true, address: true, slug: true } },
     },
   })
 
@@ -67,6 +67,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         message: `${appt.garage.name} — ${appt.service?.name} — le ${dateStr} à ${appt.startTime}`,
       },
     }).catch(console.error)
+  }
+
+  // Email invitation avis quand RDV terminé
+  if (status === 'DONE' && clientEmail) {
+    const tpl = tplReviewRequest({
+      clientName,
+      garageName:  appt.garage.name,
+      garageSlug:  appt.garage.slug,
+    })
+    sendEmail({ to: [{ email: clientEmail, name: clientName }], subject: tpl.subject, html: tpl.html }).catch(console.error)
   }
 
   return NextResponse.json(appt)

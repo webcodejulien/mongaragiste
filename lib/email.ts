@@ -151,3 +151,65 @@ export function tplBookingCancelled({
     </div>`,
   }
 }
+
+export function tplReviewRequest({
+  clientName, garageName, garageSlug,
+}: {
+  clientName: string; garageName: string; garageSlug: string
+}) {
+  const baseUrl  = process.env.NEXTAUTH_URL ?? 'https://mongaragiste-app.vercel.app'
+  const reviewUrl = `${baseUrl}/mon-compte`
+  return {
+    subject: `Comment s'est passé votre passage chez ${garageName} ?`,
+    html: `
+    <div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1a1a1a">
+      <div style="margin-bottom:24px">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#1D9E75;margin-right:8px"></span>
+        <strong style="font-size:16px">MonGaragiste</strong>
+      </div>
+      <h1 style="font-size:22px;font-weight:700;margin:0 0 8px">Votre avis compte ⭐</h1>
+      <p style="color:#555;margin:0 0 24px">Bonjour ${clientName}, votre rendez-vous chez <strong>${garageName}</strong> est terminé.</p>
+      <p style="color:#555;margin:0 0 24px">Partagez votre expérience en 30 secondes — cela aide les autres conducteurs à choisir leur garage.</p>
+      <a href="${reviewUrl}"
+        style="display:inline-block;background:#1D9E75;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;margin-bottom:24px">
+        Laisser mon avis →
+      </a>
+      <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
+      <p style="color:#aaa;font-size:11px">MonGaragiste · Votre garagiste à portée de clic</p>
+    </div>`,
+  }
+}
+
+export function tplReminder24h({
+  clientName, garageName, serviceName, date, time, garagePhone, garageAddress,
+}: {
+  clientName: string; garageName: string; serviceName: string
+  date: string; time: string; garagePhone?: string; garageAddress?: string
+}) {
+  const baseUrl = process.env.NEXTAUTH_URL ?? 'https://mongaragiste-app.vercel.app'
+  return {
+    subject: `Rappel — Votre RDV demain chez ${garageName}`,
+    html: `
+    <div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1a1a1a">
+      <div style="margin-bottom:24px">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#1D9E75;margin-right:8px"></span>
+        <strong style="font-size:16px">MonGaragiste</strong>
+      </div>
+      <h1 style="font-size:22px;font-weight:700;margin:0 0 8px">⏰ Rappel RDV demain</h1>
+      <p style="color:#555;margin:0 0 24px">Bonjour ${clientName}, n'oubliez pas votre rendez-vous demain !</p>
+      <div style="background:#F7F8FA;border-radius:10px;padding:20px;margin-bottom:24px">
+        <div style="margin-bottom:10px"><span style="color:#888;font-size:12px">Garage</span><br><strong>${garageName}</strong></div>
+        <div style="margin-bottom:10px"><span style="color:#888;font-size:12px">Service</span><br><strong>${serviceName}</strong></div>
+        <div style="margin-bottom:10px"><span style="color:#888;font-size:12px">Date & heure</span><br><strong>${date} à ${time}</strong></div>
+        ${garageAddress ? `<div style="margin-bottom:10px"><span style="color:#888;font-size:12px">Adresse</span><br><strong>${garageAddress}</strong></div>` : ''}
+        ${garagePhone   ? `<div><span style="color:#888;font-size:12px">Téléphone</span><br><strong>${garagePhone}</strong></div>` : ''}
+      </div>
+      <a href="${baseUrl}/mon-compte"
+        style="display:inline-block;background:'#F5F5F2';color:#555;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:13px;border:1px solid #ddd">
+        Annuler le RDV
+      </a>
+      <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
+      <p style="color:#aaa;font-size:11px">MonGaragiste · Votre garagiste à portée de clic</p>
+    </div>`,
+  }
+}
