@@ -63,6 +63,7 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
 
   const weekDates = getWeekDates()
   const selDate   = weekDates[selDateIdx]
+  const today     = new Date().toISOString().split('T')[0]
 
   useEffect(() => {
     fetch(`/api/public/garage/${params.slug}`)
@@ -374,16 +375,20 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                             const appDay = jsDay === 0 ? 7 : jsDay
                             const schedule = garage?.schedules?.find((s: any) => s.dayOfWeek === appDay)
                             const isClosed = schedule ? schedule.closed : false
+                            // Griser les jours passés
+                            const today = new Date().toISOString().split('T')[0]
+                            const isPast = d.iso < today
+                            const disabled = isClosed || isPast
                             return (
                               <button key={d.iso}
-                                onClick={() => { if (!isClosed) { setSelDateIdx(i); setSelTime('') } }}
-                                disabled={isClosed}
+                                onClick={() => { if (!disabled) { setSelDateIdx(i); setSelTime('') } }}
+                                disabled={disabled}
                                 className="flex flex-col items-center py-2 rounded-lg transition-colors"
                                 style={{
-                                  background: isClosed ? 'transparent' : selDateIdx===i ? '#1D9E75' : 'var(--color-background-secondary)',
-                                  color: isClosed ? 'var(--color-border-primary)' : selDateIdx===i ? '#fff' : 'var(--color-text-secondary)',
-                                  cursor: isClosed ? 'not-allowed' : 'pointer',
-                                  opacity: isClosed ? 0.4 : 1,
+                                  background: disabled ? 'transparent' : selDateIdx===i ? '#1D9E75' : 'var(--color-background-secondary)',
+                                  color: disabled ? 'var(--color-border-primary)' : selDateIdx===i ? '#fff' : 'var(--color-text-secondary)',
+                                  cursor: disabled ? 'not-allowed' : 'pointer',
+                                  opacity: disabled ? 0.35 : 1,
                                 }}>
                                 <span className="text-[9px] font-medium">{d.day}</span>
                                 <span className="text-[13px] font-bold leading-tight">{d.date}</span>

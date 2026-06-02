@@ -71,16 +71,23 @@ export async function GET(req: NextRequest) {
     select: { startTime: true, endTime: true },
   })
 
+  // Filtrer les créneaux passés si la date est aujourd'hui
+  const now        = new Date()
+  const isToday    = dateStr === now.toISOString().split('T')[0]
+  const nowMinutes = isToday ? now.getHours() * 60 + now.getMinutes() : 0
+
   // Filtrer les créneaux indisponibles
   // Un créneau est dispo si le nombre de RDV qui se chevauchent < mechanicCount
   const available = allSlots.filter(slot => {
     const slotStart = toMinutes(slot)
     const slotEnd   = slotStart + serviceDuration
 
+    // Exclure les créneaux déjà passés (aujourd'hui uniquement)
+    if (isToday && slotStart <= nowMinutes) return false
+
     const overlapping = existing.filter(a => {
       const aStart = toMinutes(a.startTime)
       const aEnd   = toMinutes(a.endTime || a.startTime)
-      // chevauchement si pas (aEnd <= slotStart || aStart >= slotEnd)
       return !(aEnd <= slotStart || aStart >= slotEnd)
     }).length
 
