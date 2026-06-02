@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { IconSearch, IconMapPin, IconStar, IconShieldCheck, IconClock, IconArrowRight, IconPhone } from '@tabler/icons-react'
 import { prisma } from '@/lib/prisma'
+import { LangToggle } from '@/components/LangToggle'
 
 const SERVICES = [
   { label:'Vidange',       icon:'🛢️', desc:'Huile + filtres' },
@@ -71,6 +72,7 @@ export default async function HomePage() {
             <Link href="/search" className="text-[13px] transition-colors" style={{ color:'var(--color-text-secondary)' }}>Trouver un garage</Link>
             <Link href="/garagiste" className="text-[13px] font-medium transition-colors" style={{ color:'#1D9E75' }}>Êtes-vous garagiste ?</Link>
             <Link href="/login" className="text-[13px] transition-colors" style={{ color:'var(--color-text-secondary)' }}>Connexion</Link>
+            <LangToggle />
             <Link href="/register/garage"
               className="px-4 py-2 rounded-lg text-[13px] font-medium text-white"
               style={{ background:'#1D9E75' }}>

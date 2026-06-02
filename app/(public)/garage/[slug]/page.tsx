@@ -9,6 +9,8 @@ import {
 
 const BOOKING_STEPS = ['Service','Créneau','Vos infos','Confirmation']
 
+const DAY_NAMES = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
+
 
 function Stars({ n, size=14 }: { n:number; size?:number }) {
   return (
@@ -134,6 +136,16 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
 
   const avg = garage.rating?.toFixed(1) || '—'
 
+  /* Logique ouvert/fermé */
+  const todayIdx      = new Date().getDay() // 0=dim
+  const todayName     = DAY_NAMES[todayIdx]
+  const todaySchedule = garage.schedules?.find((s: any) => s.day === todayName)
+  const _now          = new Date()
+  const currentTime   = `${String(_now.getHours()).padStart(2,'0')}:${String(_now.getMinutes()).padStart(2,'0')}`
+  const isOpenNow     = todaySchedule && !todaySchedule.closed
+    && currentTime >= todaySchedule.open
+    && currentTime <= todaySchedule.close
+
   /* Badge "Nouveau" si créé il y a moins de 30 jours */
   const isNew = garage.createdAt
     ? (Date.now() - new Date(garage.createdAt).getTime()) < 30 * 24 * 60 * 60 * 1000
@@ -174,7 +186,12 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                       {isNew && (
                         <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{background:'#FFF3E0',color:'#B45309'}}>Nouveau</span>
                       )}
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>Actif</span>
+                      {isOpenNow
+                        ? <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>🟢 Ouvert maintenant</span>
+                        : todaySchedule
+                          ? <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{background:'#FCEBEB',color:'#A32D2D'}}>🔴 Fermé</span>
+                          : <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>Actif</span>
+                      }
                     </div>
                   </div>
                   <p className="text-[12px] mt-1" style={{color:'var(--color-text-secondary)'}}>{garage.address}, {garage.zipCode} {garage.city}</p>

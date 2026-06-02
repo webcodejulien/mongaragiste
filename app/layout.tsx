@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { SessionWrapper } from '@/components/SessionWrapper'
+import { LangProvider } from '@/components/LangToggle'
 
 export const metadata: Metadata = {
   title: {
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
     type:     'website',
   },
   twitter: { card: 'summary' },
+  icons: { icon: '/icon.svg', apple: '/icon.svg' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -30,7 +32,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}} />
       </head>
       <body>
-        <SessionWrapper>{children}</SessionWrapper>
+        <LangProvider>
+          <SessionWrapper>{children}</SessionWrapper>
+        </LangProvider>
       </body>
     </html>
   )

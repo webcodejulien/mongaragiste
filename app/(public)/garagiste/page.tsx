@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { LangToggle } from '@/components/LangToggle'
 
 export const metadata: Metadata = {
   title: 'MonGaragiste pour les professionnels — Développez votre activité',
