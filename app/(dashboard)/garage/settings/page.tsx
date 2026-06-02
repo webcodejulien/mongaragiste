@@ -113,7 +113,7 @@ export default function SettingsPage() {
           name:info.name, phone:info.phone, address:info.address, city:info.city, zipCode:info.zip, description:info.desc, vatNumber:info.vatNumber||null, iban:info.iban||null,
           mechanicCount, slotDuration,
           schedules: schedules.map(s => ({ dayOfWeek:s.dayOfWeek, openTime:s.openTime, closeTime:s.closeTime, isClosed:s.isClosed })),
-          services: services.map(s => ({ name:s.name, duration:Number(s.duration)||60, price:s.price ? Number(s.price) : null })),
+          services: services.map(s => ({ id:s.id||undefined, name:s.name, duration:Number(s.duration)||60, price:s.price ? Number(s.price) : null })),
           notifPrefs: notifs,
         }),
       })

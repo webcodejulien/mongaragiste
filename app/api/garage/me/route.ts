@@ -63,16 +63,32 @@ export async function PATCH(req: NextRequest) {
 
     // Mettre à jour les services si fournis
     if (services) {
-      await prisma.garageService.deleteMany({ where: { garageId: garage.id } })
-      if (services.length > 0) {
-        await prisma.garageService.createMany({
-          data: services.map((s: any) => ({
-            garageId: garage.id,
-            name:     String(s.name),
-            duration: parseInt(s.duration, 10) || 60,
-            price:    s.price != null ? parseFloat(s.price) : null,
-          })),
-        })
+      const incomingIds = services.filter((s: any) => s.id).map((s: any) => s.id as string)
+
+      // Supprimer uniquement les services qui ne sont plus dans la liste ET qui n'ont pas de RDV liés
+      const toDelete = await prisma.garageService.findMany({
+        where: { garageId: garage.id, ...(incomingIds.length > 0 ? { id: { notIn: incomingIds } } : {}) },
+        include: { _count: { select: { appointments: true } } },
+      })
+      const deletableIds = toDelete
+        .filter((s: any) => s._count.appointments === 0)
+        .map((s: any) => s.id)
+      if (deletableIds.length > 0) {
+        await prisma.garageService.deleteMany({ where: { id: { in: deletableIds } } })
+      }
+
+      // Upsert chaque service : update si id connu, create sinon
+      for (const s of services) {
+        const svcData = {
+          name:     String(s.name),
+          duration: parseInt(s.duration, 10) || 60,
+          price:    s.price != null ? parseFloat(s.price) : null,
+        }
+        if (s.id) {
+          await prisma.garageService.update({ where: { id: s.id }, data: svcData })
+        } else {
+          await prisma.garageService.create({ data: { garageId: garage.id, ...svcData } })
+        }
       }
     }
 
