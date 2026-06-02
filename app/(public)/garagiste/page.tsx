@@ -64,9 +64,8 @@ const STEPS = [
 const PLANS = [
   {
     name: 'Essential',
-    price: '9 €',
+    price: '59 €',
     sub: '/ mois HTVA',
-    promo: '2 mois offerts à l\'inscription',
     features: [
       'Page garage publique (SEO)',
       'Jusqu\'à 100 RDV / mois',
@@ -75,16 +74,15 @@ const PLANS = [
       'Avis clients vérifiés',
       'Statistiques de base',
     ],
-    cta: 'Commencer — 2 mois offerts',
+    cta: 'Commencer',
     href: '/register/garage',
     highlight: false,
   },
   {
     name: 'Pro',
-    price: '19 €',
+    price: '69 €',
     sub: '/ mois HTVA',
     badge: 'Le plus populaire',
-    promo: '2 mois offerts à l\'inscription',
     features: [
       'Tout Essential inclus',
       'RDV illimités',
@@ -93,15 +91,14 @@ const PLANS = [
       'Export CSV clients & RDV',
       'Support prioritaire',
     ],
-    cta: 'Commencer — 2 mois offerts',
+    cta: 'Commencer',
     href: '/register/garage',
     highlight: true,
   },
   {
     name: 'Premium',
-    price: '29 €',
+    price: '79 €',
     sub: '/ mois HTVA',
-    promo: '2 mois offerts à l\'inscription',
     features: [
       'Tout Pro inclus',
       'Multi-garages',
@@ -110,7 +107,7 @@ const PLANS = [
       'Manager de compte dédié',
       'Formation en ligne incluse',
     ],
-    cta: 'Commencer — 2 mois offerts',
+    cta: 'Commencer',
     href: '/register/garage',
     highlight: false,
   },
@@ -357,14 +354,6 @@ export default function GaragistePage() {
                   <span className="text-[32px] font-bold" style={{ color: plan.highlight ? '#fff' : 'var(--color-text-primary)' }}>{plan.price}</span>
                   <span className="text-[12px] ml-1" style={{ color: plan.highlight ? 'rgba(255,255,255,0.7)' : 'var(--color-text-tertiary)' }}>{plan.sub}</span>
                 </div>
-                {'promo' in plan && (plan as any).promo && (
-                  <div className="mb-4">
-                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
-                      style={{ background: plan.highlight ? 'rgba(255,255,255,0.2)' : '#FAEEDA', color: plan.highlight ? '#fff' : '#633806' }}>
-                      🎁 {(plan as any).promo}
-                    </span>
-                  </div>
-                )}
                 <ul className="space-y-2 flex-1 mb-6">
                   {plan.features.map(f => (
                     <li key={f} className="flex items-start gap-2 text-[13px]" style={{ color: plan.highlight ? 'rgba(255,255,255,0.9)' : 'var(--color-text-secondary)' }}>

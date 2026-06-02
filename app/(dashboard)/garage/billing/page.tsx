@@ -8,7 +8,7 @@ const PLANS = [
   {
     key: 'STARTER',
     name: 'Essential',
-    price: '9 €',
+    price: '59 €',
     priceDetail: '/ mois HTVA',
     color: '#6B6E72',
     features: [
@@ -22,7 +22,7 @@ const PLANS = [
   {
     key: 'PRO',
     name: 'Pro',
-    price: '19 €',
+    price: '69 €',
     priceDetail: '/ mois HTVA',
     color: '#1D9E75',
     badge: 'Populaire',
@@ -38,7 +38,7 @@ const PLANS = [
   {
     key: 'PREMIUM',
     name: 'Premium',
-    price: '29 €',
+    price: '79 €',
     priceDetail: '/ mois HTVA',
     color: '#854F0B',
     features: [
@@ -85,7 +85,7 @@ export default function BillingPage() {
             </p>
             <p className="text-[12px] mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
               {plan === 'STARTER'
-                ? 'Passez au plan Pro (19 €/mois) pour les RDV illimités, les rappels SMS et les stats avancées.'
+                ? 'Passez au plan Pro (69 €/mois) pour les RDV illimités, les rappels SMS et les statistiques avancées.'
                 : 'Merci de faire confiance à MonGaragiste pour votre activité.'}
             </p>
           </div>
@@ -176,10 +176,10 @@ export default function BillingPage() {
         )}
 
         {plan === 'STARTER' && (
-          <div className="rounded-[10px] p-5" style={{ background: '#FAEEDA', border: '0.5px solid #EF9F27' }}>
-            <p className="text-[13px] font-medium mb-1" style={{ color: '#633806' }}>🎁 2 mois offerts sur tous les plans</p>
-            <p className="text-[12px]" style={{ color: '#854F0B' }}>
-              Profitez de 2 mois offerts lors de votre passage au plan Essential, Pro ou Premium. Contactez-nous à <strong>hello@mongaragiste.app</strong> pour en bénéficier.
+          <div className="rounded-[10px] p-5" style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
+            <p className="text-[13px] font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>Passez à un plan payant</p>
+            <p className="text-[12px]" style={{ color: 'var(--color-text-secondary)' }}>
+              Choisissez le plan adapté à votre activité. Contactez-nous à <strong>hello@mongaragiste.app</strong> pour activer votre abonnement.
             </p>
           </div>
         )}
