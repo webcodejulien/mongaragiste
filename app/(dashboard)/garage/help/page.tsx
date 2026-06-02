@@ -8,7 +8,7 @@ const FAQS = [
   { q: 'Comment répondre à un avis client ?', a: 'Dans la page Avis clients, cliquez sur "Répondre" sous l\'avis souhaité. Votre réponse sera visible publiquement sur votre profil.' },
   { q: 'Comment ajouter ou modifier mes services ?', a: 'Dans Paramètres → Services & tarifs, vous pouvez ajouter, modifier la durée, le prix ou supprimer vos services.' },
   { q: 'Comment activer les rappels SMS ?', a: 'Les rappels SMS sont disponibles à partir du plan Pro. Allez dans Paramètres → Notifications pour les activer.' },
-  { q: 'Comment exporter mes données ?', a: 'L\'export des données (clients, RDV) est disponible dans Paramètres → Compte. Un fichier CSV vous sera envoyé par email.' },
+  { q: 'Comment exporter mes données ?', a: 'L\'export CSV est disponible directement sur les pages Rendez-vous et Clients. Cliquez sur le bouton "Export CSV" en haut à droite de chaque liste.' },
 ]
 
 export default function HelpPage() {

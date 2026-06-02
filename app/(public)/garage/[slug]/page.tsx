@@ -128,9 +128,25 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
     setEmail(''); setPhone(''); setPlate(''); setVehicle(''); setNotes(''); setDone(false); setBookingError('')
   }
 
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center" style={{background:'var(--color-background-secondary)'}}>
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{borderColor:'#1D9E75', borderTopColor:'transparent'}}/>
+        <p className="text-[13px]" style={{color:'var(--color-text-secondary)'}}>Chargement…</p>
+      </div>
+    </div>
+  )
+
   if (!garage) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p style={{color:'var(--color-text-secondary)'}}>Garage introuvable.</p>
+    <div className="min-h-screen flex items-center justify-center" style={{background:'var(--color-background-secondary)'}}>
+      <div className="text-center">
+        <p className="text-4xl mb-4">🔧</p>
+        <p className="text-[16px] font-semibold mb-2" style={{color:'var(--color-text-primary)'}}>Garage introuvable</p>
+        <p className="text-[13px] mb-5" style={{color:'var(--color-text-secondary)'}}>Ce garage n'existe pas ou a été désactivé.</p>
+        <a href="/search" className="px-4 py-2 rounded-lg text-[13px] font-medium text-white" style={{background:'#1D9E75'}}>
+          Trouver un autre garage
+        </a>
+      </div>
     </div>
   )
 

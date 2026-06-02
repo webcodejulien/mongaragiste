@@ -134,26 +134,18 @@ export default function BillingPage() {
                       </li>
                     ))}
                   </ul>
-                  <button
-                    disabled={isCurrent || p.key === 'STARTER'}
-                    className="w-full py-2 rounded-lg text-[13px] font-medium transition-colors"
-                    style={{
-                      background: isCurrent
-                        ? '#E1F5EE'
-                        : p.key === 'STARTER'
-                          ? 'var(--color-background-secondary)'
-                          : p.color,
-                      color: isCurrent
-                        ? '#085041'
-                        : p.key === 'STARTER'
-                          ? 'var(--color-text-tertiary)'
-                          : '#fff',
-                      cursor: isCurrent || p.key === 'STARTER' ? 'default' : 'pointer',
-                    }}>
-                    {isCurrent
-                      ? <span className="flex items-center justify-center gap-1.5"><IconCrown size={13}/> Plan actuel</span>
-                      : p.key === 'STARTER' ? 'Plan de départ' : `Passer ${p.name}`}
-                  </button>
+                  {isCurrent ? (
+                    <button disabled className="w-full py-2 rounded-lg text-[13px] font-medium"
+                      style={{ background: '#E1F5EE', color: '#085041', cursor: 'default' }}>
+                      <span className="flex items-center justify-center gap-1.5"><IconCrown size={13}/> Plan actuel</span>
+                    </button>
+                  ) : (
+                    <a href={`mailto:hello@mongaragiste.app?subject=Passage au plan ${p.name}&body=Bonjour, je souhaite passer au plan ${p.name} (${p.price}/mois).`}
+                      className="w-full py-2 rounded-lg text-[13px] font-medium text-center block text-white"
+                      style={{ background: p.color }}>
+                      Passer {p.name} →
+                    </a>
+                  )}
                 </div>
               )
             })}
