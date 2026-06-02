@@ -327,10 +327,12 @@ export default async function HomePage() {
             <span className="text-[13px] font-semibold" style={{ color:'var(--color-text-primary)' }}>MonGaragiste</span>
             <span className="text-[12px]" style={{ color:'var(--color-text-tertiary)' }}>— Votre garagiste, à portée de clic.</span>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-5 flex-wrap">
             {['CGU','Confidentialité','Contact'].map(l => (
               <Link key={l} href="#" className="text-[12px]" style={{ color:'var(--color-text-tertiary)' }}>{l}</Link>
             ))}
+            <Link href="/garagiste" className="text-[12px] font-medium" style={{ color:'#1D9E75' }}>Pour les garagistes</Link>
+            <Link href="/admin" className="text-[11px]" style={{ color:'var(--color-text-tertiary)', opacity:0.6 }}>Admin</Link>
           </div>
           <p className="text-[11px]" style={{ color:'var(--color-text-tertiary)' }}>© 2024 MonGaragiste</p>
         </div>

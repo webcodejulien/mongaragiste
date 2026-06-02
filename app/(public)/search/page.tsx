@@ -377,17 +377,19 @@ function SearchContent() {
                   ) : (
                     <p className="text-[11px] mb-1" style={{ color: 'var(--color-text-tertiary)' }}>Aucun avis</p>
                   )}
-                  <p className="text-[11px] mb-3" style={{ color: 'var(--color-text-secondary)' }}>
-                    {g.phone}
-                  </p>
+                  {g.phone && (
+                    <p className="text-[11px] mb-3" style={{ color: 'var(--color-text-secondary)' }}>
+                      {g.phone}
+                    </p>
+                  )}
                   <div className="flex items-center gap-2 justify-end">
                     {pf != null && (
                       <span className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
                         dès <strong style={{ color: 'var(--color-text-primary)' }}>{pf}€</strong>
                       </span>
                     )}
-                    <span className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white" style={{ background: '#1D9E75' }}>
-                      Réserver
+                    <span className="px-4 py-2 rounded-lg text-[13px] font-semibold text-white flex items-center gap-1.5" style={{ background: '#1D9E75' }}>
+                      Voir &amp; réserver →
                     </span>
                   </div>
                 </div>

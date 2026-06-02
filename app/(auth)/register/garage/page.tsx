@@ -148,6 +148,9 @@ export default function RegisterGaragePage() {
 
       <div className="flex-1 flex items-start justify-center px-4 py-10">
         <div className="w-full max-w-[480px]">
+          <p style={{color:'var(--color-text-tertiary)', fontSize:12, marginBottom:16}}>
+            ← <a href="/garagiste" style={{color:'#1D9E75'}}>Découvrir comment ça fonctionne</a> avant de vous inscrire
+          </p>
           <div className="text-center mb-8">
             <h1 className="text-[22px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>Inscrire mon garage</h1>
             <p className="text-[13px] mt-1" style={{ color: 'var(--color-text-secondary)' }}>Commencez à recevoir des réservations en ligne</p>

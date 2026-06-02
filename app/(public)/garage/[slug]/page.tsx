@@ -454,17 +454,29 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
 
               {/* Horaires */}
               <div className="px-5 py-4" style={{borderTop:'0.5px solid var(--color-border-tertiary)'}}>
-                <p className="text-[11px] font-medium mb-2.5 uppercase tracking-wide" style={{color:'var(--color-text-tertiary)'}}>Horaires</p>
+                <div className="flex items-center justify-between mb-2.5">
+                  <p className="text-[11px] font-medium uppercase tracking-wide" style={{color:'var(--color-text-tertiary)'}}>Horaires</p>
+                  {isOpenNow
+                    ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{background:'#E1F5EE',color:'#085041'}}>🟢 Ouvert</span>
+                    : todaySchedule
+                      ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{background:'#FCEBEB',color:'#A32D2D'}}>🔴 Fermé</span>
+                      : null
+                  }
+                </div>
                 <div className="space-y-1">
-                  {(garage.schedules||[]).map((s:any) => (
-                    <div key={s.day} className="flex items-center justify-between">
-                      <span className="text-[12px]" style={{color:'var(--color-text-secondary)'}}>{s.day}</span>
-                      {s.closed
-                        ? <span className="text-[11px] font-medium" style={{color:'#E24B4A'}}>Fermé</span>
-                        : <span className="text-[12px] font-medium" style={{color:'var(--color-text-primary)'}}>{s.open} – {s.close}</span>
-                      }
-                    </div>
-                  ))}
+                  {(garage.schedules||[]).map((s:any) => {
+                    const isToday = s.day === todayName
+                    return (
+                      <div key={s.day} className="flex items-center justify-between rounded px-1.5 py-0.5 -mx-1.5"
+                        style={isToday ? {background:'#E1F5EE'} : {}}>
+                        <span className="text-[12px]" style={{color: isToday ? '#085041' : 'var(--color-text-secondary)', fontWeight: isToday ? 700 : 400}}>{s.day}</span>
+                        {s.closed
+                          ? <span className="text-[11px] font-medium" style={{color: isToday ? '#A32D2D' : '#E24B4A'}}>Fermé</span>
+                          : <span className="text-[12px] font-medium" style={{color: isToday ? '#085041' : 'var(--color-text-primary)'}}>{s.open} – {s.close}</span>
+                        }
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             </div>

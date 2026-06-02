@@ -129,6 +129,7 @@ export default function GaragistePage() {
             <Link href="/login" className="text-[13px]" style={{ color: 'var(--color-text-secondary)' }}>
               Se connecter
             </Link>
+            <LangToggle />
             <Link href="/register/garage"
               className="px-4 py-2 rounded-lg text-[13px] font-semibold text-white"
               style={{ background: '#1D9E75' }}>
