@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
-import { sendEmail, tplBookingRequest } from '@/lib/email'
+import { sendEmail, sendSMS, tplBookingRequest } from '@/lib/email'
+import { isValidEmail, isValidTime, sanitize } from '@/lib/validate'
 
 function slugify(t: string) {
   return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-')
@@ -10,10 +11,38 @@ function slugify(t: string) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { garageSlug, serviceId, date, startTime, endTime, vehiclePlate, vehicleModel, notes, firstName, lastName, email, phone } = body
+    const garageSlug   = sanitize(body.garageSlug   ?? '')
+    const serviceId    = sanitize(body.serviceId    ?? '')
+    const date         = sanitize(body.date         ?? '')
+    const startTime    = sanitize(body.startTime    ?? '')
+    const endTime      = sanitize(body.endTime      ?? '')
+    const vehiclePlate = sanitize(body.vehiclePlate ?? '').slice(0, 15)
+    const vehicleModel = sanitize(body.vehicleModel ?? '')
+    const notes        = sanitize(body.notes        ?? '')
+    const firstName    = sanitize(body.firstName    ?? '')
+    const lastName     = sanitize(body.lastName     ?? '')
+    const email        = (body.email ?? '').trim()
+    const phone        = sanitize(body.phone        ?? '')
 
     if (!garageSlug || !serviceId || !date || !startTime || !firstName || !lastName || !email) {
       return NextResponse.json({ error: 'Champs manquants.' }, { status: 400 })
+    }
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ error: 'Email invalide.' }, { status: 400 })
+    }
+    if (!isValidTime(startTime)) {
+      return NextResponse.json({ error: 'Format d\'heure invalide (HH:MM attendu).' }, { status: 400 })
+    }
+    if (firstName.length < 1 || lastName.length < 1) {
+      return NextResponse.json({ error: 'Prénom et nom requis.' }, { status: 400 })
+    }
+    // Vérifier que la date n'est pas dans le passé
+    const apptDate = new Date(date)
+    apptDate.setHours(0, 0, 0, 0)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (apptDate < today) {
+      return NextResponse.json({ error: 'La date du RDV ne peut pas être dans le passé.' }, { status: 400 })
     }
 
     // Trouver le garage
@@ -88,6 +117,13 @@ export async function POST(req: NextRequest) {
     })
     sendEmail({ to: [{ email, name: `${firstName} ${lastName}` }], subject: tpl.client.subject, html: tpl.client.html }).catch(console.error)
     sendEmail({ to: [{ email: garage.user.email, name: garage.name }], subject: tpl.garage.subject, html: tpl.garage.html }).catch(console.error)
+
+    if (phone) {
+      sendSMS({
+        to: phone,
+        content: `Demande RDV reçue ✓ ${garage.name} — ${service.name} le ${new Date(date).toLocaleDateString('fr-BE')} à ${startTime}. Confirmation à venir.`,
+      }).catch(console.error)
+    }
 
     return NextResponse.json({ id: appt.id, ok: true }, { status: 201 })
   } catch (err) {

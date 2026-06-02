@@ -161,7 +161,12 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
             {/* Infos */}
             <div className="rounded-xl p-6" style={{background:'var(--color-background-primary)',border:'0.5px solid var(--color-border-tertiary)'}}>
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl flex-shrink-0" style={{background:'var(--color-primary-light)'}}>🔧</div>
+                <div className="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center text-3xl flex-shrink-0" style={{background:'var(--color-primary-light)'}}>
+                  {garage.logoUrl
+                    ? <img src={garage.logoUrl} alt={garage.name} className="w-full h-full object-cover"/>
+                    : '🔧'
+                  }
+                </div>
                 <div className="flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <h1 className="text-[20px] font-bold" style={{color:'var(--color-text-primary)'}}>{garage.name}</h1>

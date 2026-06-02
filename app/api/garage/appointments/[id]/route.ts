@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getGarageId } from '@/lib/getGarage'
 import { prisma } from '@/lib/prisma'
-import { sendEmail, tplBookingConfirmed, tplBookingCancelled, tplReviewRequest } from '@/lib/email'
+import { sendEmail, sendSMS, tplBookingConfirmed, tplBookingCancelled, tplReviewRequest } from '@/lib/email'
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const garageId = await getGarageId()
@@ -21,6 +21,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     },
   })
 
+  const clientPhone = appt.client.phone ?? undefined
+
   const clientEmail = appt.client.user?.email
   const clientName  = `${appt.client.firstName} ${appt.client.lastName}`
   const dateStr     = new Date(appt.date).toLocaleDateString('fr-BE', { weekday:'long', day:'numeric', month:'long' })
@@ -36,6 +38,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       garagePhone: appt.garage.phone ?? undefined,
     })
     sendEmail({ to: [{ email: clientEmail, name: clientName }], subject: tpl.subject, html: tpl.html }).catch(console.error)
+
+    if (clientPhone) {
+      sendSMS({
+        to: clientPhone,
+        content: `RDV confirmé ✓ ${appt.garage.name} — ${appt.service?.name} le ${dateStr} à ${appt.startTime}. Pour annuler: mongaragiste-app.vercel.app/mon-compte`,
+      }).catch(console.error)
+    }
 
     // Notification en DB
     await prisma.notification.create({
@@ -58,6 +67,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       time:        appt.startTime,
     })
     sendEmail({ to: [{ email: clientEmail, name: clientName }], subject: tpl.subject, html: tpl.html }).catch(console.error)
+
+    if (clientPhone) {
+      sendSMS({
+        to: clientPhone,
+        content: `RDV annulé — ${appt.garage.name} — ${appt.service?.name} le ${dateStr} à ${appt.startTime}. Reprenez RDV sur mongaragiste-app.vercel.app`,
+      }).catch(console.error)
+    }
 
     await prisma.notification.create({
       data: {

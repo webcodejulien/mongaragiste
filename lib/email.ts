@@ -180,6 +180,23 @@ export function tplReviewRequest({
   }
 }
 
+export async function sendSMS({ to, content }: { to: string; content: string }) {
+  if (!API_KEY || !to) return
+  // Nettoyer le numéro — format E.164
+  const phone = to.replace(/\s/g, '').replace(/^0/, '+32')
+  if (!phone.startsWith('+')) return // ignorer si pas international
+  try {
+    const res = await fetch('https://api.brevo.com/v3/transactionalSMS/sms', {
+      method: 'POST',
+      headers: { 'api-key': API_KEY!, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: 'MonGarage', recipient: phone, content }),
+    })
+    if (!res.ok) console.error('[sms] Brevo error:', await res.text())
+  } catch (err) {
+    console.error('[sms] error:', err)
+  }
+}
+
 export function tplReminder24h({
   clientName, garageName, serviceName, date, time, garagePhone, garageAddress,
 }: {

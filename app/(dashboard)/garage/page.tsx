@@ -202,7 +202,9 @@ export default function GarageDashboard() {
                   {appts.map(a => {
                     const s = STATUS[a.status] ?? STATUS.PENDING
                     return (
-                      <div key={a.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                      <div key={a.id} className="flex items-center gap-3 px-4 py-3 transition-colors" style={{ '--hover-bg': 'var(--color-background-secondary)' } as React.CSSProperties}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-background-secondary)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                         <p className="text-[13px] font-semibold w-12 flex-shrink-0" style={{ color: 'var(--color-text-primary)' }}>
                           {a.startTime}
                         </p>

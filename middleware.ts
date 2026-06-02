@@ -31,6 +31,18 @@ export default withAuth(
       }
     }
 
+    // Routes admin → rôle ADMIN obligatoire
+    if (pathname.startsWith('/admin')) {
+      if (!token) {
+        const loginUrl = new URL('/login', req.url)
+        loginUrl.searchParams.set('callbackUrl', pathname)
+        return NextResponse.redirect(loginUrl)
+      }
+      if (token.role !== 'ADMIN') {
+        return NextResponse.redirect(new URL('/', req.url))
+      }
+    }
+
     return NextResponse.next()
   },
   {
@@ -39,7 +51,7 @@ export default withAuth(
       // La logique de rôle est gérée dans middleware()
       authorized: ({ token, req }) => {
         const pathname = req.nextUrl.pathname
-        if (pathname.startsWith('/garage') || pathname.startsWith('/client')) {
+        if (pathname.startsWith('/garage') || pathname.startsWith('/client') || pathname.startsWith('/admin')) {
           return !!token
         }
         return true
@@ -52,5 +64,6 @@ export const config = {
   matcher: [
     '/garage/:path*',
     '/client/:path*',
+    '/admin/:path*',
   ],
 }

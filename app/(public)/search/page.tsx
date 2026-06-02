@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { IconSearch, IconMapPin, IconStar, IconClock, IconAdjustments, IconLoader2 } from '@tabler/icons-react'
+import { IconSearch, IconMapPin, IconStar, IconClock, IconAdjustments, IconLoader2, IconCurrentLocation } from '@tabler/icons-react'
 
 const SORT_OPTIONS = [
   { value: 'rating',  label: 'Mieux notés' },
@@ -38,6 +38,12 @@ function SearchContent() {
   const [services, setServices] = useState<string[]>([])
   const [cities,   setCities]   = useState<string[]>([])
 
+  // Geolocation state
+  const [userLat,      setUserLat]      = useState<number | null>(null)
+  const [userLng,      setUserLng]      = useState<number | null>(null)
+  const [geoLoading,   setGeoLoading]   = useState(false)
+  const [geoError,     setGeoError]     = useState<string | null>(null)
+
   /* Autocomplétion ville */
   const [showSuggestions, setShowSuggestions] = useState(false)
   const suggestRef = useRef<HTMLDivElement>(null)
@@ -52,6 +58,8 @@ function SearchContent() {
     const qs = new URLSearchParams()
     if (city)    qs.set('city',    city)
     if (service) qs.set('service', service)
+    if (userLat !== null) qs.set('lat', String(userLat))
+    if (userLng !== null) qs.set('lng', String(userLng))
     qs.set('limit', '50')
 
     fetch(`/api/garages?${qs}`)
@@ -67,6 +75,12 @@ function SearchContent() {
         })
 
         const sorted = [...filtered].sort((a, b) => {
+          // If geolocation active and sort is 'distance', use distance from API
+          if (sort === 'distance') {
+            if (a.distance === null) return 1
+            if (b.distance === null) return -1
+            return (a.distance ?? Infinity) - (b.distance ?? Infinity)
+          }
           if (sort === 'rating')  return (b.rating ?? 0) - (a.rating ?? 0)
           if (sort === 'reviews') return (b.reviewCount ?? 0) - (a.reviewCount ?? 0)
           if (sort === 'price') {
@@ -87,7 +101,7 @@ function SearchContent() {
         setServices(allServices.sort())
       })
       .finally(() => setLoading(false))
-  }, [city, service, query, sort])
+  }, [city, service, query, sort, userLat, userLng])
 
   /* Fermer la liste si clic en dehors */
   useEffect(() => {
@@ -102,6 +116,35 @@ function SearchContent() {
 
   function clear() { setQuery(''); setCity(''); setService('') }
   const hasFilters = !!(city || service)
+
+  function handleGeolocate() {
+    if (!navigator.geolocation) {
+      setGeoError('Géolocalisation non disponible sur votre appareil.')
+      return
+    }
+    setGeoLoading(true)
+    setGeoError(null)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLat(pos.coords.latitude)
+        setUserLng(pos.coords.longitude)
+        setSort('distance')
+        setGeoLoading(false)
+      },
+      () => {
+        setGeoError('Géolocalisation refusée ou non disponible.')
+        setGeoLoading(false)
+      },
+      { timeout: 10000 }
+    )
+  }
+
+  function clearGeo() {
+    setUserLat(null)
+    setUserLng(null)
+    setGeoError(null)
+    if (sort === 'distance') setSort('rating')
+  }
 
   /* Calcul ouvert/fermé en temps réel */
   function isOpenNow(g: any): boolean | null {
@@ -127,10 +170,14 @@ function SearchContent() {
     return prices.length > 0 ? Math.min(...prices) : null
   }
 
+  const sortOptions = userLat !== null
+    ? [...SORT_OPTIONS, { value: 'distance', label: 'Distance' }]
+    : SORT_OPTIONS
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Barre de recherche */}
-      <div className="rounded-xl p-2 flex gap-2 mb-6"
+      <div className="rounded-xl p-2 flex gap-2 mb-3"
         style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="flex-1 flex items-center gap-2 px-3 relative" ref={suggestRef}>
           <IconSearch size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }}/>
@@ -163,6 +210,23 @@ function SearchContent() {
           <option value="">Tous les services</option>
           {services.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
+        <div className="w-px" style={{ background: 'var(--color-border-tertiary)' }}/>
+        {/* Bouton Près de moi */}
+        <button
+          onClick={userLat !== null ? clearGeo : handleGeolocate}
+          disabled={geoLoading}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium flex-shrink-0 transition-colors"
+          style={{
+            background: userLat !== null ? '#E1F5EE' : 'var(--color-background-secondary)',
+            color: userLat !== null ? '#085041' : 'var(--color-text-secondary)',
+          }}
+          title={userLat !== null ? 'Désactiver la géolocalisation' : 'Trier par distance'}>
+          {geoLoading
+            ? <IconLoader2 size={14} className="animate-spin"/>
+            : <IconCurrentLocation size={14}/>
+          }
+          {geoLoading ? 'Localisation…' : userLat !== null ? 'Près de moi ✓' : 'Près de moi'}
+        </button>
         <button onClick={() => setShowFilters(p => !p)}
           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium flex-shrink-0 transition-colors"
           style={{
@@ -172,6 +236,15 @@ function SearchContent() {
           <IconAdjustments size={14}/> Filtres {hasFilters && '●'}
         </button>
       </div>
+
+      {/* Message d'erreur géolocalisation */}
+      {geoError && (
+        <div className="mb-3 px-4 py-2.5 rounded-xl text-[12px] flex items-center gap-2"
+          style={{ background: '#FCEBEB', color: '#A32D2D', border: '0.5px solid #F5C6C6' }}>
+          <IconMapPin size={13}/>
+          {geoError}
+        </div>
+      )}
 
       {/* Filtres expandables */}
       {showFilters && (
@@ -218,7 +291,7 @@ function SearchContent() {
         <select value={sort} onChange={e => setSort(e.target.value)}
           className="text-[12px] px-3 py-1.5 rounded-lg focus:outline-none"
           style={{ border: '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-primary)', color: 'var(--color-text-secondary)' }}>
-          {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          {sortOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
 
@@ -265,6 +338,12 @@ function SearchContent() {
                     <span className="text-[12px]" style={{ color: 'var(--color-text-secondary)' }}>
                       {g.address}, {g.city}
                     </span>
+                    {g.distance !== null && g.distance !== undefined && (
+                      <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-full ml-1"
+                        style={{ background: '#E1F5EE', color: '#085041' }}>
+                        {g.distance} km
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {svcNames.slice(0, 4).map((s: string) => (

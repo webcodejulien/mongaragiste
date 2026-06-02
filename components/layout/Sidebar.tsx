@@ -45,11 +45,11 @@ const PLAN_LABEL: Record<string, string> = {
 }
 
 function useGarageInfo() {
-  const [garage, setGarage] = useState<{ name: string; slug: string; plan: string } | null>(null)
+  const [garage, setGarage] = useState<{ name: string; slug: string; plan: string; logoUrl?: string | null } | null>(null)
   useEffect(() => {
     fetch('/api/garage/me')
       .then(r => r.json())
-      .then(d => { if (d?.name) setGarage({ name: d.name, slug: d.slug, plan: d.plan ?? 'STARTER' }) })
+      .then(d => { if (d?.name) setGarage({ name: d.name, slug: d.slug, plan: d.plan ?? 'STARTER', logoUrl: d.logoUrl ?? null }) })
       .catch(() => {})
   }, [])
   return garage
@@ -82,10 +82,13 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       {/* Garage info */}
       <div className="px-4 py-3.5" style={{ borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0"
-            style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
-            {garage ? initials(garage.name) : '…'}
-          </div>
+          {garage?.logoUrl
+            ? <img src={garage.logoUrl} alt={garage.name} className="w-9 h-9 rounded-full object-cover flex-shrink-0"/>
+            : <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0"
+                style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
+                {garage ? initials(garage.name) : '…'}
+              </div>
+          }
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium leading-tight truncate" style={{ color: 'var(--color-text-primary)' }}>
               {garage?.name ?? '…'}

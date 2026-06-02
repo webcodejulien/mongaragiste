@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { IconBell, IconSearch, IconChevronDown } from '@tabler/icons-react'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const NOTIF_ICONS: Record<string, string> = {
   NEW_APPOINTMENT:        '📅',
@@ -21,7 +22,8 @@ export function TopBar({ title, subtitle, garageName: garageProp }: TopBarProps)
   const [notifOpen,  setNotifOpen]  = useState(false)
   const [notifs,     setNotifs]     = useState<any[]>([])
   const [loaded,     setLoaded]     = useState(false)
-  const [garageName, setGarageName] = useState(garageProp ?? '')
+  const [garageName,   setGarageName]   = useState(garageProp ?? '')
+  const [garageLogoUrl, setGarageLogoUrl] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/garage/notifications')
@@ -34,7 +36,10 @@ export function TopBar({ title, subtitle, garageName: garageProp }: TopBarProps)
     if (garageProp) { setGarageName(garageProp); return }
     fetch('/api/garage/me')
       .then(r => r.json())
-      .then(d => { if (d?.name) setGarageName(d.name) })
+      .then(d => {
+        if (d?.name) setGarageName(d.name)
+        if (d?.logoUrl) setGarageLogoUrl(d.logoUrl)
+      })
       .catch(() => {})
   }, [garageProp])
 
@@ -65,6 +70,9 @@ export function TopBar({ title, subtitle, garageName: garageProp }: TopBarProps)
       </div>
 
       <div className="flex items-center gap-2.5">
+        {/* Theme toggle */}
+        <ThemeToggle />
+
         {/* Notifications */}
         <div className="relative">
           <button
@@ -151,10 +159,13 @@ export function TopBar({ title, subtitle, garageName: garageProp }: TopBarProps)
         {/* Avatar */}
         <div className="flex items-center gap-2 pl-2.5"
           style={{ borderLeft: '0.5px solid var(--color-border-tertiary)' }}>
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium"
-            style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
-            {garageName.charAt(0)}
-          </div>
+          {garageLogoUrl
+            ? <img src={garageLogoUrl} alt={garageName} className="w-7 h-7 rounded-full object-cover flex-shrink-0"/>
+            : <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium"
+                style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
+                {garageName.charAt(0)}
+              </div>
+          }
           <span className="text-[13px] font-medium hidden sm:block" style={{ color: 'var(--color-text-primary)' }}>
             {garageName}
           </span>
