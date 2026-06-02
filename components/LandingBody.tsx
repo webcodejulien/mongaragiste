@@ -115,10 +115,9 @@ export function LandingBody({ garages, garageCount, appointmentCount, cityCount 
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <Link href="/search" className="text-[13px]" style={{ color:'var(--color-text-secondary)' }}>{T.navSearch}</Link>
-            <Link href="/garagiste" className="text-[13px] font-medium" style={{ color:'#1D9E75' }}>{T.navPro}</Link>
             <Link href="/login" className="text-[13px]" style={{ color:'var(--color-text-secondary)' }}>{T.navLogin}</Link>
             <LangToggle />
-            <Link href="/register/garage" className="px-4 py-2 rounded-lg text-[13px] font-medium text-white" style={{ background:'#1D9E75' }}>
+            <Link href="/garagiste" className="px-4 py-2 rounded-lg text-[13px] font-medium text-white" style={{ background:'#1D9E75' }}>
               {T.navRegister}
             </Link>
           </nav>
