@@ -60,8 +60,8 @@ export function LandingBody({ garages, garageCount, appointmentCount, cityCount 
     searchSvc:    nl ? 'Alle diensten'       : 'Tous les services',
     searchBtn:    nl ? 'Zoeken'              : 'Rechercher',
     quickSearch:  nl ? 'Snel zoeken:'        : 'Recherche rapide :',
-    statLabels:   nl ? ['Geverifieerde garages','Gemiddelde score','Afspraken','Steden']
-                     : ['Garages vérifiés','Note moyenne','RDV pris','Villes couvertes'],
+    statLabels:   nl ? ['Geverifieerde garages','Reservaties 24/7','Afspraken','Steden']
+                     : ['Garages vérifiés','Réservations 24/7','RDV pris','Villes couvertes'],
     garagesTitle: nl ? 'Beschikbare garages' : 'Garages disponibles',
     garagesSub:   nl ? 'Gesorteerd op beoordeling' : 'Triés par note',
     seeAll:       nl ? 'Alles zien'          : 'Voir tout',
@@ -100,7 +100,7 @@ export function LandingBody({ garages, garageCount, appointmentCount, cityCount 
 
   const STATS = [
     { value: garageCount > 0 ? `${garageCount}+` : '—', label: T.statLabels[0] },
-    { value: '4.8★',                                      label: T.statLabels[1] },
+    { value: '24/7',                                       label: T.statLabels[1] },
     { value: appointmentCount > 0 ? `${appointmentCount}+` : '—', label: T.statLabels[2] },
     { value: cityCount > 0 ? `${cityCount}` : '—',       label: T.statLabels[3] },
   ]

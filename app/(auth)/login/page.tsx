@@ -38,16 +38,18 @@ function LoginForm() {
       const session = await sessionRes.json()
       const role = session?.user?.role
       const cb = params.get('callbackUrl')
-      if (cb) router.push(cb)
+      if (cb && cb !== '/garage') router.push(cb)
       else if (role === 'GARAGE') router.push('/garage')
-      else router.push('/mon-compte')
+      else if (role === 'CLIENT') router.push('/client')
+      else if (role === 'ADMIN') router.push('/admin')
+      else router.push('/')
     }
   }
 
   async function handleGoogle() {
     setGLoading(true)
     try {
-      await signIn('google', { callbackUrl: '/garage' })
+      await signIn('google', { callbackUrl: '/auth/role-redirect' })
     } catch {
       setGoogleUnavailable(true)
       setGLoading(false)
