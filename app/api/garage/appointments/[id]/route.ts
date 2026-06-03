@@ -42,7 +42,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (clientPhone) {
       sendSMS({
         to: clientPhone,
-        content: `RDV confirmé ✓ ${appt.garage.name} — ${appt.service?.name} le ${dateStr} à ${appt.startTime}. Pour annuler: mongaragiste-app.vercel.app/mon-compte`,
+        content: `RDV confirmé ✓ ${appt.garage.name} — ${appt.service?.name} le ${dateStr} à ${appt.startTime}. Pour annuler: mongaragiste.app/mon-compte`,
       }).catch(console.error)
     }
 
@@ -71,7 +71,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (clientPhone) {
       sendSMS({
         to: clientPhone,
-        content: `RDV annulé — ${appt.garage.name} — ${appt.service?.name} le ${dateStr} à ${appt.startTime}. Reprenez RDV sur mongaragiste-app.vercel.app`,
+        content: `RDV annulé — ${appt.garage.name} — ${appt.service?.name} le ${dateStr} à ${appt.startTime}. Reprenez RDV sur mongaragiste.app`,
       }).catch(console.error)
     }
 

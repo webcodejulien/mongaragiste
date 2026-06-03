@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 
-const BASE = process.env.NEXTAUTH_URL || 'https://mongaragiste-app.vercel.app'
+const BASE = process.env.NEXTAUTH_URL || 'https://mongaragiste.app'
 
 export default function robots(): MetadataRoute.Robots {
   return {

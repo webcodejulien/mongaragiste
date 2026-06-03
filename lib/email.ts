@@ -1,6 +1,6 @@
 const BREVO_API = 'https://api.brevo.com/v3/smtp/email'
 const API_KEY   = process.env.BREVO_API_KEY
-const SENDER    = process.env.BREVO_SENDER ?? 'noreply@mongaragiste.app'
+const SENDER    = process.env.BREVO_SENDER ?? 'support@mongaragiste.app'
 const SENDER_NAME = 'MonGaragiste'
 
 interface SendEmailParams {
@@ -82,7 +82,7 @@ export function tplBookingRequest({
           <div style="margin-bottom:10px"><span style="color:#888;font-size:12px">Service demandé</span><br><strong>${serviceName}</strong></div>
           <div><span style="color:#888;font-size:12px">Date & heure souhaitées</span><br><strong>${date} à ${time}</strong></div>
         </div>
-        <a href="${process.env.NEXTAUTH_URL ?? 'https://mongaragiste-app.vercel.app'}/garage/appointments"
+        <a href="${process.env.NEXTAUTH_URL ?? 'https://mongaragiste.app'}/garage/appointments"
           style="display:inline-block;background:#1D9E75;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px">
           Voir et confirmer le RDV →
         </a>
@@ -157,7 +157,7 @@ export function tplReviewRequest({
 }: {
   clientName: string; garageName: string; garageSlug: string; appointmentId?: string
 }) {
-  const baseUrl   = process.env.NEXTAUTH_URL ?? 'https://mongaragiste-app.vercel.app'
+  const baseUrl   = process.env.NEXTAUTH_URL ?? 'https://mongaragiste.app'
   const reviewUrl = appointmentId
     ? `${baseUrl}/garage/${garageSlug}/review?appointment=${appointmentId}`
     : `${baseUrl}/garage/${garageSlug}/review`
@@ -205,7 +205,7 @@ export function tplReminder24h({
   clientName: string; garageName: string; serviceName: string
   date: string; time: string; garagePhone?: string; garageAddress?: string
 }) {
-  const baseUrl = process.env.NEXTAUTH_URL ?? 'https://mongaragiste-app.vercel.app'
+  const baseUrl = process.env.NEXTAUTH_URL ?? 'https://mongaragiste.app'
   return {
     subject: `Rappel — Votre RDV demain chez ${garageName}`,
     html: `
