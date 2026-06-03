@@ -6,10 +6,10 @@ import { LangToggle, useLang } from '@/components/LangToggle'
 const CONTENT = {
   fr: {
     badge: '🔧 Conçu pour les garagistes belges',
-    heroTitle1: 'Arrêtez de perdre du temps.',
-    heroTitle2: 'Vos clients réservent,',
-    heroTitle3: 'vous travaillez.',
-    heroSub: "MonGaragiste s'occupe de votre agenda, vos rappels, vos factures et votre réputation en ligne. Vous vous concentrez sur ce que vous faites de mieux : la mécanique.",
+    heroTitle1: 'Votre garage, disponible',
+    heroTitle2: '24h/24 — même quand',
+    heroTitle3: 'vous êtes sous une voiture.',
+    heroSub: "MonGaragiste gère votre agenda, vos rappels, vos factures et votre réputation en ligne. Vous pouvez vous consacrer à ce que vous faites de mieux : la mécanique.",
     ctaPrimary: 'Inscrire mon garage →',
     ctaSecondary: 'Se connecter',
     heroBullets: '✓ En ligne en 2 minutes  ·  ✓ Sans formation technique  ·  ✓ Support belge',
@@ -65,8 +65,8 @@ const CONTENT = {
       {
         n: '03',
         icon: '🔧',
-        title: 'Travaillez, on gère le reste',
-        desc: "Confirmations, rappels, historique clients, factures — tout est automatisé. Vous vous concentrez sur la mécanique.",
+        title: 'Consacrez-vous à votre métier',
+        desc: "Confirmations, rappels, historique clients, factures — tout est automatisé. Vous restez pleinement disponible pour votre activité.",
       },
     ],
 
@@ -159,8 +159,8 @@ const CONTENT = {
       ],
     ],
 
-    ctaFinalTitle: "Votre garage mérite mieux qu'un agenda papier.",
-    ctaFinalSub: "Rejoignez les garages belges qui ont modernisé leur prise de rendez-vous et récupèrent des heures chaque semaine.",
+    ctaFinalTitle: 'Simplifiez la gestion de votre garage dès aujourd'''hui.',
+    ctaFinalSub: "Des centaines de garagistes belges font confiance à MonGaragiste pour gérer leurs rendez-vous en toute simplicité.",
     ctaFinalBtn: 'Inscrire mon garage →',
     ctaFinalNote: 'Sans engagement · Résiliable à tout moment · Support belge inclus',
 
@@ -174,10 +174,10 @@ const CONTENT = {
   },
   nl: {
     badge: '🔧 Ontworpen voor Belgische garagehouders',
-    heroTitle1: 'Stop met tijd verliezen.',
-    heroTitle2: 'Uw klanten boeken,',
-    heroTitle3: 'u werkt.',
-    heroSub: 'MonGaragiste beheert uw agenda, herinneringen, facturen en online reputatie. U concentreert zich op wat u het beste doet: mechanica.',
+    heroTitle1: 'Uw garage, beschikbaar',
+    heroTitle2: '24u/24 — ook wanneer',
+    heroTitle3: 'u onder een wagen ligt.',
+    heroSub: 'MonGaragiste beheert uw agenda, herinneringen, facturen en online reputatie. U kunt zich volledig wijden aan uw vak: mechanica.',
     ctaPrimary: 'Mijn garage inschrijven →',
     ctaSecondary: 'Inloggen',
     heroBullets: '✓ Online in 2 minuten  ·  ✓ Geen technische opleiding  ·  ✓ Belgische support',
