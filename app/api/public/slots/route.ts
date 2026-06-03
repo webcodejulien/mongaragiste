@@ -72,9 +72,13 @@ export async function GET(req: NextRequest) {
   })
 
   // Filtrer les créneaux passés si la date est aujourd'hui
-  const now        = new Date()
-  const isToday    = dateStr === now.toISOString().split('T')[0]
-  const nowMinutes = isToday ? now.getHours() * 60 + now.getMinutes() : 0
+  // Le serveur tourne en UTC — on utilise Europe/Brussels pour comparer correctement
+  const now = new Date()
+  const nowBrussels = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Brussels' }))
+  const todayBrussels = `${nowBrussels.getFullYear()}-${String(nowBrussels.getMonth()+1).padStart(2,'0')}-${String(nowBrussels.getDate()).padStart(2,'0')}`
+  const isToday    = dateStr === todayBrussels
+  // Ajoute 15 min de marge pour éviter de proposer un créneau qui commence dans 1 min
+  const nowMinutes = isToday ? nowBrussels.getHours() * 60 + nowBrussels.getMinutes() + 15 : 0
 
   // Filtrer les créneaux indisponibles
   // Un créneau est dispo si le nombre de RDV qui se chevauchent < mechanicCount
