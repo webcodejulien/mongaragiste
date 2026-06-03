@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { Logo } from '@/components/Logo'
 import { IconMail, IconClock, IconMessageCircle } from '@tabler/icons-react'
 import { useLang } from '@/components/LangToggle'
 import { LangToggle } from '@/components/LangToggle'
@@ -99,10 +100,7 @@ export default function ContactPage() {
       {/* Nav */}
       <header style={{ background: 'var(--color-background-primary)', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: '#1D9E75' }}>M</div>
-            <span className="text-[15px] font-bold" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
-          </Link>
+          <Logo size="sm" />
           <div className="flex items-center gap-3">
             <LangToggle />
             <Link href="/" className="text-[13px]" style={{ color: 'var(--color-text-secondary)' }}>{T.back}</Link>

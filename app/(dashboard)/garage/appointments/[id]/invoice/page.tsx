@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { IconPrinter, IconArrowLeft, IconDownload } from '@tabler/icons-react'
+import { Logo } from '@/components/Logo'
 
 export default function InvoicePage() {
   const params   = useParams()
@@ -72,10 +73,8 @@ export default function InvoicePage() {
           {/* En-tête */}
           <div className="flex items-start justify-between mb-10">
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                  style={{ background: '#1D9E75' }}>M</div>
-                <span className="text-[18px] font-bold" style={{ color: '#1D9E75' }}>MonGaragiste</span>
+              <div className="mb-3">
+                <Logo size="md" />
               </div>
               <p className="text-[16px] font-bold text-gray-900">{garage.name}</p>
               <p className="text-[13px] text-gray-500 mt-0.5">{garage.address}</p>

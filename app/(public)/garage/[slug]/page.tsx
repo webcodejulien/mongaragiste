@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Logo } from '@/components/Logo'
 import {
   IconMapPin, IconPhone, IconClock, IconStar, IconStarFilled,
   IconCheck, IconArrowLeft, IconCar, IconUser, IconLoader2,
@@ -178,10 +179,7 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
     <div className="min-h-screen" style={{background:'var(--color-background-secondary)'}}>
       <header className="sticky top-0 z-30 h-14" style={{background:'var(--color-background-primary)',borderBottom:'0.5px solid var(--color-border-tertiary)'}}>
         <div className="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full" style={{background:'#1D9E75'}}/>
-            <span className="text-[14px] font-semibold" style={{color:'var(--color-text-primary)'}}>MonGaragiste</span>
-          </Link>
+          <Logo size="sm" />
           <Link href="/search" className="flex items-center gap-1 text-[12px]" style={{color:'var(--color-text-secondary)'}}>
             <IconArrowLeft size={13}/> Retour
           </Link>

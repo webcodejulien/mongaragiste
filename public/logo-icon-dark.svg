@@ -1,0 +1,8 @@
+<svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond sombre -->
+  <rect width="44" height="44" rx="10" fill="#111827"/>
+  <!-- Lettre M en vert -->
+  <polygon points="8,34 8,10 22,23 36,10 36,34 32,34 32,15 22,27 12,15 12,34" fill="#1D9E75"/>
+  <!-- Accent -->
+  <rect x="8" y="36" width="28" height="2.5" rx="1.25" fill="rgba(29,158,117,0.4)"/>
+</svg>
