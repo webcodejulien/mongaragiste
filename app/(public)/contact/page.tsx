@@ -148,8 +148,8 @@ export default function ContactPage() {
               <p className="text-[13px] mb-2" style={{ color: 'var(--color-text-secondary)' }}>
                 {T.cardGaragisteBody}
               </p>
-              <a href="mailto:pro@mongaragiste.app" className="text-[13px] font-medium" style={{ color: '#1D9E75' }}>
-                pro@mongaragiste.app
+              <a href="mailto:support@mongaragiste.app" className="text-[13px] font-medium" style={{ color: '#1D9E75' }}>
+                support@mongaragiste.app
               </a>
             </div>
           </div>

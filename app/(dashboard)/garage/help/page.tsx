@@ -19,7 +19,7 @@ const FAQS = [
   },
   {
     q: "Un client ne reçoit pas ses emails de confirmation ?",
-    a: "Vérifiez que son adresse email est correcte dans la fiche du rendez-vous. Les emails sont envoyés depuis noreply@mongaragiste.app — demandez au client de vérifier ses spams.",
+    a: "Vérifiez que son adresse email est correcte dans la fiche du rendez-vous. Les emails sont envoyés depuis support@mongaragiste.app — demandez au client de vérifier ses spams.",
   },
   {
     q: 'Comment annuler un rendez-vous ?',
