@@ -121,6 +121,15 @@ export default function SettingsPage() {
       if (!res.ok) {
         setSaveError(data.error || 'Erreur lors de la sauvegarde.')
       } else {
+        // Mettre à jour le state avec les données fraîches de la DB
+        if (data.services) setServices(data.services)
+        if (data.schedules?.length) {
+          setSchedules(DAYS.map((_,i) => {
+            const s = data.schedules.find((x:any) => x.dayOfWeek === i+1)
+            return s ? { dayOfWeek:i+1, openTime:s.openTime, closeTime:s.closeTime, isClosed:s.isClosed }
+                     : { dayOfWeek:i+1, openTime:'08:00', closeTime:'18:00', isClosed:i>=5 }
+          }))
+        }
         setSaved(true)
         setTimeout(() => setSaved(false), 2500)
       }

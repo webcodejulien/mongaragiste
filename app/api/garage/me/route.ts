@@ -30,16 +30,22 @@ export async function PATCH(req: NextRequest) {
       ...(iban          !== undefined && { iban: iban || null }),
     }
 
-    // Geocode automatically when address or city changes
+    // Geocode avec timeout 4s — non bloquant si ça échoue
     if (address !== undefined || city !== undefined) {
-      const q = encodeURIComponent(`${address ?? garage.address} ${city ?? garage.city} Belgium`)
-      const geo = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, {
-        headers: { 'User-Agent': 'MonGaragiste/1.0' },
-      }).then(r => r.json()).catch(() => [])
-      if (geo[0]) {
-        data.lat = parseFloat(geo[0].lat)
-        data.lng = parseFloat(geo[0].lon)
-      }
+      try {
+        const q = encodeURIComponent(`${address ?? garage.address} ${city ?? garage.city} Belgium`)
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), 4000)
+        const geo = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`,
+          { headers: { 'User-Agent': 'MonGaragiste/1.0' }, signal: controller.signal }
+        ).then(r => r.json()).catch(() => [])
+        clearTimeout(timer)
+        if (Array.isArray(geo) && geo[0]) {
+          data.lat = parseFloat(geo[0].lat)
+          data.lng = parseFloat(geo[0].lon)
+        }
+      } catch { /* geocoding échoué — on continue sans lat/lng */ }
     }
 
     const updated = await prisma.garage.update({
@@ -92,7 +98,15 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    return NextResponse.json(updated)
+    // Retourner les données fraîches avec services et schedules
+    const fresh = await prisma.garage.findUnique({
+      where: { id: garage.id },
+      include: {
+        services:  { orderBy: { name: 'asc' } },
+        schedules: { orderBy: { dayOfWeek: 'asc' } },
+      },
+    })
+    return NextResponse.json(fresh)
   } catch (err) {
     console.error('[garage/me PATCH]', err)
     return NextResponse.json({ error: 'Erreur serveur.' }, { status: 500 })
