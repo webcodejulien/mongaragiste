@@ -17,7 +17,9 @@ function LoginForm() {
   const [gLoading, setGLoading] = useState(false)
   const [error, setError]       = useState(
     params.get('error') === 'OAuthAccountNotLinked'
-      ? 'Ce compte Google est déjà lié à un autre utilisateur.'
+      ? 'Cet email existe déjà. Connectez-vous avec votre email et mot de passe.'
+      : params.get('error') === 'Configuration'
+      ? 'Erreur de configuration. Réessayez ou contactez le support.'
       : params.get('error')
       ? 'Une erreur est survenue lors de la connexion.'
       : ''
