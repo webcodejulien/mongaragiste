@@ -88,7 +88,7 @@ export default function BillingPage() {
   const mailtoBody = encodeURIComponent(
     `Bonjour,\n\nJe souhaite changer mon abonnement MonGaragiste.\n\nGarage : ${garage?.name ?? ''}\nPlan actuel : ${currentLabel}\nNouveau plan souhaité : \n\nCordialement`
   )
-  const mailto = `mailto:contact@mongaragiste.app?subject=Changement%20de%20plan&body=${mailtoBody}`
+  const mailto = `mailto:support@mongaragiste.app?subject=Changement%20de%20plan&body=${mailtoBody}`
 
   return (
     <div className="flex flex-col flex-1">
@@ -197,7 +197,7 @@ export default function BillingPage() {
           <p className="text-[11px] mt-3 text-center" style={{ color: 'var(--color-text-tertiary)' }}>
             Pour changer de plan, contactez-nous à{' '}
             <a href={mailto} className="underline" style={{ color: '#1D9E75' }}>
-              contact@mongaragiste.app
+              support@mongaragiste.app
             </a>
           </p>
         </div>

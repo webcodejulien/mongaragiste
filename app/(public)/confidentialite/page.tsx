@@ -14,7 +14,7 @@ const CONTENT = {
     sections: [
       {
         title: '1. Responsable du traitement',
-        content: `MonGaragiste SRL est responsable du traitement de vos données personnelles. Contact DPO : privacy@mongaragiste.app`,
+        content: `MonGaragiste SRL est responsable du traitement de vos données personnelles. Contact DPO : support@mongaragiste.app`,
       },
       {
         title: '2. Données collectées',
@@ -38,7 +38,7 @@ const CONTENT = {
       },
       {
         title: '7. Vos droits (RGPD)',
-        content: `Conformément au RGPD, vous disposez des droits suivants :\n• Droit d'accès à vos données\n• Droit de rectification\n• Droit à l'effacement (« droit à l'oubli »)\n• Droit à la portabilité\n• Droit d'opposition\n• Droit à la limitation du traitement\n\nPour exercer ces droits : privacy@mongaragiste.app`,
+        content: `Conformément au RGPD, vous disposez des droits suivants :\n• Droit d'accès à vos données\n• Droit de rectification\n• Droit à l'effacement (« droit à l'oubli »)\n• Droit à la portabilité\n• Droit d'opposition\n• Droit à la limitation du traitement\n\nPour exercer ces droits : support@mongaragiste.app`,
       },
       {
         title: '8. Cookies',
@@ -63,7 +63,7 @@ const CONTENT = {
     sections: [
       {
         title: '1. Verwerkingsverantwoordelijke',
-        content: `MonGaragiste SRL is de verwerkingsverantwoordelijke voor uw persoonsgegevens. Contact DPO: privacy@mongaragiste.app`,
+        content: `MonGaragiste SRL is de verwerkingsverantwoordelijke voor uw persoonsgegevens. Contact DPO: support@mongaragiste.app`,
       },
       {
         title: '2. Verzamelde gegevens',
@@ -87,7 +87,7 @@ const CONTENT = {
       },
       {
         title: '7. Uw rechten (AVG)',
-        content: `Overeenkomstig de AVG beschikt u over de volgende rechten:\n• Recht van toegang tot uw gegevens\n• Recht op rectificatie\n• Recht op wissing (« recht om vergeten te worden »)\n• Recht op overdraagbaarheid\n• Recht van bezwaar\n• Recht op beperking van de verwerking\n\nOm deze rechten uit te oefenen: privacy@mongaragiste.app`,
+        content: `Overeenkomstig de AVG beschikt u over de volgende rechten:\n• Recht van toegang tot uw gegevens\n• Recht op rectificatie\n• Recht op wissing (« recht om vergeten te worden »)\n• Recht op overdraagbaarheid\n• Recht van bezwaar\n• Recht op beperking van de verwerking\n\nOm deze rechten uit te oefenen: support@mongaragiste.app`,
       },
       {
         title: '8. Cookies',
