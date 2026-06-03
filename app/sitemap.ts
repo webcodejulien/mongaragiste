@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 import { prisma } from '@/lib/prisma'
 
-const BASE = process.env.NEXTAUTH_URL || 'https://mongaragiste-app.vercel.app'
+const BASE = process.env.NEXTAUTH_URL || 'https://mongaragiste.app'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Pages statiques

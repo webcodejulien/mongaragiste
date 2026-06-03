@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   },
   description: 'Trouvez et réservez votre garagiste en ligne. Vidange, freins, pneus, révision — choisissez votre créneau directement.',
   keywords: ['garage', 'garagiste', 'réservation', 'rendez-vous', 'voiture', 'entretien', 'Belgique', 'Bruxelles'],
-  metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://mongaragiste-app.vercel.app'),
+  metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://mongaragiste.app'),
   openGraph: {
     siteName: 'MonGaragiste',
     locale:   'fr_BE',
