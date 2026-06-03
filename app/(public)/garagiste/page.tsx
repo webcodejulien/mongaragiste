@@ -361,7 +361,7 @@ export default function GaragistePage() {
           <Link href="/" className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#1D9E75' }} />
             <span className="text-[15px] font-bold" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
-            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full ml-1" style={{ background: '#E1F5EE', color: '#085041' }}>Pro</span>
+
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-[13px]" style={{ color: 'var(--color-text-secondary)' }}>
