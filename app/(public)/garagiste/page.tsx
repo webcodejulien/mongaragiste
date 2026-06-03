@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { LangToggle, useLang } from '@/components/LangToggle'
+import { Logo } from '@/components/Logo'
 
 const CONTENT = {
   fr: {
@@ -358,11 +359,7 @@ export default function GaragistePage() {
       {/* Nav */}
       <nav className="sticky top-0 z-30 h-14" style={{ background: 'var(--color-background-primary)', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="max-w-6xl mx-auto px-5 h-full flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#1D9E75' }} />
-            <span className="text-[15px] font-bold" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
-
-          </Link>
+          <Logo size="sm" />
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-[13px]" style={{ color: 'var(--color-text-secondary)' }}>
               {T.navLogin}

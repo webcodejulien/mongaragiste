@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { TopBar } from '@/components/layout/TopBar'
 import { IconDownload, IconPrinter, IconShare, IconCopy, IconCheck } from '@tabler/icons-react'
+import { Logo } from '@/components/Logo'
 
 export default function QRCodePage() {
   const [garage, setGarage] = useState<any>(null)
@@ -84,11 +85,8 @@ export default function QRCodePage() {
 
             {/* Header vert */}
             <div className="p-6 text-white text-center" style={{ background: '#1D9E75' }}>
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
-                  <span className="text-[11px] font-bold" style={{ color: '#1D9E75' }}>M</span>
-                </div>
-                <span className="text-[15px] font-bold">MonGaragiste</span>
+              <div className="flex items-center justify-center mb-1">
+                <Logo size="sm" variant="white" />
               </div>
               <p className="text-[12px] opacity-80">Réservez votre rendez-vous en ligne</p>
             </div>
