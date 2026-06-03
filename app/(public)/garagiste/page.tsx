@@ -159,7 +159,7 @@ const CONTENT = {
       ],
     ],
 
-    ctaFinalTitle: 'Simplifiez la gestion de votre garage dès aujourd'''hui.',
+    ctaFinalTitle: "Simplifiez la gestion de votre garage dès aujourd'hui.",
     ctaFinalSub: "Des centaines de garagistes belges font confiance à MonGaragiste pour gérer leurs rendez-vous en toute simplicité.",
     ctaFinalBtn: 'Inscrire mon garage →',
     ctaFinalNote: 'Sans engagement · Résiliable à tout moment · Support belge inclus',
