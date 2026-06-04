@@ -42,7 +42,7 @@ function LoginForm() {
       const cb = params.get('callbackUrl')
       if (cb && cb !== '/garage') router.push(cb)
       else if (role === 'GARAGE') router.push('/garage')
-      else if (role === 'CLIENT') router.push('/client')
+      else if (role === 'CLIENT') router.push('/mon-compte')
       else if (role === 'ADMIN') router.push('/admin')
       else router.push('/')
     }

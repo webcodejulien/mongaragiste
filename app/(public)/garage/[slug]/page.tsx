@@ -55,7 +55,9 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
   const [phone,      setPhone]      = useState('')
   const [plate,      setPlate]      = useState('')
   const [vehicle,    setVehicle]    = useState('')
+  const [vin,        setVin]        = useState('')
   const [notes,      setNotes]      = useState('')
+  const [engagé,     setEngagé]     = useState(false)
   const [submitting,   setSubmitting]   = useState(false)
   const [done,         setDone]         = useState(false)
   const [bookingError, setBookingError] = useState('')
@@ -89,7 +91,8 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
   function canNext() {
     if (bStep===1) return !!selService
     if (bStep===2) return !!selTime
-    if (bStep===3) return !!firstName && !!lastName && !!email && !!plate && !!vehicle
+    if (bStep===3) return !!firstName && !!lastName && !!email && !!phone && !!plate && !!vehicle
+    if (bStep===4) return engagé
     return true
   }
 
@@ -114,7 +117,7 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
           endTime:     calcEndTime(selTime, selService.duration),
           vehiclePlate: plate,
           vehicleModel: vehicle,
-          notes,
+          notes: `${vin ? `N° châssis: ${vin}\n` : ''}${notes}`.trim(),
           firstName, lastName, email, phone,
         }),
       })
@@ -436,6 +439,7 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                         <p className="text-[12px] font-medium pb-1" style={{color:'var(--color-text-secondary)',borderBottom:'0.5px solid var(--color-border-tertiary)'}}>🚗 Véhicule</p>
                         <FI label="Immatriculation *" value={plate} onChange={setPlate} placeholder="1-ABC-123" upper/>
                         <FI label="Modèle *" value={vehicle} onChange={setVehicle} placeholder="ex: Renault Clio 2021"/>
+                        <FI label="N° de châssis (VIN)" value={vin} onChange={setVin} placeholder="VIN17CHIFFRES (optionnel)" upper/>
                         <FI label="Notes (optionnel)" value={notes} onChange={setNotes} placeholder="Infos complémentaires…"/>
                         <p className="text-[12px] font-medium pt-1 pb-1" style={{color:'var(--color-text-secondary)',borderBottom:'0.5px solid var(--color-border-tertiary)'}}>👤 Vos coordonnées</p>
                         <div className="grid grid-cols-2 gap-2">
@@ -443,7 +447,7 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                           <FI label="Nom *" value={lastName} onChange={setLastName} placeholder="Dupont"/>
                         </div>
                         <FI label="Email *" type="email" value={email} onChange={setEmail} placeholder="vous@exemple.com"/>
-                        <FI label="Téléphone" type="tel" value={phone} onChange={setPhone} placeholder="+32 470 12 34 56"/>
+                        <FI label="Téléphone *" type="tel" value={phone} onChange={setPhone} placeholder="+32 470 12 34 56"/>
                       </div>
                     )}
 
@@ -456,9 +460,15 @@ export default function GarageProfilePage({ params }: { params: { slug: string }
                           <Row icon="👤" label={`${firstName} ${lastName}`} sub={email}/>
                         </div>
                         {notes && <p className="text-[12px] italic" style={{color:'var(--color-text-secondary)'}}>« {notes} »</p>}
-                        <p className="text-[11px] leading-relaxed" style={{color:'var(--color-text-tertiary)'}}>
-                          En confirmant, vous acceptez que le garage vous contacte pour confirmer ce rendez-vous.
-                        </p>
+                        {/* Engagement anti no-show */}
+                        <label className="flex items-start gap-2.5 cursor-pointer p-3 rounded-lg"
+                          style={{background: engagé ? '#E1F5EE' : 'var(--color-background-secondary)', border: `0.5px solid ${engagé ? '#1D9E75' : 'var(--color-border-tertiary)'}`}}>
+                          <input type="checkbox" checked={engagé} onChange={e => setEngagé(e.target.checked)}
+                            className="mt-0.5 flex-shrink-0" style={{accentColor:'#1D9E75'}}/>
+                          <span className="text-[12px] leading-relaxed" style={{color:'var(--color-text-secondary)'}}>
+                            Je m'engage à me présenter à ce rendez-vous ou à l'annuler <strong>au moins 24h à l'avance</strong>. En cas d'absence répétée sans prévenir, le garage peut refuser mes futures demandes.
+                          </span>
+                        </label>
                       </div>
                     )}
                   </div>

@@ -12,7 +12,7 @@ export default function RoleRedirectPage() {
     if (status === 'loading') return
     const role = (session?.user as any)?.role
     if (role === 'GARAGE') router.replace('/garage')
-    else if (role === 'CLIENT') router.replace('/client')
+    else if (role === 'CLIENT') router.replace('/mon-compte')
     else if (role === 'ADMIN') router.replace('/admin')
     else router.replace('/')
   }, [session, status, router])
