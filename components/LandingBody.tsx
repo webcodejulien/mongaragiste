@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Logo } from '@/components/Logo'
 import { IconSearch, IconMapPin, IconStar, IconShieldCheck, IconClock, IconArrowRight, IconPhone } from '@tabler/icons-react'
 import { useLang, LangToggle } from './LangToggle'
 
@@ -112,8 +113,7 @@ export function LandingBody({ garages, garageCount, appointmentCount, cityCount 
       <header className="sticky top-0 z-30 h-14" style={{ background:'var(--color-background-primary)', borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full" style={{ background:'#1D9E75' }}/>
-            <span className="text-[15px] font-semibold" style={{ color:'var(--color-text-primary)' }}>MonGaragiste</span>
+            <Logo size="sm" href="/" />
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <Link href="/search" className="text-[13px]" style={{ color:'var(--color-text-secondary)' }}>{T.navSearch}</Link>
@@ -313,9 +313,7 @@ export function LandingBody({ garages, garageCount, appointmentCount, cityCount 
       <footer style={{ background:'var(--color-background-primary)', borderTop:'0.5px solid var(--color-border-tertiary)' }}>
         <div className="max-w-6xl mx-auto px-4 py-8 flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background:'#1D9E75' }}/>
-            <span className="text-[13px] font-semibold" style={{ color:'var(--color-text-primary)' }}>MonGaragiste</span>
-            <span className="text-[12px]" style={{ color:'var(--color-text-tertiary)' }}>{T.footerTagline}</span>
+            <Logo size="sm" href="/" />
           </div>
           <div className="flex items-center gap-5 flex-wrap">
             {T.footerLinks.map(l => (

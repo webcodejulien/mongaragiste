@@ -183,19 +183,39 @@ export function tplReviewRequest({
 }
 
 export async function sendSMS({ to, content }: { to: string; content: string }) {
-  if (!API_KEY || !to) return
-  // Nettoyer le numéro — format E.164
-  const phone = to.replace(/\s/g, '').replace(/^0/, '+32')
-  if (!phone.startsWith('+')) return // ignorer si pas international
+  if (!API_KEY || !to) {
+    console.log('[sms] Skipped — no API_KEY or no recipient')
+    return
+  }
+  // Nettoyer le numéro — format E.164 belge
+  let phone = to.replace(/\s/g, '').replace(/[\-\.\(\)]/g, '')
+  if (phone.startsWith('0')) phone = '+32' + phone.slice(1)
+  if (!phone.startsWith('+')) phone = '+32' + phone
+  if (phone.length < 10) {
+    console.log('[sms] Invalid phone number:', phone)
+    return
+  }
   try {
+    const body = {
+      sender: 'MnGaragiste', // max 11 chars, alphanumeric
+      recipient: phone,
+      content,
+      type: 'transactional',
+    }
+    console.log('[sms] Sending to', phone, '...')
     const res = await fetch('https://api.brevo.com/v3/transactionalSMS/sms', {
       method: 'POST',
       headers: { 'api-key': API_KEY!, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sender: 'MonGarage', recipient: phone, content }),
+      body: JSON.stringify(body),
     })
-    if (!res.ok) console.error('[sms] Brevo error:', await res.text())
+    const responseText = await res.text()
+    if (!res.ok) {
+      console.error('[sms] Brevo error', res.status, ':', responseText)
+    } else {
+      console.log('[sms] Sent successfully to', phone)
+    }
   } catch (err) {
-    console.error('[sms] error:', err)
+    console.error('[sms] Network error:', err)
   }
 }
 

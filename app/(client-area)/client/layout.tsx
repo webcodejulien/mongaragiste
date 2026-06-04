@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Logo } from '@/components/Logo'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import {
@@ -22,8 +23,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       <div className="flex items-center justify-between px-4 py-4"
         style={{ borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="flex items-center gap-2">
-          <IconCircleFilled size={8} style={{ color: '#1D9E75' }} />
-          <span className="text-[14px] font-medium" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
+          <Logo size="sm" href="/" />
         </div>
         {onClose && (
           <button onClick={onClose} style={{ color: 'var(--color-text-secondary)' }}>
@@ -111,8 +111,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <div className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4"
         style={{ background: 'var(--color-background-primary)', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="flex items-center gap-2">
-          <IconCircleFilled size={8} style={{ color: '#1D9E75' }} />
-          <span className="text-[14px] font-medium" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
+          <Logo size="sm" href="/" />
         </div>
         <button onClick={() => setMobileOpen(true)} style={{ color: 'var(--color-text-secondary)' }}>
           <IconMenu2 size={22} />
