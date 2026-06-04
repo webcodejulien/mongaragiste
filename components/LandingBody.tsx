@@ -112,9 +112,7 @@ export function LandingBody({ garages, garageCount, appointmentCount, cityCount 
       {/* HEADER */}
       <header className="sticky top-0 z-30 h-14" style={{ background:'var(--color-background-primary)', borderBottom:'0.5px solid var(--color-border-tertiary)' }}>
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Logo size="sm" href="/" />
-          </Link>
+          <Logo size="sm" href="/" />
           <nav className="hidden md:flex items-center gap-6">
             <Link href="/search" className="text-[13px]" style={{ color:'var(--color-text-secondary)' }}>{T.navSearch}</Link>
             <Link href="/login" className="text-[13px]" style={{ color:'var(--color-text-secondary)' }}>{T.navLogin}</Link>
