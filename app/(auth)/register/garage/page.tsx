@@ -107,7 +107,7 @@ export default function RegisterGaragePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          role: 'GARAGE', email, password,
+          role: 'GARAGE', email, password, phone,
           garage: { name, phone, address, city, zipCode, description, services, schedules, mechanicCount, slotDuration },
         }),
       })
