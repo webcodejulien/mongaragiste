@@ -51,10 +51,19 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.role = (user as any).role
         token.id   = user.id
+      }
+      // Lors d'une connexion Google, si le rôle n'est pas dans le token,
+      // on le récupère depuis la DB (premier login OAuth)
+      if (account?.provider === 'google' && !token.role) {
+        const dbUser = await prisma.user.findUnique({ where: { id: token.id as string } })
+        if (dbUser) {
+          token.role = dbUser.role
+          token.id   = dbUser.id
+        }
       }
       return token
     },
