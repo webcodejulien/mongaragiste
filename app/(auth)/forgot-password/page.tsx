@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { Logo } from '@/components/Logo'
 import { IconArrowLeft, IconMail } from '@tabler/icons-react'
 
 export default function ForgotPasswordPage() {
@@ -35,8 +36,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-background-secondary)' }}>
       <header className="h-14 flex items-center px-6" style={{ background: 'var(--color-background-primary)', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <Link href="/" className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full" style={{ background: '#1D9E75' }} />
-          <span className="text-[14px] font-medium" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
+          <Logo size="sm" href="/" />
         </Link>
       </header>
 

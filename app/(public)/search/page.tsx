@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
+import { Logo } from '@/components/Logo'
 import { useSearchParams } from 'next/navigation'
 import { IconSearch, IconMapPin, IconStar, IconClock, IconAdjustments, IconLoader2, IconCurrentLocation } from '@tabler/icons-react'
 import { useLang } from '@/components/LangToggle'
@@ -411,8 +412,7 @@ export default function SearchPage() {
         style={{ background: 'var(--color-background-primary)', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full" style={{ background: '#1D9E75' }}/>
-            <span className="text-[14px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
+            <Logo size="sm" href="/" />
           </Link>
           <nav className="flex items-center gap-4">
             <Link href="/login" className="text-[13px]" style={{ color: 'var(--color-text-secondary)' }}>Connexion</Link>

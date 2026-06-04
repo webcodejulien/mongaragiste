@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { Logo } from '@/components/Logo'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { IconCalendar, IconCheck, IconX, IconClock, IconArrowRight, IconLogout, IconUser, IconPencil, IconDeviceFloppy, IconStarFilled, IconStar, IconMessageCircle } from '@tabler/icons-react'
@@ -142,8 +143,7 @@ export default function MonComptePage() {
       <header className="sticky top-0 z-30 h-14" style={{background:'var(--color-background-primary)',borderBottom:'0.5px solid var(--color-border-tertiary)'}}>
         <div className="max-w-3xl mx-auto px-4 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full" style={{background:'#1D9E75'}}/>
-            <span className="text-[14px] font-semibold" style={{color:'var(--color-text-primary)'}}>MonGaragiste</span>
+            <Logo size="sm" href="/" />
           </Link>
           <div className="flex items-center gap-3">
             <span className="text-[13px]" style={{color:'var(--color-text-secondary)'}}>{user?.email}</span>

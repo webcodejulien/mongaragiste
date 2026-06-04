@@ -623,8 +623,7 @@ export default function GaragistePage() {
       <footer style={{ borderTop: '0.5px solid var(--color-border-tertiary)', background: 'var(--color-background-primary)' }}>
         <div className="max-w-6xl mx-auto px-5 py-8 flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full" style={{ background: '#1D9E75' }} />
-            <span className="text-[13px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
+            <Logo size="sm" href="/" />
           </div>
           <div className="flex items-center gap-5 flex-wrap">
             <Link href="/" className="text-[12px]" style={{ color: 'var(--color-text-tertiary)' }}>{T.footerFind}</Link>
