@@ -8,6 +8,7 @@ import {
   IconUsers, IconChartBar, IconStar, IconBell,
   IconReceipt, IconSettings, IconHelp, IconQrcode,
   IconExternalLink, IconLogout, IconCircleFilled, IconMenu2, IconX,
+  IconBellRinging, IconFileText,
 } from '@tabler/icons-react'
 import { useLang } from '@/components/LangToggle'
 
@@ -21,6 +22,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       items: [
         { href: '/garage',               label: t.dashboard,     icon: IconLayoutDashboard },
         { href: '/garage/agenda',        label: t.agenda,        icon: IconCalendar },
+        { href: '/garage/quotes',        label: 'Devis',         icon: IconFileText },
         { href: '/garage/appointments',  label: t.appointments,  icon: IconClipboardList, badge: 0, badgeColor: 'amber' },
         { href: '/garage/clients',       label: t.clients,       icon: IconUsers },
       ],
@@ -30,6 +32,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       items: [
         { href: '/garage/stats',         label: t.stats,         icon: IconChartBar },
         { href: '/garage/reviews',       label: t.reviews,       icon: IconStar },
+        { href: '/garage/reminders',     label: 'Rappels',       icon: IconBellRinging },
         { href: '/garage/notifications', label: t.notifications, icon: IconBell, badge: 0, badgeColor: 'red' },
         { href: '/garage/qrcode',         label: 'QR Code',       icon: IconQrcode },
         { href: '/garage/billing',       label: t.billing,       icon: IconReceipt },
