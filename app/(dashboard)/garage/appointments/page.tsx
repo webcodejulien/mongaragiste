@@ -4,8 +4,133 @@ import { useEffect, useState } from 'react'
 import { TopBar } from '@/components/layout/TopBar'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SkeletonRow } from '@/components/ui/Skeleton'
-import { IconSearch, IconCheck, IconX, IconDownload, IconPhone, IconFileInvoice } from '@tabler/icons-react'
+import { IconSearch, IconCheck, IconX, IconDownload, IconPhone, IconFileInvoice, IconMessageCircle } from '@tabler/icons-react'
 import Link from 'next/link'
+
+type MessageTarget = {
+  clientId: string
+  name: string
+  email: string | null
+  phone: string | null
+}
+
+function MessageModal({ target, onClose }: { target: MessageTarget; onClose: () => void }) {
+  const [channel,  setChannel]  = useState<'email' | 'sms'>('email')
+  const [subject,  setSubject]  = useState('')
+  const [message,  setMessage]  = useState('')
+  const [sending,  setSending]  = useState(false)
+  const [sent,     setSent]     = useState(false)
+  const [error,    setError]    = useState('')
+
+  async function handleSend(e: React.FormEvent) {
+    e.preventDefault()
+    if (!message.trim()) return
+    setSending(true)
+    setError('')
+    try {
+      const res = await fetch('/api/garage/message', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ clientId: target.clientId, channel, subject, message }),
+      })
+      if (res.ok) {
+        setSent(true)
+        setTimeout(onClose, 1500)
+      } else {
+        const data = await res.json()
+        setError(data.error ?? "Erreur lors de l'envoi.")
+      }
+    } catch {
+      setError('Erreur réseau.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="w-full max-w-md rounded-[12px] p-6"
+        style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)' }}
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-[15px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+            Envoyer un message
+          </h2>
+          <button onClick={onClose} style={{ color: 'var(--color-text-tertiary)' }}>
+            <IconX size={18}/>
+          </button>
+        </div>
+
+        {sent ? (
+          <div className="flex flex-col items-center py-8 gap-3">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: '#E1F5EE' }}>
+              <IconMessageCircle size={22} style={{ color: '#085041' }}/>
+            </div>
+            <p className="text-[14px] font-medium" style={{ color: 'var(--color-text-primary)' }}>Message envoyé !</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSend} className="space-y-4">
+            <div className="rounded-lg px-3 py-2.5"
+              style={{ background: 'var(--color-background-secondary)', border: '0.5px solid var(--color-border-tertiary)' }}>
+              <p className="text-[10px] font-medium uppercase tracking-wide mb-1" style={{ color: 'var(--color-text-tertiary)' }}>Destinataire</p>
+              <p className="text-[13px] font-medium" style={{ color: 'var(--color-text-primary)' }}>{target.name}</p>
+              <p className="text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
+                {target.email} {target.phone ? `· ${target.phone}` : ''}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-wide mb-2" style={{ color: 'var(--color-text-secondary)' }}>Canal</p>
+              <div className="flex gap-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" value="email" checked={channel === 'email'} onChange={() => setChannel('email')} className="accent-[#1D9E75]"/>
+                  <span className="text-[13px]" style={{ color: 'var(--color-text-primary)' }}>Email</span>
+                  {!target.email && <span className="text-[11px]" style={{ color: '#A32D2D' }}>(indisponible)</span>}
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" value="sms" checked={channel === 'sms'} onChange={() => setChannel('sms')} className="accent-[#1D9E75]"/>
+                  <span className="text-[13px]" style={{ color: 'var(--color-text-primary)' }}>SMS</span>
+                  {!target.phone && <span className="text-[11px]" style={{ color: '#A32D2D' }}>(indisponible)</span>}
+                </label>
+              </div>
+            </div>
+
+            {channel === 'email' && (
+              <div>
+                <label className="text-[11px] font-medium uppercase tracking-wide mb-1 block" style={{ color: 'var(--color-text-secondary)' }}>Sujet</label>
+                <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Sujet du message…"
+                  className="w-full px-3 py-2 text-[13px] rounded-lg focus:outline-none"
+                  style={{ border: '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-primary)', color: 'var(--color-text-primary)' }}/>
+              </div>
+            )}
+
+            <div>
+              <label className="text-[11px] font-medium uppercase tracking-wide mb-1 block" style={{ color: 'var(--color-text-secondary)' }}>Message *</label>
+              <textarea value={message} onChange={e => setMessage(e.target.value)} rows={4} placeholder="Votre message…" required
+                className="w-full px-3 py-2 text-[13px] rounded-lg focus:outline-none resize-none"
+                style={{ border: '0.5px solid var(--color-border-secondary)', background: 'var(--color-background-primary)', color: 'var(--color-text-primary)' }}/>
+            </div>
+
+            {error && <p className="text-[12px]" style={{ color: '#A32D2D' }}>{error}</p>}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button type="button" onClick={onClose}
+                className="px-4 py-2 rounded text-[13px]"
+                style={{ border: '0.5px solid var(--color-border-tertiary)', color: 'var(--color-text-secondary)' }}>
+                Annuler
+              </button>
+              <button type="submit" disabled={sending || !message.trim()}
+                className="px-4 py-2 rounded text-[13px] font-medium text-white disabled:opacity-50"
+                style={{ background: '#1D9E75' }}>
+                {sending ? 'Envoi…' : 'Envoyer'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  )
+}
 
 const STATUS: Record<string, { label: string; bg: string; color: string }> = {
   PENDING:     { label: 'En attente',   bg: '#FAEEDA', color: '#633806' },
@@ -48,6 +173,7 @@ export default function AppointmentsPage() {
   const [search,  setSearch]  = useState('')
   const [fIdx,    setFIdx]    = useState(0)
   const [expanded,setExpanded]= useState<string|null>(null)
+  const [msgTarget, setMsgTarget] = useState<MessageTarget | null>(null)
 
   useEffect(() => {
     fetch('/api/garage/appointments')
@@ -86,6 +212,9 @@ export default function AppointmentsPage() {
 
   return (
     <div className="flex flex-col flex-1">
+      {msgTarget && (
+        <MessageModal target={msgTarget} onClose={() => setMsgTarget(null)}/>
+      )}
       <TopBar title="Rendez-vous" subtitle={pending > 0 ? `${pending} en attente de confirmation` : undefined}/>
 
       <main className="flex-1 p-5">
@@ -247,6 +376,18 @@ export default function AppointmentsPage() {
                             <IconFileInvoice size={13}/>
                           </Link>
                         )}
+                        <button
+                          onClick={() => setMsgTarget({
+                            clientId: a.client?.id ?? '',
+                            name:     `${a.client?.firstName ?? ''} ${a.client?.lastName ?? ''}`,
+                            email:    a.client?.user?.email ?? null,
+                            phone:    a.client?.phone ?? null,
+                          })}
+                          className="p-1.5 rounded"
+                          style={{ background:'var(--color-background-secondary)', color:'var(--color-text-secondary)', border:'0.5px solid var(--color-border-tertiary)' }}
+                          title="Envoyer un message">
+                          <IconMessageCircle size={13}/>
+                        </button>
                       </div>
                     </div>
                     {isExp && a.notes && (
