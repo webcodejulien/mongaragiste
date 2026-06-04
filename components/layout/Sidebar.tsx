@@ -11,6 +11,7 @@ import {
   IconBellRinging, IconFileText,
 } from '@tabler/icons-react'
 import { useLang } from '@/components/LangToggle'
+import { Logo } from '@/components/Logo'
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
@@ -53,8 +54,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       <div className="flex items-center justify-between px-4 py-4"
         style={{ borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="flex items-center gap-2">
-          <IconCircleFilled size={8} className="text-primary-400" style={{ color: '#1D9E75' }} />
-          <span className="text-[14px] font-medium" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
+          <Logo size="sm" />
         </div>
         {onClose && (
           <button onClick={onClose} style={{ color: 'var(--color-text-secondary)' }}>
@@ -151,8 +151,7 @@ export function Sidebar() {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4"
         style={{ background: 'var(--color-background-primary)', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
         <div className="flex items-center gap-2">
-          <IconCircleFilled size={8} style={{ color: '#1D9E75' }} />
-          <span className="text-[14px] font-medium" style={{ color: 'var(--color-text-primary)' }}>MonGaragiste</span>
+          <Logo size="sm" />
         </div>
         <button onClick={() => setMobileOpen(true)} style={{ color: 'var(--color-text-secondary)' }}>
           <IconMenu2 size={22} />
